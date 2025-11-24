@@ -29,8 +29,10 @@ Unified repository for DICOM utilities across multiple languages with a shared c
 - UI: `python -m interface.app` (Tkinter) uses the contract; headless runner: `python -m interface.contract_runner`.
 
 ## CI
-- GitHub Actions workflow in `.github/workflows/ci.yml` runs Python/Rust/Java/C# tests. C++/interface excluded due to heavy deps; add if environment allows.
+- GitHub Actions workflow in `.github/workflows/ci.yml` runs Python, Rust, Java, C#, C++ (configure+build), and JS (build + vitest). Interface/UI still omitted from CI because of GUI deps; add when headless coverage is available.
 
 ## Notes
 - Ignore build artifacts (bin/obj/target/output/node_modules/coverage/artifacts). See `.gitignore`.
 - Java/C# CLIs are mapped in adapters; ensure env vars `JAVA_DICOM_TOOLS_CMD` / `CS_DICOM_TOOLS_CMD` point to the built jar/binary.***
+- Java build downloads dcm4che artifacts from `https://www.dcm4che.org/maven2`.
+- C# targets .NET 8; if only .NET 10 is installed locally, run tests with `DOTNET_ROLL_FORWARD=Major dotnet test`.

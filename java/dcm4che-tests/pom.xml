@@ -45,9 +45,14 @@
       <version>${dcm4che.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.glassfish</groupId>
-      <artifactId>jakarta.json</artifactId>
-      <version>2.0.1</version>
+      <groupId>jakarta.json</groupId>
+      <artifactId>jakarta.json-api</artifactId>
+      <version>2.1.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.parsson</groupId>
+      <artifactId>parsson</artifactId>
+      <version>1.1.7</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -62,6 +67,34 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>dcm4che</id>
+      <name>dcm4che Maven</name>
+      <url>https://www.dcm4che.org/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>dcm4che-plugins</id>
+      <name>dcm4che Maven Plugins</name>
+      <url>https://www.dcm4che.org/maven2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
 
   <build>
     <plugins>

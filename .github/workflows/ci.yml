@@ -60,3 +60,32 @@ jobs:
         run: |
           cd java/dcm4che-tests
           mvn test -B
+
+  cpp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure CMake (no external deps required for compile)
+        run: cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+      - name: Build
+        run: cmake --build cpp/build --config Release -- -j2
+
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: js/viewer-gateway/package-lock.json
+      - name: Install dependencies
+        working-directory: js/viewer-gateway
+        run: npm ci
+      - name: Build
+        working-directory: js/viewer-gateway
+        run: npm run build
+      - name: Test
+        working-directory: js/viewer-gateway
+        run: npm test

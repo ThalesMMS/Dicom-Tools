@@ -4,8 +4,8 @@
 - Python 3.10+ with `pip`
 - Rust stable (1.75+)
 - CMake ≥3.15 and C++17 compiler
-- .NET SDK (for `cs/`)
-- JDK/ Maven (for `java/`)
+- .NET SDK 8.0 (tests can roll forward with `DOTNET_ROLL_FORWARD=Major` if only .NET 10 is installed)
+- JDK 17 and Maven (downloads dcm4che artifacts from `https://www.dcm4che.org/maven2`)
 
 ## Core Commands
 - `make python-install` — install Python toolkit editable
@@ -27,7 +27,7 @@ Helpers:
 - C++: `cd cpp && mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && ctest`
 - Interface: `cd interface && pytest`
 - Java: `cd java/dcm4che-tests && mvn test`
-- C#: `cd cs && dotnet test`
+- C#: `cd cs && dotnet test` (or `DOTNET_ROLL_FORWARD=Major dotnet test` if .NET 8 runtime is missing)
 - JS: no workspace cloned; use npm/nx scripts when present
 
 ## Contract & Env Vars
@@ -42,4 +42,4 @@ Helpers:
 - Cleaning: remove build/output dirs before release; see `.gitignore`
 
 ## CI
-- GitHub Actions: `.github/workflows/ci.yml` runs Python, Rust, Java, C# tests. Add C++/interface steps if the environment has deps preinstalled.
+- GitHub Actions: `.github/workflows/ci.yml` runs Python, Rust, Java, C#, C++ (configure+build), and JS (build + vitest). Interface/UI not yet automated; add once headless coverage is available.
