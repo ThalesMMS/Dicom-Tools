@@ -12,8 +12,9 @@ Legenda: [ ] pendente | [x] concluído
 8. [x] Artefatos e logging: convenção de nomes de saída documentada em `interface/ARTIFACTS.md` (outputs por backend, defaults, limpeza, stdout/stderr).
 9. [x] Testes unitários/funcionais por backend: Rust `cargo test` ok; Python `pytest` ok (com deps instaladas); C++ `python tests/run_all.py` ok após build; interface `pytest` ok.
 10. [x] Testes de integração via contrato: suíte pytest em `interface/tests/test_contract_runner.py` (usa sample_series e backends buildados).
-11. [ ] Empacotamento e distribuição: wheels Python, binários Rust/C++, script `scripts/setup_all.sh`.
-12. [ ] CI/CD unificado: pipeline com build/lint/test de todos e testes de integração do contrato.
-13. [ ] (Antipenúltima) Testar tudo: checklist completo de funcionalidades expostas, comparação entre backends quando aplicável, validação manual da UI.
-14. [ ] (Penúltima) Integrar Java (dcm4chee) no contrato: CLI/REST fino + wrapper `interface/adapters/java_cli.py` (testes iniciais já rodados em `java/dcm4che-tests`, mvn test ok).
-15. [ ] (Última) Integrar C# (fo-dicom) no contrato: CLI/JSON em `cs/` + wrapper `interface/adapters/csharp_cli.py` (dotnet test ok; falta validar/alinhar contrato e distribuição).
+11. [x] Empacotamento e distribuição: wheels Python, binários Rust/C++, scripts `scripts/setup_all.sh` e `scripts/package_all.sh`.
+12. [x] CI/CD unificado: workflow `.github/workflows/ci.yml` cobrindo Python, Rust, Java (mvn test) e C# (dotnet test net8).
+13. [ ] Testar tudo: checklist completo de funcionalidades expostas, comparação entre backends quando aplicável, validação manual da UI.
+14. [ ] Integrar Java (dcm4chee) no contrato: CLI/REST fino + wrapper `interface/adapters/java_cli.py` (testes iniciais já rodados em `java/dcm4che-tests`, mvn test ok).
+15. [ ] Integrar C# (fo-dicom) no contrato: CLI/JSON em `cs/` + wrapper `interface/adapters/csharp_cli.py` (dotnet test ok; falta validar/alinhar contrato e distribuição).
+16. [ ] Integrar Javascript (Cornerstone3D).

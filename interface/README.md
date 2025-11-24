@@ -9,11 +9,11 @@ Este diretório concentra a UI Tkinter e os adaptadores que chamam os backends C
   - Rust: `cargo build --release` em `rust/` (gera `rust/target/release/dicom-tools`).
   - C++: `cmake --build .` em `cpp/build` (gera `cpp/build/DicomTools`).
 
-Variáveis de ambiente opcionais para apontar binários:
+Optional env vars to point binaries:
 - `PYTHON_DICOM_TOOLS_CMD` (default `python -m DICOM_reencoder.cli`, cwd `python/`)
 - `RUST_DICOM_TOOLS_BIN` (default `rust/target/release/dicom-tools`; fallback `cargo run --release --`)
 - `CPP_DICOM_TOOLS_BIN` (default `cpp/build/DicomTools`)
-- `CS_DICOM_TOOLS_CMD` (default `cs/bin/Release/net8.0/DicomTools.Cli`)
+- `CS_DICOM_TOOLS_CMD` (default `cs/bin/Release/net8.0/DicomTools.Cli` or Debug fallback)
 - `JAVA_DICOM_TOOLS_CMD` (default `java/dcm4che-tests/target/dcm4che-tests.jar` via `java -jar`)
 
 ## Usando a UI Tkinter

@@ -1,49 +1,45 @@
 # Build & Tooling Guide
 
-Use o `Makefile` na raiz para builds reprodutíveis por linguagem. Ajuste variáveis (`PYTHON`, `CARGO`, `CMAKE`, `BUILD_TYPE`) conforme o ambiente.
+## General Requirements
+- Python 3.10+ with `pip`
+- Rust stable (1.75+)
+- CMake ≥3.15 and C++17 compiler
+- .NET SDK (for `cs/`)
+- JDK/ Maven (for `java/`)
 
-## Requisitos gerais
-- Python 3.10+ com `pip`.
-- Rust toolchain estável (1.75+).
-- CMake ≥3.15 e compilador C++17.
-- Opcional: .NET SDK para `cs/`, JDK/Gradle/Maven para `java/` (não editar `java/` enquanto outro agente trabalha).
+## Core Commands
+- `make python-install` — install Python toolkit editable
+- `make python-test` — run Python tests
+- `make rust-build` — build Rust release
+- `make rust-test` — `cargo test`
+- `make cpp-build` — CMake build for `cpp/`
+- `make cpp-test` — `ctest` (if configured)
+- `make interface-run` — launch Tkinter UI
+- `make all` — python-install + rust-build + cpp-build
 
-## Comandos principais (Makefile)
-- `make python-install` — instala o toolkit Python em modo editável.
-- `make python-test` — roda `pytest` em `python/tests`.
-- `make rust-build` — compila o binário Rust (`target/release/dicom-tools`).
-- `make rust-test` — roda `cargo test`.
-- `make cpp-build` — gera `cpp/build/` com CMake e builda o executável `DicomTools`.
-- `make cpp-test` — roda `ctest` em `cpp/build` (se configurado).
-- `make interface-run` — abre a UI Tkinter (`interface/app.py`).
-- `make all` — `python-install`, `rust-build`, `cpp-build`.
-- Script único: `scripts/setup_all.sh` (instala Python editável, builda Rust release e C++ release, cria symlink `cpp/input -> sample_series` se houver).
-- Interface tests: `cd interface && pytest` (requer backends buildados e `sample_series/` presente).
-- Recomendação geral de testes: `cd python && pytest`, `cd rust && cargo test`, `cd cpp/build && ctest`, `cd interface && pytest`.
-- Java: `cd java/dcm4che-tests && mvn test` (exige JDK/ Maven e dependências baixadas).
-- C#: `cd cs && dotnet test` (exige .NET SDK).
-- JS: sem workspace clonado; quando houver projeto npm/nx, use os scripts definidos lá.
+Helpers:
+- Setup: `./scripts/setup_all.sh` (Python editable + Rust/C++ build + symlink `cpp/input -> sample_series`)
+- Packaging: `./scripts/package_all.sh` (wheel/sdist + Rust/C++ binaries copied to `artifacts/`)
 
-## Python (python/)
-- Dependências em `requirements.txt` (mínimos). Use `python -m pip install -e .` para dev. Para pin exato, use `pip-compile` gerando um lock (não commitado por padrão).
-- Dev/test: `pip install -r python/requirements-dev.txt` para `pytest` e `build`.
-- Testes: `pytest`.
+## Tests (by project)
+- Python: `pip install -r python/requirements-dev.txt && pip install -e python && cd python && pytest`
+- Rust: `cd rust && cargo test`
+- C++: `cd cpp && mkdir -p build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && ctest`
+- Interface: `cd interface && pytest`
+- Java: `cd java/dcm4che-tests && mvn test`
+- C#: `cd cs && dotnet test`
+- JS: no workspace cloned; use npm/nx scripts when present
 
-## Rust (rust/)
-- Build: `cargo build --release`. Tests: `cargo test`. Formatação/lint: `cargo fmt`, `cargo clippy --all-targets --all-features`.
+## Contract & Env Vars
+- Python CLI: `python -m DICOM_reencoder.cli` (cwd `python/`)
+- Rust binary: `rust/target/release/dicom-tools` (fallback `cargo run --release --`)
+- C++ binary: `cpp/build/DicomTools`
+- Java CLI jar: `java/dcm4che-tests/target/dcm4che-tests.jar` (`JAVA_DICOM_TOOLS_CMD` to override)
+- C# CLI: `cs/bin/(Release|Debug)/net8.0/DicomTools.Cli` (`CS_DICOM_TOOLS_CMD` to override)
 
-## C++ (cpp/)
-- Configure/build: `mkdir -p cpp/build && cd cpp/build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .`.
-- Dependências pesadas (GDCM, DCMTK, ITK, VTK): usar `cpp/scripts/build_deps.sh` para baixar/instalar em `cpp/deps/install` e reusar cache local em builds seguintes.
-- Testes: `cd cpp/build && ctest --output-on-failure` (se disponível).
+## Artifacts & Outputs
+- Defaults: write to `output/` (backend-specific) when not provided
+- Cleaning: remove build/output dirs before release; see `.gitignore`
 
-## Interface & Contrato (interface/)
-- UI: `python -m interface.app`.
-- Executor headless: `python -m interface.contract_runner --backend python --op info --input file.dcm`.
-- Ajustes de binários via env vars: `PYTHON_DICOM_TOOLS_CMD`, `RUST_DICOM_TOOLS_BIN`, `CPP_DICOM_TOOLS_BIN`.
-- Artefatos/saídas: ver `interface/ARTIFACTS.md` para nomes e diretórios padrão por backend.
-
-## C# (cs/) e Java (java/)
-- C#: preparar CLI fo-dicom seguindo contrato CLI/JSON; builds típicos usam `dotnet build` / `dotnet test`.
-- Java: integração dcm4chee; testes iniciais estão em `java/dcm4che-tests`.
-- JS: integração Cornerstone futura (sem repo clonado no momento).
+## CI
+- GitHub Actions: `.github/workflows/ci.yml` runs Python, Rust, Java, C# tests. Add C++/interface steps if the environment has deps preinstalled.

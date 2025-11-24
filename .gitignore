@@ -75,3 +75,6 @@ artifacts/
 /cs/DicomTools.Tests/bin
 /cs/DicomTools.Cli/obj
 /cs/DicomTools.Cli/bin
+AGENTS.md
+*/TASKS.md
+plano.md

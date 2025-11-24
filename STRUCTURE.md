@@ -1,11 +1,12 @@
-# Estrutura do monorepo
+# Repository Structure
 
-- `cpp/`: CLI e módulos C++ (GDCM, DCMTK, ITK, VTK). Build esperado em `cpp/build/DicomTools`.
-- `rust/`: CLI/web em Rust (`dicom-tools`), build em `rust/target/release/dicom-tools`.
-- `python/`: Toolkit Python (`DICOM_reencoder`), CLI `python -m DICOM_reencoder.cli`.
-- `interface/`: UI Tkinter e adaptadores do contrato CLI/JSON.
-- `cs/`: Esqueleto para integração fo-dicom (C#).
-- `java/`: Pendente integração dcm4chee (repositório removido; apenas tarefas).
-- `js/`: Pendente integração com Cornerstone (sem repositório, apenas tarefas/guia).
-- `sample_series/`: Amostras de DICOM para testes locais (se presentes).
-- `plano.md`: Plano de integração com status.
+- `cpp/`: C++ CLI and modules (GDCM, DCMTK, ITK, VTK). Build: `cpp/build/DicomTools`.
+- `rust/`: Rust CLI/web (`dicom-tools`). Build: `rust/target/release/dicom-tools`.
+- `python/`: Python toolkit (`DICOM_reencoder`), CLI `python -m DICOM_reencoder.cli`.
+- `interface/`: Tkinter UI and contract adapters (CLI/JSON).
+- `cs/`: fo-dicom CLI/tests.
+- `java/`: dcm4chee tests/CLI.
+- `js/`: Cornerstone integration notes (no repo cloned).
+- `sample_series/`: DICOM samples for tests.
+- `plano.md`: Integration plan with status.
+- `scripts/`: setup/package utilities.

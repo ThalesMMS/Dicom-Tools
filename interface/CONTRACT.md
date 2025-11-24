@@ -43,8 +43,8 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 - **Python** (`python -m DICOM_reencoder.cli`): `info -> summary --json`, `anonymize -> anonymize`, `to_image -> png`, `transcode -> transcode`, `validate -> python -m DICOM_reencoder.validate_dicom`, `echo -> dicom_echo`, `volume -> volume`, `nifti -> nifti`.  
 - **Rust** (`rust/target/release/dicom-tools` ou `cargo run --release -- ...`): `info`, `anonymize`, `to_image` (`to-image`), `transcode`, `validate` (`validate`), `echo` (`echo`), `dump` (`dump`), `stats` (`stats`/`histogram`).  
 - **C++** (`cpp/build/DicomTools`): `info/dump -> gdcm:dump`, `anonymize -> gdcm:anonymize`, `to_image -> gdcm:preview`, `stats -> gdcm:stats`, `transcode -> gdcm:transcode-j2k|gdcm:transcode-rle|gdcm:jpegls` (mapeado por `options.syntax`), `validate -> gdcm:dump` (proxy até existir comando dedicado).  
-- **Java (dcm4chee)**: a ser integrado na etapa penúltima; expectativa é expor um CLI/REST que aceite o mesmo envelope e devolva JSON.  
-- **C# (fo-dicom)**: esqueleto de wrapper em `interface/adapters/csharp_cli.py`; exige um CLI em `cs/` que implemente as operações do contrato (nomes equivalentes aos demais backends).
+- **Java (dcm4chee)**: CLI em `java/dcm4che-tests/target/dcm4che-tests.jar` (`java -jar ...`): `info --json`, `anonymize --output`, `to-image --output [--format] [--frame]`, `transcode --output --syntax`, `validate`, `dump [--max-width]`, `stats --bins [--json|--pretty]`, `echo host:port [--timeout --calling --called]`.  
+- **C# (fo-dicom)**: CLI em `cs/bin/(Release|Debug)/net8.0/DicomTools.Cli`: `info --json`, `anonymize --output`, `to-image --output [--frame] [--format]`, `transcode --output --transfer-syntax`, `validate`, `echo host:port`, `dump [--depth --max-value-length]`, `stats --json [--frame]`, `histogram --json [--bins] [--frame]`.
 
 ## Binaries e variáveis de ambiente
 - `PYTHON_DICOM_TOOLS_CMD` (padrão: `python -m DICOM_reencoder.cli`, cwd=`python/`)
