@@ -1,0 +1,5 @@
+include README.md
+include LICENSE
+include requirements.txt
+recursive-include DICOM_reencoder/web_templates *
+recursive-include DICOM_reencoder/web_static *

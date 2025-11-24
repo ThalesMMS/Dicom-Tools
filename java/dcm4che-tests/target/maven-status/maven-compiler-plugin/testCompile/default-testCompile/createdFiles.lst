@@ -1,0 +1,9 @@
+com/dicomtools/dcm4che/DicomDeidentifyTest.class
+com/dicomtools/dcm4che/DicomSeriesTest$Slice.class
+com/dicomtools/dcm4che/DicomImageIoTest.class
+com/dicomtools/dcm4che/DicomPixelStatisticsTest.class
+com/dicomtools/dcm4che/DicomSeriesTest.class
+com/dicomtools/dcm4che/DicomRoundTripTest.class
+com/dicomtools/dcm4che/TestData.class
+com/dicomtools/dcm4che/DicomJsonTest.class
+com/dicomtools/dcm4che/DicomParsingTest.class

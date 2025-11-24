@@ -1,0 +1,66 @@
+# Geral
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+
+# IDE/Editor
+.vscode/
+.idea/
+*.iml
+
+# Python
+__pycache__/
+*.py[cod]
+python/.pytest_cache/
+python/.mypy_cache/
+python/.coverage
+python/.coverage.*
+python/htmlcov/
+python/build/
+python/dist/
+python/*.egg-info/
+python/.venv/
+python/venv/
+.venv/
+venv/
+
+# Interface (Python)
+interface/__pycache__/
+interface/.pytest_cache/
+
+# Rust
+rust/target/
+rust/.cargo/
+
+# C++
+cpp/build/
+cpp/deps/
+cpp/output/
+cpp/CMakeFiles/
+
+# C#
+cs/bin/
+cs/obj/
+cs/.vs/
+
+# Java
+java/target/
+java/.gradle/
+java/.idea/
+java/*.iml
+java/build/
+
+# JS (Cornerstone3D)
+js/node_modules/
+js/**/node_modules/
+js/.nx/
+js/.turbo/
+js/**/dist/
+js/**/coverage/
+
+# Saídas temporárias/artefatos gerais
+output/
+tmp/
+*.tmp

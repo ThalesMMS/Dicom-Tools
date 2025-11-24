@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dicom-tools"
+version = "1.0.0"
+description = "Comprehensive DICOM utilities for medical imaging"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Thales MMS"}
+]
+keywords = ["dicom", "medical", "imaging", "healthcare", "radiology", "pydicom"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+dependencies = [
+    "pydicom>=2.3.0",
+    "numpy>=1.20.0",
+    "Pillow>=9.0.0",
+    "pynetdicom>=2.0.0",
+    "flask>=2.0.0",
+    "flask-cors>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=3.0.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "gdcm>=3.0.0",
+    "SimpleITK>=2.2.0",
+    "dicom-numpy>=0.5.0",
+]
+
+extra = [
+    "gdcm>=3.0.0",
+    "SimpleITK>=2.2.0",
+    "dicom-numpy>=0.5.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ThalesMMS/Dicom-Tools"
+"Bug Reports" = "https://github.com/ThalesMMS/Dicom-Tools/issues"
+Source = "https://github.com/ThalesMMS/Dicom-Tools"
+
+[project.scripts]
+dicom-extract-metadata = "DICOM_reencoder.extract_metadata:main"
+dicom-info = "DICOM_reencoder.dicom_info:main"
+dicom-compare = "DICOM_reencoder.comparar_dicom:main"
+dicom-reencode = "DICOM_reencoder.reencode_dicom:main"
+dicom-decompress = "DICOM_reencoder.decompress_dicom:main"
+dicom-to-image = "DICOM_reencoder.convert_to_image:main"
+dicom-anonymize = "DICOM_reencoder.anonymize_dicom:main"
+dicom-validate = "DICOM_reencoder.validate_dicom:main"
+dicom-pixel-stats = "DICOM_reencoder.pixel_stats:main"
+dicom-modify = "DICOM_reencoder.modify_tags:main"
+dicom-organize = "DICOM_reencoder.organize_dicom:main"
+dicom-search = "DICOM_reencoder.search_dicom:main"
+dicom-split-multiframe = "DICOM_reencoder.split_multiframe:main"
+dicom-batch = "DICOM_reencoder.batch_process:main"
+dicom-volume = "DICOM_reencoder.volume_builder:main"
+dicom-to-nifti = "DICOM_reencoder.series_to_nifti:main"
+dicom-transcode = "DICOM_reencoder.transcode_dicom:main"
+dicom-query = "DICOM_reencoder.dicom_query:main"
+dicom-retrieve = "DICOM_reencoder.dicom_retrieve:main"
+dicom-echo = "DICOM_reencoder.dicom_echo:main"
+dicom-web = "DICOM_reencoder.web_interface:main"
+dicom-tools = "DICOM_reencoder.cli:main"
+
+[tool.setuptools]
+packages = ["DICOM_reencoder", "DICOM_reencoder.core"]
+
+[tool.setuptools.package-data]
+DICOM_reencoder = ["web_templates/*", "web_static/*"]

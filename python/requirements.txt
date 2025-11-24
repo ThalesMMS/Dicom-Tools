@@ -1,0 +1,25 @@
+# Core DICOM library
+pydicom>=2.3.0
+
+# Image processing
+numpy>=1.20.0
+Pillow>=9.0.0
+
+# DICOM networking (C-FIND, C-MOVE, C-STORE)
+pynetdicom>=2.0.0
+
+# Web interface
+flask>=2.0.0
+flask-cors>=3.0.0
+
+# Extended DICOM stack
+gdcm>=3.0.0
+dicom-numpy>=0.5.0
+SimpleITK>=2.2.0
+
+# Optional: Development dependencies
+# Uncomment to install development tools
+# pytest>=7.0.0
+# pytest-cov>=3.0.0
+# black>=22.0.0
+# flake8>=4.0.0

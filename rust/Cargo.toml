@@ -1,0 +1,40 @@
+[package]
+name = "dicom-tools"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+# Core DICOM
+dicom = "0.7"
+dicom-pixeldata = { version = "0.7", features = ["image", "ndarray"] } # Para manipulação de imagem
+dicom-ul = "0.7"        # Para networking (SCU)
+dicom-object = "0.7"
+dicom-core = "0.7"
+dicom-dictionary-std = "0.7"
+
+# CLI e Utilitários
+clap = { version = "4.4", features = ["derive"] }
+anyhow = "1.0"
+thiserror = "1.0"
+chrono = "0.4"
+walkdir = "2.4"
+rayon = "1.8"
+sha2 = "0.10"
+hex = "0.4"
+
+# Imagem
+image = "0.25"
+ndarray = "0.15"
+
+# Web Server (Axum)
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.7", features = ["multipart"] }
+tower-http = { version = "0.5", features = ["cors", "fs"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+dicom-json = "0.7"
+
+[dev-dependencies]
+tempfile = "3"
