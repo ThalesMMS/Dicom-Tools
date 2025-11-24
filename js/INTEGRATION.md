@@ -1,8 +1,9 @@
-# JS / Cornerstone3D – Notas de Integração (sem repo clonado)
+# JS / Cornerstone3D – Notas de Integração
 
-Não há workspace Cornerstone3D clonado. Para usar:
-- Instale pacotes publicados: `npm install @cornerstonejs/core @cornerstonejs/tools @cornerstonejs/dicom-image-loader`.
-- Opcional: use Vite/webpack para montar um viewer leve que aponte para `sample_series`.
+Não mantemos mais o repositório clonado; usamos os pacotes publicados no app `js/viewer-gateway`.
+- `cd js/viewer-gateway && npm install`
+- `npm run dev` para demo Vite (aponta para `/sample_series` via HTTP que você servir)
+- `npm test` (Vitest) para verificar gateway + integridade da `sample_series`.
 
 ## Carregar a `sample_series` no Cornerstone3D (browser, HTTP)
 Exemplo mínimo usando os pacotes publicados (sirva os arquivos via HTTP, não `file://`):
@@ -79,6 +80,6 @@ viewer.destroy();
 Implementação: usar `@cornerstonejs/core` + `@cornerstonejs/tools` + `@cornerstonejs/dicom-image-loader`; esconder wiring (registro de loaders, criação de engine/viewport, setStack/setVolumes) e oferecer métodos simples (`setSlice`, `setVOI`, `setToolMode`).
 
 ## Observações rápidas
-- `yarn test:ci` já valida os loaders e ferramentas; não foi alterado.
-- Teste adicional `sampleSeries.jest.js` garante que a série local está íntegra e pronta para uso em demos.
-- Se quiser um exemplo pronto, podemos adicionar um HTML + bundler leve (Vite) apontando para `sample_series`; basta pedir. 
+- Testes Vitest em `js/viewer-gateway/tests`: `viewerGateway*.test.ts` (gateway/API) e `sampleSeries.integration.test.ts` (consistência da série via `dicom-parser`).
+- Sirva `sample_series` via HTTP local (ex.: `npx serve ..` na raiz do repo ou `npx http-server .. -p 8080`) para o viewer Vite.
+- Se quiser um exemplo adicional (React/Angular/Vue), só pedir. 

@@ -2,6 +2,7 @@ import * as cornerstoneCore from '@cornerstonejs/core';
 import { RenderingEngine, Enums, setUseCPURendering } from '@cornerstonejs/core';
 import dicomImageLoader from '@cornerstonejs/dicom-image-loader';
 import dicomParser from 'dicom-parser';
+import { buildImageIds } from './imageIds';
 
 export type ViewerOptions = {
   element: HTMLElement;
@@ -9,15 +10,6 @@ export type ViewerOptions = {
   viewportId?: string;
   useCPU?: boolean;
 };
-
-// Convert local/relative paths into wadouri: imageIds
-export function buildImageIds(baseUrl: string, count: number) {
-  const normalizedBase = baseUrl.replace(/\/$/, '');
-  return Array.from({ length: count }, (_, i) => {
-    const num = String(i + 1).padStart(4, '0');
-    return `wadouri:${normalizedBase}/IM-0001-${num}.dcm`;
-  });
-}
 
 function configureLoaders() {
   dicomImageLoader.external.cornerstone = cornerstoneCore as any;
@@ -58,3 +50,5 @@ export async function createStackViewer(options: ViewerOptions) {
     viewport,
   };
 }
+
+export { buildImageIds };
