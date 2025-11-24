@@ -5,7 +5,7 @@
 - `python/`: Toolkit Python (`DICOM_reencoder`), CLI `python -m DICOM_reencoder.cli`.
 - `interface/`: UI Tkinter e adaptadores do contrato CLI/JSON.
 - `cs/`: Esqueleto para integração fo-dicom (C#).
-- `java/`: Integração dcm4chee (tests iniciais prontos).
-- `js/`: Workspace para Cornerstone3D (clonado para testes/integração futura).
+- `java/`: Pendente integração dcm4chee (repositório removido; apenas tarefas).
+- `js/`: Pendente integração com Cornerstone (sem repositório, apenas tarefas/guia).
 - `sample_series/`: Amostras de DICOM para testes locais (se presentes).
 - `plano.md`: Plano de integração com status.

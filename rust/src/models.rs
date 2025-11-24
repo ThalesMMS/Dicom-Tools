@@ -80,3 +80,11 @@ pub struct PixelFormatSummary {
     pub window_center: Option<f64>,
     pub window_width: Option<f64>,
 }
+
+/// Composite structure used by the `info` command when emitting JSON.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InfoReport {
+    pub basic: BasicMetadata,
+    pub detailed: DetailedMetadata,
+    pub pixel_format: Option<PixelFormatSummary>,
+}

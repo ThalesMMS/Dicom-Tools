@@ -19,6 +19,7 @@ struct CommandContext {
     std::string inputPath;
     std::string outputDir;
     bool verbose{false};
+    bool jsonOutput{false};
 };
 
 struct Command {

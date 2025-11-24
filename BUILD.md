@@ -22,10 +22,11 @@ Use o `Makefile` na raiz para builds reprodutíveis por linguagem. Ajuste variá
 - Recomendação geral de testes: `cd python && pytest`, `cd rust && cargo test`, `cd cpp/build && ctest`, `cd interface && pytest`.
 - Java: `cd java/dcm4che-tests && mvn test` (exige JDK/ Maven e dependências baixadas).
 - C#: `cd cs && dotnet test` (exige .NET SDK).
-- JS (Cornerstone3D): siga scripts do workspace (`npm test`/`nx test`) conforme `js/cornerstone3d` se necessário.
+- JS: sem workspace clonado; quando houver projeto npm/nx, use os scripts definidos lá.
 
 ## Python (python/)
 - Dependências em `requirements.txt` (mínimos). Use `python -m pip install -e .` para dev. Para pin exato, use `pip-compile` gerando um lock (não commitado por padrão).
+- Dev/test: `pip install -r python/requirements-dev.txt` para `pytest` e `build`.
 - Testes: `pytest`.
 
 ## Rust (rust/)
@@ -45,4 +46,4 @@ Use o `Makefile` na raiz para builds reprodutíveis por linguagem. Ajuste variá
 ## C# (cs/) e Java (java/)
 - C#: preparar CLI fo-dicom seguindo contrato CLI/JSON; builds típicos usam `dotnet build` / `dotnet test`.
 - Java: integração dcm4chee; testes iniciais estão em `java/dcm4che-tests`.
-- JS: Cornerstone3D clonada em `js/cornerstone3d` para avaliação/integração futura.
+- JS: integração Cornerstone futura (sem repo clonado no momento).

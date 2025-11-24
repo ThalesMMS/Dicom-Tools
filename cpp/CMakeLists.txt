@@ -4,6 +4,8 @@ project(DicomToolsCpp)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(CTest)
+
 # Add local deps install dir to prefix path
 list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/deps/install")
 
@@ -145,4 +147,17 @@ if(GDCM_FOUND)
         target_link_directories(DicomTools PRIVATE ${GDCM_LIBRARY_DIRS})
     endif()
     target_link_libraries(DicomTools PRIVATE ${GDCM_LIBRARIES})
+endif()
+
+if(BUILD_TESTING)
+    find_package(Python3 COMPONENTS Interpreter)
+    if(Python3_Interpreter_FOUND)
+        add_test(
+            NAME cpp_run_all
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tests/run_all.py
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        )
+    else()
+        message(WARNING "Python3 not found; skipping cpp_run_all ctest")
+    endif()
 endif()

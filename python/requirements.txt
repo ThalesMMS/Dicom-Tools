@@ -12,10 +12,11 @@ pynetdicom>=2.0.0
 flask>=2.0.0
 flask-cors>=3.0.0
 
-# Extended DICOM stack
-gdcm>=3.0.0
-dicom-numpy>=0.5.0
-SimpleITK>=2.2.0
+# Extended DICOM stack (names as published on PyPI)
+# Note: package name is python-gdcm (not "gdcm") on PyPI
+python-gdcm>=3.2.0
+dicom-numpy>=0.6.5
+SimpleITK>=2.5.3
 
 # Optional: Development dependencies
 # Uncomment to install development tools

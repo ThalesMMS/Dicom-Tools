@@ -1,0 +1,7 @@
+#app {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #222;
+}

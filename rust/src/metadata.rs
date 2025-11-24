@@ -12,9 +12,10 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use dicom::core::Tag;
 use dicom::object::{open_file, DefaultDicomObject};
+use serde_json::to_string_pretty;
 
 use crate::dicom_access::ElementAccess;
-use crate::models::{BasicMetadata, DetailedMetadata, PixelFormatSummary};
+use crate::models::{BasicMetadata, DetailedMetadata, InfoReport, PixelFormatSummary};
 use crate::stats;
 
 fn text_for_tag<T: ElementAccess>(obj: &T, tag: Tag) -> Option<String> {
@@ -138,6 +139,19 @@ pub fn extract_detailed_metadata<T: ElementAccess>(obj: &T) -> DetailedMetadata 
     }
 }
 
+/// Produce a fully owned metadata bundle for CLI/JSON consumers.
+pub fn info_report(path: &Path) -> Result<InfoReport> {
+    let obj: DefaultDicomObject = open_file(path).context("Falha ao abrir arquivo DICOM")?;
+    build_info_report(path, &obj)
+}
+
+/// Serialize the info report into a pretty JSON string.
+pub fn info_to_json(path: &Path) -> Result<String> {
+    let report = info_report(path)?;
+    let json = to_string_pretty(&report).context("Falha ao serializar metadados para JSON")?;
+    Ok(json)
+}
+
 pub fn read_basic_metadata(path: &Path) -> Result<BasicMetadata> {
     let obj: DefaultDicomObject = open_file(path).context("Falha ao abrir arquivo DICOM")?;
     Ok(extract_basic_metadata(&obj))
@@ -148,14 +162,19 @@ pub fn read_detailed_metadata(path: &Path) -> Result<DetailedMetadata> {
     Ok(extract_detailed_metadata(&obj))
 }
 
-pub fn print_info(path: &Path, verbose: bool) -> Result<()> {
+pub fn print_info(path: &Path, verbose: bool, json: bool) -> Result<()> {
     let obj: DefaultDicomObject = open_file(path).context("Falha ao abrir arquivo DICOM")?;
-    let basic = extract_basic_metadata(&obj);
-    let pixel_format = if basic.has_pixel_data {
-        stats::pixel_format_for_file(path).ok()
-    } else {
-        None
-    };
+    let report = build_info_report(path, &obj)?;
+
+    if json {
+        let payload =
+            to_string_pretty(&report).context("Falha ao serializar metadados para JSON")?;
+        println!("{payload}");
+        return Ok(());
+    }
+
+    let basic = &report.basic;
+    let pixel_format = &report.pixel_format;
 
     println!("{}", "=".repeat(80));
     println!("DICOM File Information: {:?}", path.file_name().unwrap());
@@ -218,6 +237,22 @@ pub fn print_info(path: &Path, verbose: bool) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn build_info_report(path: &Path, obj: &DefaultDicomObject) -> Result<InfoReport> {
+    let basic = extract_basic_metadata(obj);
+    let detailed = extract_detailed_metadata(obj);
+    let pixel_format = if basic.has_pixel_data {
+        stats::pixel_format_for_file(path).ok()
+    } else {
+        None
+    };
+
+    Ok(InfoReport {
+        basic,
+        detailed,
+        pixel_format,
+    })
 }
 
 fn print_pixel_format(format: &PixelFormatSummary) {

@@ -31,6 +31,11 @@ pub fn dump_to_string(path: &Path, max_depth: usize, max_value_len: usize) -> Re
     Ok(out)
 }
 
+/// Render the entire dataset as standard DICOM JSON (lossless, includes sequences and pixel data).
+pub fn dump_to_json(path: &Path) -> Result<String> {
+    crate::json::to_json_string(path).context("Failed to render DICOM JSON")
+}
+
 fn dump_object(
     obj: &InMemDicomObject<StandardDataDictionary>,
     depth: usize,

@@ -45,6 +45,8 @@ CLIOptions ParseCLIArgs(int argc, char* argv[], const CommandRegistry& registry)
             } else {
                 std::cerr << "Missing value for --output" << std::endl;
             }
+        } else if (IsFlag(arg, "-j", "--json")) {
+            opts.json = true;
         } else if (opts.command.empty()) {
             opts.command = arg;
         } else {
@@ -76,6 +78,7 @@ void PrintUsage(std::ostream& os, const CommandRegistry& registry) {
     os << "  -i, --input <path>   Specify DICOM file or directory" << std::endl;
     os << "  -o, --output <dir>   Output directory (default: output)" << std::endl;
     os << "  -v, --verbose        Print extra details for commands" << std::endl;
+    os << "  -j, --json           Emit JSON outputs when supported (info/validate)" << std::endl;
     os << std::endl;
     os << "Commands:" << std::endl;
     // Leverage registry for up-to-date list so usage always matches capabilities

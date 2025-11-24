@@ -25,8 +25,13 @@ setup(
     url='https://github.com/ThalesMMS/Dicom-Tools',
     license='MIT',
 
-    packages=find_packages(),
+    packages=find_packages(include=["DICOM_reencoder", "DICOM_reencoder.*"]),
     include_package_data=True,
+    package_data={
+        "DICOM_reencoder": ["web_templates/*", "web_static/*"],
+        "DICOM_reencoder.web_templates": ["*"],
+        "DICOM_reencoder.web_static": ["*"],
+    },
 
     python_requires='>=3.9',
 
@@ -115,7 +120,6 @@ setup(
         'Development Status :: 4 - Beta',
         'Intended Audience :: Healthcare Industry',
         'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.9',

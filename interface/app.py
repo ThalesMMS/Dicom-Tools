@@ -8,12 +8,15 @@ from .adapters import get_adapter
 
 BACKENDS = ["python", "rust", "cpp"]
 OPERATIONS = ["info", "anonymize", "to_image", "transcode", "validate", "echo", "stats", "dump", "volume", "nifti"]
+IMAGE_EXTS = {".png", ".pgm", ".ppm", ".jpg", ".jpeg"}
 
 
 class TkApp:
     def __init__(self) -> None:
         self.root = tk.Tk()
         self.root.title("Dicom Tools – UI unificada (CLI/JSON)")
+        self.status_var = tk.StringVar(value="Pronto")
+        self.preview_img = None
         self._build_form()
 
     def _build_form(self) -> None:
@@ -54,6 +57,14 @@ class TkApp:
         self.result_text = tk.Text(frm, height=18, width=80)
         self.result_text.grid(row=6, column=1, columnspan=2, sticky="nsew")
 
+        ttk.Label(frm, text="Status").grid(row=7, column=0, sticky="w")
+        self.status_label = ttk.Label(frm, textvariable=self.status_var)
+        self.status_label.grid(row=7, column=1, sticky="w")
+
+        ttk.Label(frm, text="Preview (imagem)").grid(row=8, column=0, sticky="nw")
+        self.preview_label = ttk.Label(frm)
+        self.preview_label.grid(row=8, column=1, columnspan=2, sticky="w")
+
         for col in range(3):
             frm.columnconfigure(col, weight=1)
         frm.rowconfigure(6, weight=1)
@@ -69,6 +80,10 @@ class TkApp:
         if path:
             self.output_entry.delete(0, tk.END)
             self.output_entry.insert(0, path)
+
+    def _require_input(self, op: str) -> bool:
+        # echo não precisa de input; os demais sim (arquivo ou diretório)
+        return op not in {"echo"}
 
     def _parse_options(self) -> dict:
         text = self.options_text.get("1.0", tk.END).strip()
@@ -87,8 +102,12 @@ class TkApp:
         output_path = self.output_entry.get().strip() or None
         options = self._parse_options()
 
-        if not input_path:
+        if self._require_input(op) and not input_path:
             messagebox.showerror("Erro", "Informe o caminho de entrada")
+            return
+
+        if self._require_input(op) and not Path(input_path).exists():
+            messagebox.showerror("Erro", f"Caminho de entrada não existe:\n{input_path}")
             return
 
         try:
@@ -105,8 +124,16 @@ class TkApp:
             "options": options,
         }
 
-        result = adapter.handle(request)
-        self._render_result(result)
+        self._set_status("Executando...")
+        self.run_button.state(["disabled"])
+        try:
+            result = adapter.handle(request)
+            self._render_result(result)
+        except Exception as exc:
+            messagebox.showerror("Erro de execução", str(exc))
+            self._set_status("Falha")
+        finally:
+            self.run_button.state(["!disabled"])
 
     def _render_result(self, result) -> None:
         payload = result.as_dict() if hasattr(result, "as_dict") else result
@@ -115,6 +142,28 @@ class TkApp:
 
         if not result.ok:
             messagebox.showwarning("Falha", f"Comando retornou código {result.returncode}")
+            self._set_status("Falha")
+        else:
+            self._set_status("Sucesso")
+        self._render_preview(result)
+
+    def _render_preview(self, result) -> None:
+        # Exibe primeira imagem gerada (png/pgm/ppm/jpeg)
+        self.preview_img = None
+        self.preview_label.configure(image="", text="")
+        files = getattr(result, "output_files", []) or []
+        for file in files:
+            path = Path(file)
+            if path.suffix.lower() in IMAGE_EXTS and path.exists():
+                try:
+                    self.preview_img = tk.PhotoImage(file=str(path))
+                    self.preview_label.configure(image=self.preview_img, text="")
+                except Exception:
+                    self.preview_label.configure(text=f"Pré-visualização indisponível: {path.name}")
+                break
+
+    def _set_status(self, msg: str) -> None:
+        self.status_var.set(msg)
 
     def run(self) -> None:
         self.root.mainloop()

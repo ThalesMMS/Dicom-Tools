@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -123,5 +124,117 @@ public class InMemoryStoreScp : DicomService, IDicomServiceProvider, IDicomCStor
 
     public void OnConnectionClosed(Exception exception)
     {
+    }
+}
+
+internal sealed record CliResult(int ExitCode, string Stdout, string Stderr);
+
+internal static class CliRunner
+{
+    private static string? _cachedCliPath;
+
+    internal static CliResult Run(params string[] args)
+    {
+        var dllPath = EnsureCliBuilt();
+        var psi = new ProcessStartInfo("dotnet")
+        {
+            WorkingDirectory = LocateCsRoot(),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        psi.ArgumentList.Add(dllPath);
+        foreach (var arg in args)
+        {
+            psi.ArgumentList.Add(arg);
+        }
+
+        using var process = Process.Start(psi)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        return new CliResult(process.ExitCode, stdout.Trim(), stderr.Trim());
+    }
+
+    private static string EnsureCliBuilt()
+    {
+        if (_cachedCliPath != null && File.Exists(_cachedCliPath))
+        {
+            return _cachedCliPath;
+        }
+
+        var csRoot = LocateCsRoot();
+        var existing = FindBuiltCli(csRoot);
+        if (existing != null)
+        {
+            _cachedCliPath = existing;
+            return existing;
+        }
+
+        BuildCli(csRoot);
+        existing = FindBuiltCli(csRoot);
+        if (existing == null)
+        {
+            throw new FileNotFoundException("Could not locate built CLI after build command.");
+        }
+
+        _cachedCliPath = existing;
+        return existing;
+    }
+
+    private static void BuildCli(string csRoot)
+    {
+        var psi = new ProcessStartInfo("dotnet")
+        {
+            WorkingDirectory = csRoot,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        psi.ArgumentList.Add("build");
+        psi.ArgumentList.Add("DicomTools.Cli/DicomTools.Cli.csproj");
+
+        using var process = Process.Start(psi)!;
+        var stdout = process.StandardOutput.ReadToEnd();
+        var stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+        if (process.ExitCode != 0)
+        {
+            throw new InvalidOperationException($"Failed to build CLI: {stdout}\n{stderr}");
+        }
+    }
+
+    private static string? FindBuiltCli(string csRoot)
+    {
+        var targets = new[] { "net10.0", "net8.0" };
+        foreach (var target in targets)
+        {
+            var candidate = Path.Combine(csRoot, "bin", "Debug", target, "DicomTools.Cli.dll");
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static string LocateCsRoot()
+    {
+        var current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            var candidate = Path.Combine(current.FullName, "DicomTools.sln");
+            if (File.Exists(candidate))
+            {
+                return current.FullName;
+            }
+
+            current = current.Parent;
+        }
+
+        throw new DirectoryNotFoundException("Could not locate cs root containing DicomTools.sln");
     }
 }

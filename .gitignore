@@ -44,6 +44,11 @@ cpp/CMakeFiles/
 cs/bin/
 cs/obj/
 cs/.vs/
+cs/**/TestResults/
+cs/**/TestResult.xml
+cs/**/coverage.cobertura.xml
+cs/**/coverage.opencover.xml
+cs/**/Coverlet*/
 
 # Java
 java/target/
@@ -64,3 +69,9 @@ js/**/coverage/
 output/
 tmp/
 *.tmp
+artifacts/
+/java/dcm4che-tests/target
+/cs/DicomTools.Tests/obj
+/cs/DicomTools.Tests/bin
+/cs/DicomTools.Cli/obj
+/cs/DicomTools.Cli/bin

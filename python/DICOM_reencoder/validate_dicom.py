@@ -32,22 +32,24 @@ class DicomValidator:
         self.warnings = []
         self.info = []
 
-    def validate_file(self, file_path):
+    def validate_file(self, file_path, *, display: bool = True):
         """
         Validate a DICOM file.
 
         Args:
             file_path: Path to DICOM file to validate
+            display: Whether to print validation output (defaults to True)
 
         Returns:
             True if valid (no errors), False otherwise
         """
         self._reset()
 
-        print(f"\n{'='*80}")
-        print(f"DICOM File Validation")
-        print(f"{'='*80}")
-        print(f"File: {file_path}\n")
+        if display:
+            print(f"\n{'='*80}")
+            print("DICOM File Validation")
+            print(f"{'='*80}")
+            print(f"File: {file_path}\n")
 
         # Check if file exists
         if not os.path.exists(file_path):
@@ -71,7 +73,7 @@ class DicomValidator:
             return False
 
         self._validate_preamble(file_path)
-        return self.validate_dataset(dataset, file_path=file_path)
+        return self.validate_dataset(dataset, file_path=file_path, display=display)
 
     def validate_dataset(self, dataset: pydicom.dataset.Dataset, *, file_path: Optional[str] = None,
                          display: bool = True) -> bool:

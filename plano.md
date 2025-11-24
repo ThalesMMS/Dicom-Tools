@@ -15,5 +15,5 @@ Legenda: [ ] pendente | [x] concluído
 11. [ ] Empacotamento e distribuição: wheels Python, binários Rust/C++, script `scripts/setup_all.sh`.
 12. [ ] CI/CD unificado: pipeline com build/lint/test de todos e testes de integração do contrato.
 13. [ ] (Antipenúltima) Testar tudo: checklist completo de funcionalidades expostas, comparação entre backends quando aplicável, validação manual da UI.
-14. [ ] (Penúltima) Integrar Java (dcm4chee) no contrato: CLI/REST fino + wrapper `interface/adapters/java_cli.py` (testes iniciais já rodados em `java/dcm4che-tests`).
-15. [ ] (Última) Integrar C# (fo-dicom) no contrato: implementar CLI/JSON no projeto `cs/`, adicionar wrapper `interface/adapters/csharp_cli.py`, cobrir nos testes (projeto de testes inicial existe em `cs/DicomTools.Tests`).
+14. [ ] (Penúltima) Integrar Java (dcm4chee) no contrato: CLI/REST fino + wrapper `interface/adapters/java_cli.py` (testes iniciais já rodados em `java/dcm4che-tests`, mvn test ok).
+15. [ ] (Última) Integrar C# (fo-dicom) no contrato: CLI/JSON em `cs/` + wrapper `interface/adapters/csharp_cli.py` (dotnet test ok; falta validar/alinhar contrato e distribuição).

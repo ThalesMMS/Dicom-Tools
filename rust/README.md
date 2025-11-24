@@ -111,3 +111,11 @@ cargo run -- web --host 127.0.0.1 --port 3000
 - **Code Style:** Adhere strictly to `rustfmt` and `clippy` defaults.
 - **Error Handling:** Use `anyhow` for top-level error reporting.
 - **Safety:** Do not commit real Protected Health Information (PHI). Use synthetic or anonymized DICOM data for testing.
+
+## Release Packaging
+
+- Release profile enforces `codegen-units = 1` and disables incremental builds for reproducibility.
+- Build release binary with locked dependencies: `cargo build --release --locked`.
+- For deterministic outputs, set `SOURCE_DATE_EPOCH` and disable incremental builds: `CARGO_PROFILE_RELEASE_INCREMENTAL=false cargo build --release --locked`.
+- Optionally strip symbols after the build to shrink the artifact: `strip target/release/dicom-tools` (or `llvm-strip` on macOS).
+- Package the binary with a normalized timestamp to keep archives reproducible: `tar --owner=0 --group=0 --mtime="@${SOURCE_DATE_EPOCH:-$(date +%s)}" -czf dicom-tools-${VERSION:-local}-$(uname -m).tar.gz -C target/release dicom-tools`.

@@ -13,6 +13,8 @@ Variáveis de ambiente opcionais para apontar binários:
 - `PYTHON_DICOM_TOOLS_CMD` (default `python -m DICOM_reencoder.cli`, cwd `python/`)
 - `RUST_DICOM_TOOLS_BIN` (default `rust/target/release/dicom-tools`; fallback `cargo run --release --`)
 - `CPP_DICOM_TOOLS_BIN` (default `cpp/build/DicomTools`)
+- `CS_DICOM_TOOLS_CMD` (default `cs/bin/Release/net8.0/DicomTools.Cli`)
+- `JAVA_DICOM_TOOLS_CMD` (default `java/dcm4che-tests/target/dcm4che-tests.jar` via `java -jar`)
 
 ## Usando a UI Tkinter
 ```bash

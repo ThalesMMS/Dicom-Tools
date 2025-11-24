@@ -6,13 +6,15 @@
 //
 // Thales Matheus Mendonça Santos - November 2025
 
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 use dicom::core::{DataElement, PrimitiveValue, Tag, VR};
 use dicom::dictionary_std::StandardDataDictionary;
 use dicom::object::{FileDicomObject, FileMetaTableBuilder, InMemDicomObject};
-use dicom::transfer_syntax::entries::EXPLICIT_VR_LITTLE_ENDIAN;
-use dicom_tools::{anonymize, image, json, metadata, stats, transcode, validate};
+use dicom::transfer_syntax::entries::{EXPLICIT_VR_LITTLE_ENDIAN, IMPLICIT_VR_LITTLE_ENDIAN};
+use dicom_tools::models::InfoReport;
+use dicom_tools::{anonymize, dump, image, json, metadata, scu, stats, transcode, validate};
+use serde_json::Value;
 use tempfile::{tempdir, TempDir};
 
 fn build_test_dicom() -> (TempDir, PathBuf) {
@@ -230,6 +232,38 @@ fn transcode_to_implicit_vr_le_changes_meta() {
 }
 
 #[test]
+fn transcode_handles_all_uncompressed_variants() {
+    let (_dir, path) = build_test_dicom();
+    let baseline = stats::pixel_statistics_for_file(&path).expect("baseline stats");
+
+    let variants = [
+        (
+            transcode::UncompressedTransferSyntax::ExplicitVRLittleEndian,
+            EXPLICIT_VR_LITTLE_ENDIAN.uid(),
+            "explicit",
+        ),
+        (
+            transcode::UncompressedTransferSyntax::ImplicitVRLittleEndian,
+            IMPLICIT_VR_LITTLE_ENDIAN.uid(),
+            "implicit",
+        ),
+    ];
+
+    for (syntax, expected_uid, label) in variants {
+        let output = path.with_file_name(format!("sample_transcoded_{label}.dcm"));
+        transcode::transcode(&path, &output, syntax).expect("transcode variant");
+        let stats_out = stats::pixel_statistics_for_file(&output).expect("stats");
+
+        assert_eq!(baseline.total_pixels, stats_out.total_pixels);
+        assert!((baseline.min - stats_out.min).abs() < f32::EPSILON);
+        assert!((baseline.max - stats_out.max).abs() < f32::EPSILON);
+
+        let transcoded = dicom::object::open_file(&output).expect("open transcoded");
+        assert_eq!(transcoded.meta().transfer_syntax(), expected_uid);
+    }
+}
+
+#[test]
 fn json_roundtrip_preserves_pixels_and_attributes() {
     let (_dir, path) = build_test_dicom();
     let json_path = path.with_file_name("sample.json");
@@ -280,12 +314,49 @@ fn basic_metadata_exposes_dimensions_and_frames() {
 }
 
 #[test]
+fn info_json_includes_basic_and_pixel_format() {
+    let (_dir, path) = build_test_dicom();
+    let json_str = metadata::info_to_json(&path).expect("info json");
+
+    let report: InfoReport = serde_json::from_str(&json_str).expect("deserialize info report");
+    assert_eq!(report.basic.patient_name.as_deref(), Some("Test^Patient"));
+    assert_eq!(
+        report.detailed.patient.get("Name").map(String::as_str),
+        Some("Test^Patient")
+    );
+    assert!(report.pixel_format.is_some());
+}
+
+#[test]
+fn dump_json_contains_standard_tags() {
+    let (_dir, path) = build_test_dicom();
+    let json_str = dump::dump_to_json(&path).expect("dump json");
+    let value: Value = serde_json::from_str(&json_str).expect("parse json");
+
+    assert_eq!(value["00080060"]["Value"][0].as_str(), Some("OT"));
+    assert_eq!(
+        value["00100010"]["Value"][0]["Alphabetic"].as_str(),
+        Some("Test^Patient")
+    );
+}
+
+#[test]
 fn histogram_counts_align_with_pixels() {
     let (_dir, path) = build_test_dicom();
     let histogram = stats::histogram_for_file(&path, 8).expect("histogram");
     let total: u64 = histogram.bins.iter().sum();
     assert_eq!(total, 4);
+    assert_eq!(histogram.bins.len(), 8);
     assert!(histogram.max >= histogram.min);
+}
+
+#[test]
+fn histogram_respects_requested_bins() {
+    let (_dir, path) = build_test_dicom();
+    let histogram = stats::histogram_for_file(&path, 4).expect("histogram");
+
+    assert_eq!(histogram.bins.len(), 4);
+    assert_eq!(histogram.bins, vec![1, 1, 1, 1]);
 }
 
 #[test]
@@ -301,4 +372,19 @@ fn pixel_format_summary_includes_window_and_rescale() {
     assert_eq!(details.rescale_slope, Some(2.0));
     assert_eq!(details.window_center, Some(50.0));
     assert_eq!(details.window_width, Some(150.0));
+}
+
+#[test]
+#[ignore = "Requires TEST_PACS_ADDR pointing to host:port for C-ECHO"]
+fn echo_against_configured_pacs() {
+    let addr = env::var("TEST_PACS_ADDR").expect("TEST_PACS_ADDR not set");
+    scu::echo(&addr).expect("echo");
+}
+
+#[test]
+#[ignore = "Requires TEST_PACS_ADDR pointing to host:port for C-STORE"]
+fn push_against_configured_pacs() {
+    let addr = env::var("TEST_PACS_ADDR").expect("TEST_PACS_ADDR not set");
+    let (_dir, path) = build_test_dicom();
+    scu::push(&addr, &path).expect("push");
 }

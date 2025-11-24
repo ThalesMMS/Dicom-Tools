@@ -6,8 +6,8 @@
 - `rust/`: Rust CLI/web (`dicom-tools`). Integration tests in `rust/tests/`.
 - `interface/`: Tkinter UI + contract adapters (CLI/JSON).
 - `cs/`: Forthcoming fo-dicom integration (C#).
-- `java/`: dcm4chee integration (tests iniciais prontos).
-- `js/`: Cornerstone3D workspace (clonado para avaliação/integração).
+- `java/`: integração dcm4chee (repo removido; só tarefas por enquanto).
+- `js/`: integração Cornerstone (sem repo; só tarefas/guia).
 - `scripts/`: utilitários (ex.: `setup_all.sh` para builds Python/Rust/C++).
 - `sample_series/`: Example DICOM data (if present).
 - `plano.md`, `STRUCTURE.md`: planning and layout docs.
@@ -38,7 +38,7 @@
 - C#: `dotnet test` em `cs/DicomTools.Tests` (fo-dicom).
 - Java: `mvn test` em `java/dcm4che-tests` (quando ativo).
 - UI/contract: add integration tests invoking `interface.contract_runner` to validate responses and outputs.
-- JS: seguir scripts do workspace Cornerstone3D (nx/jest) se aplicável.
+- JS: quando houver projeto, seguir scripts npm/nx configurados; hoje não há workspace clonado.
 - Sugerido: `cd python && pytest`; `cd rust && cargo test`; `cd cpp && ctest` ou `python tests/run_all.py`; `cd interface && pytest`; `dotnet test cs/DicomTools.Tests`; `cd java/dcm4che-tests && mvn test` (quando configurado); scripts npm/nx no `js/` se necessário.
 - Artefatos: siga `interface/ARTIFACTS.md` para nomes/diretórios padrão; mantenha stdout curto e use stderr para logs detalhados.
 

@@ -14,6 +14,25 @@
 #ifdef USE_DCMTK
 
 void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
+    registry.Register({
+        "validate",
+        "General",
+        "Validate DICOM structure and required identifiers (--json for machine-readable report)",
+        [](const CommandContext& ctx) {
+            return ValidateDicomFile(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
+        }
+    });
+
+    registry.Register({
+        "info",
+        "General",
+        "Export DICOM metadata summary (--json to emit dcmtk_metadata.json)",
+        [](const CommandContext& ctx) {
+            TestMetadataReport(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
+            return 0;
+        }
+    });
+
     // Composite command to run every DCMTK demo action in one go
     registry.Register({
         "test-dcmtk",
@@ -27,10 +46,11 @@ void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
             TestRLEReencode(ctx.inputPath, ctx.outputDir);
             TestRawDump(ctx.inputPath, ctx.outputDir);
             TestExplicitVRRewrite(ctx.inputPath, ctx.outputDir);
-            TestMetadataReport(ctx.inputPath, ctx.outputDir);
+            TestMetadataReport(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
             TestBMPPreview(ctx.inputPath, ctx.outputDir);
             TestDICOMDIRGeneration(ctx.inputPath, ctx.outputDir);
             TestSegmentationExport(ctx.inputPath, ctx.outputDir);
+            ValidateDicomFile(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
             return 0;
         }
     });
@@ -110,7 +130,7 @@ void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
         "DCMTK",
         "Export common metadata fields to text",
         [](const CommandContext& ctx) {
-            TestMetadataReport(ctx.inputPath, ctx.outputDir);
+            TestMetadataReport(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
             return 0;
         }
     });
@@ -142,6 +162,15 @@ void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
         [](const CommandContext& ctx) {
             TestSegmentationExport(ctx.inputPath, ctx.outputDir);
             return 0;
+        }
+    });
+
+    registry.Register({
+        "dcmtk:validate",
+        "DCMTK",
+        "Validate DICOM attributes and write validation report",
+        [](const CommandContext& ctx) {
+            return ValidateDicomFile(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
         }
     });
 }

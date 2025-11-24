@@ -19,4 +19,5 @@ struct CLIOptions {
     bool modules{false};
     bool help{false};
     bool verbose{false};
+    bool json{false};
 };

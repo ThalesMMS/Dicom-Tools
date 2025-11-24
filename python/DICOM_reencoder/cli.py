@@ -18,6 +18,7 @@ from . import web_interface
 from .anonymize_dicom import anonymize_dicom
 from .core import calculate_statistics, frame_to_png_bytes, load_dataset, save_dataset, summarize_metadata
 from .core.network import send_c_echo
+from .validate_dicom import DicomValidator
 
 
 def cmd_summary(args: argparse.Namespace) -> None:
@@ -33,6 +34,10 @@ def cmd_summary(args: argparse.Namespace) -> None:
     print("Series   ", summary["series"])
     print("Image    ", summary["image"])
 
+    if getattr(args, "verbose", False):
+        print()
+        print(json.dumps(summary, indent=2))
+
 
 def cmd_stats(args: argparse.Namespace) -> None:
     dataset = load_dataset(args.file)
@@ -46,14 +51,26 @@ def cmd_png(args: argparse.Namespace) -> None:
     dataset = load_dataset(args.file)
     png_bytes = frame_to_png_bytes(dataset, frame_index=args.frame)
     png_bytes.seek(0)
-    output = Path(args.output or f"{Path(args.file).stem}.png")
-    output.write_bytes(png_bytes.read())
+
+    ext = "jpg" if args.format == "jpeg" else "png"
+    output = Path(args.output or f"{Path(args.file).stem}.{ext}")
+    if output.suffix.lower() not in {".png", ".jpg", ".jpeg"}:
+        output = output.with_suffix(f".{ext}")
+
+    if args.format == "jpeg":
+        from PIL import Image
+
+        image = Image.open(png_bytes).convert("RGB")
+        image.save(output, format="JPEG", quality=95)
+    else:
+        output.write_bytes(png_bytes.read())
+
     print(f"Saved {output}")
 
 
 def cmd_anonymize(args: argparse.Namespace) -> None:
     inferred_output = args.output or str(Path(args.file).with_name(f"{Path(args.file).stem}_anonymized{Path(args.file).suffix}"))
-    anonymize_dicom(args.file, args.output)
+    anonymize_dicom(args.file, inferred_output)
     print(f"Anonymized file written to {inferred_output}")
 
 
@@ -109,23 +126,50 @@ def cmd_transcode(args: argparse.Namespace) -> None:
     print(f"Transcoded DICOM written to {output_path}")
 
 
+def cmd_validate(args: argparse.Namespace) -> None:
+    validator = DicomValidator()
+    ok = validator.validate_file(args.file, display=False)
+    result = {
+        "ok": bool(ok),
+        "errors": validator.errors,
+        "warnings": validator.warnings,
+        "info": validator.info,
+    }
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+        return
+
+    status = "VALID" if ok else "INVALID"
+    print(f"{args.file}: {status}")
+    for message in validator.errors:
+        print(f"ERROR: {message}")
+    if args.include_info:
+        for message in validator.info:
+            print(f"INFO: {message}")
+    for message in validator.warnings:
+        print(f"WARNING: {message}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="dicom-tools", description="Multi-tool CLI for DICOM utilities")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    summary = sub.add_parser("summary", help="Print condensed DICOM metadata")
-    summary.add_argument("file", help="Path to a DICOM file")
-    summary.add_argument("--json", action="store_true", help="Emit JSON metadata")
-    summary.set_defaults(func=cmd_summary)
+    info = sub.add_parser("info", aliases=["summary"], help="Print condensed DICOM metadata")
+    info.add_argument("file", help="Path to a DICOM file")
+    info.add_argument("--json", action="store_true", help="Emit JSON metadata")
+    info.add_argument("--verbose", action="store_true", help="Show full JSON summary even in text mode")
+    info.set_defaults(func=cmd_summary)
 
     stats = sub.add_parser("stats", help="Compute pixel statistics for a DICOM file")
     stats.add_argument("file")
     stats.set_defaults(func=cmd_stats)
 
-    png = sub.add_parser("png", help="Export a frame to PNG")
+    png = sub.add_parser("to_image", aliases=["png"], help="Export a frame to PNG or JPEG")
     png.add_argument("file")
     png.add_argument("--frame", type=int, default=0, help="Frame index for multi-frame datasets")
-    png.add_argument("-o", "--output", help="Output PNG path")
+    png.add_argument("--format", choices=["png", "jpeg"], default="png", help="Output image format")
+    png.add_argument("-o", "--output", help="Output image path")
     png.set_defaults(func=cmd_png)
 
     anonymize = sub.add_parser("anonymize", help="Anonymize a DICOM file")
@@ -165,6 +209,12 @@ def main() -> None:
     transcode.add_argument("--syntax", default="explicit",
                            help="Target syntax: explicit, implicit, deflated, jpeg-lossless, jpeg2000-lossless, rle")
     transcode.set_defaults(func=cmd_transcode)
+
+    validate = sub.add_parser("validate", help="Validate a DICOM file for required metadata and transfer syntax")
+    validate.add_argument("file", help="Input DICOM file")
+    validate.add_argument("--json", action="store_true", help="Emit structured validation results")
+    validate.add_argument("--include-info", action="store_true", help="Print informational checks in text mode")
+    validate.set_defaults(func=cmd_validate)
 
     args = parser.parse_args()
     args.func(args)

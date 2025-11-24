@@ -86,6 +86,7 @@ if run_test("test-dcmtk", "DCMTK Features"):
     require_file("dcmtk_raw_dump.bin")
     require_file("dcmtk_explicit_vr.dcm")
     require_file("dcmtk_metadata.txt")
+    require_file("validate.txt")
     require_file("dcmtk_preview.bmp")
     require_file("dcmtk_segmentation.dcm")
     require_file("dicomdir_media/DICOMDIR")

@@ -40,3 +40,43 @@ def test_cpp_preview():
     payload = json.loads(result.stdout)
     assert payload["ok"] is True
     assert any(str(f).endswith(".pgm") for f in payload.get("output_files", []))
+
+
+@pytest.mark.skipif(not SAMPLE.exists(), reason="sample_series missing")
+def test_python_anonymize(tmp_path: Path):
+    out = tmp_path / "anon.dcm"
+    cmd = RUNNER + ["--backend", "python", "--op", "anonymize", "--input", str(SAMPLE), "--output", str(out)]
+    result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is True
+    assert out.exists()
+
+
+@pytest.mark.skipif(not SAMPLE.exists(), reason="sample_series missing")
+def test_rust_transcode(tmp_path: Path):
+    out = tmp_path / "transcoded.dcm"
+    cmd = RUNNER + [
+        "--backend",
+        "rust",
+        "--op",
+        "transcode",
+        "--input",
+        str(SAMPLE),
+        "--output",
+        str(out),
+        "--options",
+        json.dumps({"syntax": "explicit-vr-little-endian"}),
+    ]
+    result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is True
+    assert out.exists()
+
+
+def test_invalid_backend():
+    cmd = RUNNER + ["--backend", "unknown", "--op", "info", "--input", "file.dcm"]
+    result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
+    assert result.returncode != 0
+    assert result.stderr

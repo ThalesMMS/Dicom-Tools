@@ -30,6 +30,8 @@ pub enum Commands {
         file: PathBuf,
         #[arg(short, long)]
         verbose: bool,
+        #[arg(long, help = "Emit metadata as JSON instead of plain text")]
+        json: bool,
     },
     /// Anonymize a DICOM file
     Anonymize {
@@ -38,6 +40,7 @@ pub enum Commands {
         output: Option<PathBuf>,
     },
     /// Convert to an image (similar to convert_to_image.py)
+    #[command(alias = "to_image")]
     ToImage {
         input: PathBuf,
         #[arg(short, long)]
@@ -102,6 +105,7 @@ pub enum Commands {
             long,
             value_enum,
             default_value_t = TransferSyntax::ExplicitVrLittleEndian,
+            visible_alias = "syntax",
             help = "Target transfer syntax (uncompressed only)"
         )]
         transfer_syntax: TransferSyntax,
@@ -117,10 +121,12 @@ pub enum Commands {
     /// Dump the whole DICOM dataset
     Dump {
         file: PathBuf,
-        #[arg(long, default_value_t = 4)]
+        #[arg(long, default_value_t = 4, visible_alias = "depth")]
         max_depth: usize,
         #[arg(long, default_value_t = 64)]
         max_value_len: usize,
+        #[arg(long, help = "Emit dataset as DICOM JSON instead of text")]
+        json: bool,
     },
 }
 
@@ -154,7 +160,11 @@ pub async fn run() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Info { file, verbose } => metadata::print_info(&file, verbose)?,
+        Commands::Info {
+            file,
+            verbose,
+            json,
+        } => metadata::print_info(&file, verbose, json)?,
         Commands::Anonymize { input, output } => anonymize::process_file(&input, output)?,
         Commands::ToImage {
             input,
@@ -230,8 +240,14 @@ pub async fn run() -> anyhow::Result<()> {
             file,
             max_depth,
             max_value_len,
+            json,
         } => {
-            dump::dump_file(&file, max_depth, max_value_len)?;
+            if json {
+                let output = dump::dump_to_json(&file)?;
+                println!("{output}");
+            } else {
+                dump::dump_file(&file, max_depth, max_value_len)?;
+            }
         }
     }
 

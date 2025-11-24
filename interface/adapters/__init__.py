@@ -2,6 +2,8 @@
 from .python_cli import PythonCliAdapter
 from .rust_cli import RustCliAdapter
 from .cpp_cli import CppCliAdapter
+from .csharp_cli import CSharpCliAdapter
+from .java_cli import JavaCliAdapter
 
 
 def get_adapter(backend: str):
@@ -12,4 +14,8 @@ def get_adapter(backend: str):
         return RustCliAdapter()
     if backend == "cpp":
         return CppCliAdapter()
+    if backend in {"csharp", "cs", "dotnet"}:
+        return CSharpCliAdapter()
+    if backend == "java":
+        return JavaCliAdapter()
     raise ValueError(f"Backend não suportado: {backend}")

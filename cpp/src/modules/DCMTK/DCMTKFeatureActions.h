@@ -18,9 +18,10 @@ namespace DCMTKTests {
     void TestLosslessJPEGReencode(const std::string& filename, const std::string& outputDir);
     void TestRawDump(const std::string& filename, const std::string& outputDir);
     void TestExplicitVRRewrite(const std::string& filename, const std::string& outputDir);
-    void TestMetadataReport(const std::string& filename, const std::string& outputDir);
+    void TestMetadataReport(const std::string& filename, const std::string& outputDir, bool jsonOutput = false);
     void TestRLEReencode(const std::string& filename, const std::string& outputDir);
     void TestJPEGBaseline(const std::string& filename, const std::string& outputDir);
     void TestBMPPreview(const std::string& filename, const std::string& outputDir);
     void TestSegmentationExport(const std::string& filename, const std::string& outputDir);
+    int ValidateDicomFile(const std::string& filename, const std::string& outputDir, bool jsonOutput);
 }

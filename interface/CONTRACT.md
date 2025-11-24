@@ -44,7 +44,7 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 - **Rust** (`rust/target/release/dicom-tools` ou `cargo run --release -- ...`): `info`, `anonymize`, `to_image` (`to-image`), `transcode`, `validate` (`validate`), `echo` (`echo`), `dump` (`dump`), `stats` (`stats`/`histogram`).  
 - **C++** (`cpp/build/DicomTools`): `info/dump -> gdcm:dump`, `anonymize -> gdcm:anonymize`, `to_image -> gdcm:preview`, `stats -> gdcm:stats`, `transcode -> gdcm:transcode-j2k|gdcm:transcode-rle|gdcm:jpegls` (mapeado por `options.syntax`), `validate -> gdcm:dump` (proxy até existir comando dedicado).  
 - **Java (dcm4chee)**: a ser integrado na etapa penúltima; expectativa é expor um CLI/REST que aceite o mesmo envelope e devolva JSON.  
-- **C# (fo-dicom)**: a ser integrado na última etapa, seguindo o mesmo contrato CLI/JSON.
+- **C# (fo-dicom)**: esqueleto de wrapper em `interface/adapters/csharp_cli.py`; exige um CLI em `cs/` que implemente as operações do contrato (nomes equivalentes aos demais backends).
 
 ## Binaries e variáveis de ambiente
 - `PYTHON_DICOM_TOOLS_CMD` (padrão: `python -m DICOM_reencoder.cli`, cwd=`python/`)

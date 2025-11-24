@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Execute the selected command in the shared context
-    CommandContext ctx{inputPath, options.outputDir, options.verbose};
+    CommandContext ctx{inputPath, options.outputDir, options.verbose, options.json};
     int result = registry.Run(options.command, ctx);
 
     std::cout << "========================================" << std::endl;
