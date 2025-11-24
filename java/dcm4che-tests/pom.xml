@@ -9,7 +9,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <dcm4che.version>5.34.2</dcm4che.version>
+    <dcm4che.version>5.34.1</dcm4che.version>
     <junit.version>5.10.2</junit.version>
   </properties>
 

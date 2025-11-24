@@ -45,7 +45,7 @@ jobs:
       - name: Restore & test (net8)
         run: |
           cd cs
-          dotnet test DicomTools.Tests/DicomTools.Tests.csproj -p:TargetFrameworks=net8.0
+          dotnet test DicomTools.Tests/DicomTools.Tests.csproj -p:TargetFramework=net8.0
 
   java:
     runs-on: ubuntu-latest
