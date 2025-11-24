@@ -17,6 +17,7 @@ Use o `Makefile` na raiz para builds reprodutíveis por linguagem. Ajuste variá
 - `make cpp-test` — roda `ctest` em `cpp/build` (se configurado).
 - `make interface-run` — abre a UI Tkinter (`interface/app.py`).
 - `make all` — `python-install`, `rust-build`, `cpp-build`.
+- Script único: `scripts/setup_all.sh` (instala Python editável, builda Rust release e C++ release, cria symlink `cpp/input -> sample_series` se houver).
 - Interface tests: `cd interface && pytest` (requer backends buildados e `sample_series/` presente).
 - Recomendação geral de testes: `cd python && pytest`, `cd rust && cargo test`, `cd cpp/build && ctest`, `cd interface && pytest`.
 - Java: `cd java/dcm4che-tests && mvn test` (exige JDK/ Maven e dependências baixadas).

@@ -8,6 +8,7 @@
 - `cs/`: Forthcoming fo-dicom integration (C#).
 - `java/`: dcm4chee integration (tests iniciais prontos).
 - `js/`: Cornerstone3D workspace (clonado para avaliação/integração).
+- `scripts/`: utilitários (ex.: `setup_all.sh` para builds Python/Rust/C++).
 - `sample_series/`: Example DICOM data (if present).
 - `plano.md`, `STRUCTURE.md`: planning and layout docs.
 
