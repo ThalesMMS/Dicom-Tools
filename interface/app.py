@@ -47,6 +47,46 @@ BACKEND_OPS = {
     "js": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo"],
 }
 
+BACKEND_LIBRARIES = {
+    "python": {
+        "dicom_reencoder": BACKEND_OPS["python"],
+        "pydicom": ["info", "anonymize", "to_image", "transcode", "validate", "dump", "stats"],
+        "pynetdicom": ["echo"],
+        "python-gdcm": ["to_image", "transcode", "validate"],
+        "simpleitk": ["volume", "nifti", "to_image"],
+        "dicom-numpy": ["volume", "nifti", "stats"],
+    },
+    "rust": {"dicom-rs": BACKEND_OPS["rust"]},
+    "cpp": {
+        "gdcm": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
+        "dcmtk": ["info", "anonymize", "to_image", "transcode", "validate", "dump"],
+        "itk": ["to_image", "validate", "stats"],
+        "vtk": [
+            "vtk_export",
+            "vtk_nifti",
+            "vtk_isosurface",
+            "vtk_resample",
+            "vtk_mask",
+            "vtk_connectivity",
+            "vtk_mip",
+            "vtk_metadata",
+            "vtk_stats",
+            "vtk_viewer",
+            "vtk_volume_render",
+            "vtk_mpr_multi",
+            "vtk_overlay",
+            "vtk_stream",
+            "test_vtk",
+        ],
+    },
+    "java": {"dcm4che": BACKEND_OPS["java"]},
+    "csharp": {"fo-dicom": BACKEND_OPS["csharp"]},
+    "js": {
+        "js-shim": BACKEND_OPS["js"],
+        "cornerstone3d": ["info", "to_image", "volume", "nifti"],
+    },
+}
+
 # Default recipes for each backend/op so the UI can run a full suite quickly
 DEFAULTS = {
     "python": {
@@ -342,58 +382,63 @@ class TkApp:
         self.backend.set(BACKENDS[0])
         self.backend.grid(row=0, column=1, sticky="ew")
 
-        ttk.Label(frm, text="Operação").grid(row=1, column=0, sticky="w")
+        ttk.Label(frm, text="Biblioteca").grid(row=1, column=0, sticky="w")
+        self.library = ttk.Combobox(frm, state="readonly")
+        self.library.bind("<<ComboboxSelected>>", self._on_library_change)
+        self.library.grid(row=1, column=1, sticky="ew")
+
+        ttk.Label(frm, text="Operação").grid(row=2, column=0, sticky="w")
         self.operation = ttk.Combobox(frm, state="readonly")
         self.operation.bind("<<ComboboxSelected>>", self._on_operation_change)
-        self.operation.grid(row=1, column=1, sticky="ew")
+        self.operation.grid(row=2, column=1, sticky="ew")
 
         self.input_label = ttk.Label(frm, text="Entrada")
-        self.input_label.grid(row=2, column=0, sticky="w")
+        self.input_label.grid(row=3, column=0, sticky="w")
         self.input_entry = ttk.Entry(frm)
-        self.input_entry.grid(row=2, column=1, sticky="ew")
+        self.input_entry.grid(row=3, column=1, sticky="ew")
         self.input_browse_btn = ttk.Button(frm, text="Selecionar", command=self._browse_input)
-        self.input_browse_btn.grid(row=2, column=2, padx=4)
+        self.input_browse_btn.grid(row=3, column=2, padx=4)
 
         self.output_label = ttk.Label(frm, text="Saída (opcional)")
-        self.output_label.grid(row=3, column=0, sticky="w")
+        self.output_label.grid(row=4, column=0, sticky="w")
         self.output_entry = ttk.Entry(frm)
-        self.output_entry.grid(row=3, column=1, sticky="ew")
+        self.output_entry.grid(row=4, column=1, sticky="ew")
         self.output_browse_btn = ttk.Button(frm, text="Selecionar", command=self._browse_output)
-        self.output_browse_btn.grid(row=3, column=2, padx=4)
+        self.output_browse_btn.grid(row=4, column=2, padx=4)
 
         self.options_label = ttk.Label(frm, text="Options JSON (opcional)")
-        self.options_label.grid(row=4, column=0, sticky="w")
+        self.options_label.grid(row=5, column=0, sticky="w")
         self.options_text = tk.Text(frm, height=5, width=60)
         self.options_text.insert("1.0", "{}")
-        self.options_text.grid(row=4, column=1, columnspan=2, sticky="nsew", pady=4)
+        self.options_text.grid(row=5, column=1, columnspan=2, sticky="nsew", pady=4)
 
-        ttk.Label(frm, text="Comando custom").grid(row=5, column=0, sticky="w")
+        ttk.Label(frm, text="Comando custom").grid(row=6, column=0, sticky="w")
         self.custom_cmd_entry = ttk.Entry(frm)
-        self.custom_cmd_entry.grid(row=5, column=1, columnspan=2, sticky="ew")
+        self.custom_cmd_entry.grid(row=6, column=1, columnspan=2, sticky="ew")
 
-        ttk.Button(frm, text="Carregar defaults", command=self._load_defaults).grid(row=5, column=0, sticky="w", pady=6)
+        ttk.Button(frm, text="Carregar defaults", command=self._load_defaults).grid(row=6, column=0, sticky="w", pady=6)
         self.run_button = ttk.Button(frm, text="Executar", command=self._run)
-        self.run_button.grid(row=5, column=1, sticky="e", pady=6)
-        ttk.Button(frm, text="Rodar suíte completa", command=self._run_suite).grid(row=5, column=2, sticky="e", pady=6)
+        self.run_button.grid(row=6, column=1, sticky="e", pady=6)
+        ttk.Button(frm, text="Rodar suíte completa", command=self._run_suite).grid(row=6, column=2, sticky="e", pady=6)
 
         self.hint_label = ttk.Label(frm, text="", foreground="gray", wraplength=680)
-        self.hint_label.grid(row=6, column=0, columnspan=3, sticky="w", pady=(2, 4))
+        self.hint_label.grid(row=7, column=0, columnspan=3, sticky="w", pady=(2, 4))
 
-        ttk.Label(frm, text="Resultado").grid(row=7, column=0, sticky="nw")
+        ttk.Label(frm, text="Resultado").grid(row=8, column=0, sticky="nw")
         self.result_text = tk.Text(frm, height=18, width=80)
-        self.result_text.grid(row=7, column=1, columnspan=2, sticky="nsew")
+        self.result_text.grid(row=8, column=1, columnspan=2, sticky="nsew")
 
-        ttk.Label(frm, text="Status").grid(row=8, column=0, sticky="w")
+        ttk.Label(frm, text="Status").grid(row=9, column=0, sticky="w")
         self.status_label = ttk.Label(frm, textvariable=self.status_var)
-        self.status_label.grid(row=8, column=1, sticky="w")
+        self.status_label.grid(row=9, column=1, sticky="w")
 
-        ttk.Label(frm, text="Preview (imagem)").grid(row=9, column=0, sticky="nw")
+        ttk.Label(frm, text="Preview (imagem)").grid(row=10, column=0, sticky="nw")
         self.preview_label = ttk.Label(frm)
-        self.preview_label.grid(row=9, column=1, columnspan=2, sticky="w")
+        self.preview_label.grid(row=10, column=1, columnspan=2, sticky="w")
 
         for col in range(3):
             frm.columnconfigure(col, weight=1)
-        frm.rowconfigure(7, weight=1)
+        frm.rowconfigure(8, weight=1)
         self._update_operations()
 
     def _browse_input(self) -> None:
@@ -424,7 +469,41 @@ class TkApp:
 
     def _update_operations(self, *_args) -> None:
         backend = self.backend.get().lower()
-        ops = BACKEND_OPS.get(backend, [])
+        self._update_library_options(backend)
+        self._update_operations_list(backend, self.library.get())
+
+    def _update_library_options(self, backend: str) -> None:
+        libs = BACKEND_LIBRARIES.get(backend, {})
+        if len(libs) > 1:
+            values = ["Todos"] + list(libs.keys())
+            default = "Todos"
+        elif libs:
+            values = list(libs.keys())
+            default = values[0]
+        else:
+            values = ["Padrão"]
+            default = "Padrão"
+        self.library["values"] = values
+        if not self.library.get() or self.library.get() not in values:
+            self.library.set(default)
+
+    def _on_library_change(self, *_args) -> None:
+        backend = self.backend.get().lower()
+        self._update_operations_list(backend, self.library.get())
+
+    def _ops_for_backend(self, backend: str, library: str | None) -> list[str]:
+        libs = BACKEND_LIBRARIES.get(backend, {})
+        if library and library not in {"Todos", "Padrão", "All"}:
+            return libs.get(library, [])
+        if libs:
+            ops: list[str] = []
+            for items in libs.values():
+                ops.extend(items)
+            return list(dict.fromkeys(ops))  # preserve order
+        return BACKEND_OPS.get(backend, [])
+
+    def _update_operations_list(self, backend: str, library: str | None) -> None:
+        ops = self._ops_for_backend(backend, library)
         self.operation["values"] = ops
         if ops:
             self.operation.set(ops[0])
@@ -434,12 +513,23 @@ class TkApp:
         self._apply_operation_spec()
 
     def _current_spec(self) -> dict:
-        return get_operation_spec(self.backend.get(), self.operation.get())
+        backend = self.backend.get() if hasattr(self.backend, "get") else ""
+        op = self.operation.get() if hasattr(self.operation, "get") else ""
+        return get_operation_spec(backend, op)
 
     def _requires_input(self, spec: dict, op: str) -> bool:
         if op == "custom":
             return False
         return spec.get("input") not in {"none", "optional"}
+
+    # Compatibilidade com testes antigos
+    def _require_input(self, op: str) -> bool:
+        backend = self.backend.get() if hasattr(self.backend, "get") else ""
+        spec = get_operation_spec(backend, op)
+        return self._requires_input(spec, op)
+
+    def _op_uses_directory_input(self, op: str) -> bool:
+        return get_operation_spec(self.backend.get(), op).get("input") == "directory"
 
     def _apply_operation_spec(self) -> None:
         spec = self._current_spec()
@@ -515,6 +605,8 @@ class TkApp:
         self.options_text.insert("1.0", json.dumps(data or {}, indent=2))
 
     def _spec_hint(self, spec: dict) -> str:
+        backend = self.backend.get() if hasattr(self.backend, "get") else ""
+        library = self.library.get() if hasattr(self, "library") and hasattr(self.library, "get") else ""
         input_map = {
             "file": "Arquivo único",
             "directory": "Pasta/série (múltiplos arquivos)",
@@ -528,6 +620,13 @@ class TkApp:
         hint = f"{base} | Opções: {options}"
         if desc:
             hint = f"{hint} | {desc}"
+        prefix = []
+        if backend:
+            prefix.append(f"Backend: {backend}")
+        if library and library not in {"Todos", "Padrão"}:
+            prefix.append(f"Lib: {library}")
+        if prefix:
+            hint = f"{' · '.join(prefix)} | {hint}"
         return hint
 
     def _update_hint(self, spec: dict) -> None:
@@ -549,8 +648,11 @@ class TkApp:
         if op != "custom":
             self.custom_cmd_entry.delete(0, tk.END)
 
-    def _normalize_output(self, op: str, input_path: str, output_path: str | None, spec: dict) -> str | None:
+    def _normalize_output(self, op: str, input_path: str, output_path: str | None, spec: dict | None = None) -> str | None:
         """If the user selected a directory, infer a file name based on op and input."""
+        if spec is None:
+            backend = self.backend.get() if hasattr(self.backend, "get") else ""
+            spec = get_operation_spec(backend, op)
         if not output_path or spec.get("output") == "display":
             return None
         if spec.get("output") == "directory":
@@ -572,13 +674,19 @@ class TkApp:
         return str(out)
 
     def _parse_options(self) -> dict:
-        state = str(self.options_text.cget("state"))
-        if state == "disabled":
-            self.options_text.configure(state="normal")
-            text = self.options_text.get("1.0", tk.END).strip()
-            self.options_text.configure(state="disabled")
+        text_widget = self.options_text
+        state = "normal"
+        if hasattr(text_widget, "cget"):
+            try:
+                state = str(text_widget.cget("state"))
+            except Exception:
+                state = "normal"
+        if state == "disabled" and hasattr(text_widget, "configure"):
+            text_widget.configure(state="normal")
+            text = text_widget.get("1.0", tk.END).strip()
+            text_widget.configure(state="disabled")
         else:
-            text = self.options_text.get("1.0", tk.END).strip()
+            text = text_widget.get("1.0", tk.END).strip()
         if not text:
             return {}
         try:

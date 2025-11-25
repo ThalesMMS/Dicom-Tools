@@ -45,6 +45,7 @@ def make_dummy_app(monkeypatch):
     inst = app.TkApp.__new__(app.TkApp)
     inst.backend = DummyEntry("python")
     inst.operation = DummyEntry("info")
+    inst.library = DummyEntry("Todos")
     inst.input_entry = DummyEntry()
     inst.output_entry = DummyEntry()
     inst.options_text = DummyText("{}")
