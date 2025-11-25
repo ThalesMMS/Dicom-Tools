@@ -4,6 +4,7 @@ from .rust_cli import RustCliAdapter
 from .cpp_cli import CppCliAdapter
 from .csharp_cli import CSharpCliAdapter
 from .java_cli import JavaCliAdapter
+from .js_cli import JsCliAdapter
 
 
 def get_adapter(backend: str):
@@ -18,4 +19,6 @@ def get_adapter(backend: str):
         return CSharpCliAdapter()
     if backend == "java":
         return JavaCliAdapter()
+    if backend == "js":
+        return JsCliAdapter()
     raise ValueError(f"Backend não suportado: {backend}")

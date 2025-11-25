@@ -45,11 +45,13 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 - **C++** (`cpp/build/DicomTools`): `info/dump -> gdcm:dump`, `anonymize -> gdcm:anonymize`, `to_image -> gdcm:preview`, `stats -> gdcm:stats`, `transcode -> gdcm:transcode-j2k|gdcm:transcode-rle|gdcm:jpegls` (mapeado por `options.syntax`), `validate -> gdcm:dump` (proxy até existir comando dedicado).  
 - **Java (dcm4chee)**: CLI em `java/dcm4che-tests/target/dcm4che-tests.jar` (`java -jar ...`): `info --json`, `anonymize --output`, `to-image --output [--format] [--frame]`, `transcode --output --syntax`, `validate`, `dump [--max-width]`, `stats --bins [--json|--pretty]`, `echo host:port [--timeout --calling --called]`.  
 - **C# (fo-dicom)**: CLI em `cs/bin/(Release|Debug)/net8.0/DicomTools.Cli`: `info --json`, `anonymize --output`, `to-image --output [--frame] [--format]`, `transcode --output --transfer-syntax`, `validate`, `echo host:port`, `dump [--depth --max-value-length]`, `stats --json [--frame]`, `histogram --json [--bins] [--frame]`.
+- **JavaScript (shim)**: CLI em `js/contract-cli/index.js` (env `JS_DICOM_TOOLS_CMD` para sobrescrever). Implementa o contrato delegando ao backend Python: `info/anonymize/to_image/transcode/validate/stats/dump/volume/nifti/echo`.
 
 ## Binaries e variáveis de ambiente
 - `PYTHON_DICOM_TOOLS_CMD` (padrão: `python -m DICOM_reencoder.cli`, cwd=`python/`)
 - `RUST_DICOM_TOOLS_BIN` (padrão: `rust/target/release/dicom-tools`; fallback `cargo run --release --`)
 - `CPP_DICOM_TOOLS_BIN` (padrão: `cpp/build/DicomTools`)
+- `JS_DICOM_TOOLS_CMD` (padrão: `node js/contract-cli/index.js`)
 
 ## Exemplo de requisição
 ```json
