@@ -59,6 +59,7 @@ cmake --build build
 | | **Structured Report** | Generates a small SR (NUM + TEXT) and validates it. |
 | | **RTSTRUCT Read** | Summarizes ROIs/contours from RTSTRUCT. |
 | | **Functional Groups** | Dumps per-frame functional group info and frame preview. |
+| | **Waveform / PS Summary** | Reports waveform sequence/channel metadata and GSPS identifiers. |
 | **ITK** | **Edge Detection** | Applies Canny Edge Detection filter. |
 | | **Smoothing** | Reduces noise using Discrete Gaussian Smoothing. |
 | | **Median Filter** | Removes salt-and-pepper noise with a 3D median. |

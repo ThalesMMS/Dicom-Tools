@@ -29,5 +29,6 @@ namespace DCMTKTests {
     void TestStructuredReport(const std::string& sourceFile, const std::string& outputDir);
     void TestRTStructRead(const std::string& filename, const std::string& outputDir);
     void TestFunctionalGroupRead(const std::string& filename, const std::string& outputDir);
+    void TestWaveformAndPSReport(const std::string& filename, const std::string& outputDir);
     int ValidateDicomFile(const std::string& filename, const std::string& outputDir, bool jsonOutput);
 }

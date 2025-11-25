@@ -56,6 +56,7 @@ void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
             TestStructuredReport(ctx.inputPath, ctx.outputDir);
             TestRTStructRead(ctx.inputPath, ctx.outputDir);
             TestFunctionalGroupRead(ctx.inputPath, ctx.outputDir);
+            TestWaveformAndPSReport(ctx.inputPath, ctx.outputDir);
             ValidateDicomFile(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
             return 0;
         }
@@ -237,6 +238,16 @@ void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
         "Inspect multi-frame functional groups and export first frame preview",
         [](const CommandContext& ctx) {
             TestFunctionalGroupRead(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "dcmtk:waveform",
+        "DCMTK",
+        "Summarize Waveform and Softcopy Presentation State metadata",
+        [](const CommandContext& ctx) {
+            TestWaveformAndPSReport(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });

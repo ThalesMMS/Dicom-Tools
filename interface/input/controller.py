@@ -37,8 +37,11 @@ class InputController:
     def scroll(self, viewer: str, delta: int) -> None:
         self.emit(viewer, InputEvent("scroll", {"delta": delta}))
 
-    def zoom(self, viewer: str, factor: float) -> None:
-        self.emit(viewer, InputEvent("zoom", {"factor": factor}))
+    def zoom(self, viewer: str, factor: float, origin: tuple[float, float] | None = None) -> None:
+        payload = {"factor": factor}
+        if origin is not None:
+            payload["origin"] = origin
+        self.emit(viewer, InputEvent("zoom", payload))
 
     def pan(self, viewer: str, dx: float, dy: float) -> None:
         self.emit(viewer, InputEvent("pan", {"dx": dx, "dy": dy}))
@@ -54,4 +57,3 @@ class InputController:
 
     def rebuild_mpr(self, viewer: str, plane: str) -> None:
         self.emit(viewer, InputEvent("rebuild_mpr", {"plane": plane}))
-

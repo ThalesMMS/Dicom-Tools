@@ -103,6 +103,7 @@ if run_test("test-dcmtk", "DCMTK Features"):
     require_file("dcmtk_sr_summary.txt")
     require_file("dcmtk_rtstruct.txt")
     require_file("dcmtk_functional_groups.txt")
+    require_file("dcmtk_waveform.txt")
 else:
     tests_passed = False
 

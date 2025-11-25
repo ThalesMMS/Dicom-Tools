@@ -59,7 +59,8 @@ class ZoomTool(Tool):
         payload = command.payload or {}
         viewer = state.get_viewer(payload.get("viewer"))
         factor = float(payload.get("factor", 1.0))
-        viewer.apply_zoom(factor)
+        origin = payload.get("origin") or (0.0, 0.0)
+        viewer.apply_zoom(factor, origin=tuple(origin))
         request = _build_frame_request(viewer, reason="zoom")
         return [
             Event("state_changed", {"viewer": viewer.name, "tool": self.name}),
@@ -191,4 +192,3 @@ class ToolManager:
             return None
         self.state.set_active_tool(tool.name)
         return tool.apply(command, self.state)
-

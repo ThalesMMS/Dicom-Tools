@@ -10,10 +10,17 @@ Objetivo: manter saídas previsíveis por backend para facilitar depuração, li
 ## Python (`python/`)
 - Preferir `output/` na raiz do repo quando não especificado; scripts atuais já inferem nomes (ex.: `<stem>_anonymized.dcm`, `<stem>.png`).
 - Logs: mensagens curtas em stdout; erros/exceções em stderr.
+- Operações mapeadas:
+  - anonymize → `<stem>_anonymized.dcm`
+  - to_image → `<stem>.png`
+  - transcode → `<stem>_explicit.dcm`
+  - volume → `volume.npy` (+ metadata JSON)
+  - nifti → `<stem>.nii.gz`
 
 ## Rust (`rust/`)
 - Binário `dicom-tools`: seguir saída padrão em stdout; arquivos em caminhos fornecidos. Para operações sem output explícito, usar `output/` na raiz.
 - Logs detalhados: manter em stderr (tracing); resumo em stdout.
+- Operações mapeadas (padrão): anonymize (`*_anonymized.dcm`), to_image (`*.png`), transcode (`*_explicit.dcm`), volume/nifti usam paths explícitos do caller.
 
 ## C++ (`cpp/`)
 - Executável `DicomTools`: já usa `-o` para diretório; manter padrão `cpp/output/` se não especificado.

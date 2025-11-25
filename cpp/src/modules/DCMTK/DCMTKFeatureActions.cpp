@@ -25,6 +25,7 @@
 #include "dcmtk/dcmdata/dcddirif.h"
 #include "dcmtk/dcmdata/dctk.h"
 #include "dcmtk/dcmdata/dcuid.h"
+#include "dcmtk/dcmdata/dcsequen.h"
 #include "dcmtk/dcmimgle/dcmimage.h"
 #include "dcmtk/dcmdata/dcrledrg.h"
 #include "dcmtk/dcmdata/dcrleerg.h"
@@ -1199,6 +1200,80 @@ int DCMTKTests::ValidateDicomFile(const std::string& filename, const std::string
     (void)jsonOutput;
     std::cerr << "DCMTK not enabled; validation unavailable." << std::endl;
     return 1;
+#endif
+}
+
+void DCMTKTests::TestWaveformAndPSReport(const std::string& filename, const std::string& outputDir) {
+    // Inspect waveform and presentation state metadata and emit a text summary
+    std::cout << "--- [DCMTK] Waveform / Presentation State ---" << std::endl;
+#ifdef USE_DCMTK
+    DcmFileFormat file;
+    const std::string reportPath = JoinPath(outputDir, "dcmtk_waveform.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+    if (!report.is_open()) {
+        std::cerr << "Could not open waveform report at " << reportPath << std::endl;
+        return;
+    }
+
+    if (file.loadFile(filename.c_str()).bad()) {
+        report << "Error=load_failed\n";
+        report.close();
+        std::cerr << "Failed to load file for waveform inspection." << std::endl;
+        return;
+    }
+
+    DcmDataset* ds = file.getDataset();
+    OFString sopClass;
+    ds->findAndGetOFString(DCM_SOPClassUID, sopClass);
+    const bool isPS = (sopClass == UID_GrayscaleSoftcopyPresentationStateStorage);
+
+    report << "SOPClass=" << sopClass.c_str() << "\n";
+    report << "IsPresentationState=" << (isPS ? "yes" : "no") << "\n";
+
+    DcmSequenceOfItems* wfSeq = nullptr;
+    if (ds->findAndGetSequence(DCM_WaveformSequence, wfSeq).good() && wfSeq && wfSeq->card() > 0) {
+        const size_t items = static_cast<size_t>(wfSeq->card());
+        report << "WaveformSequenceItems=" << items << "\n";
+        for (size_t i = 0; i < items; ++i) {
+            DcmItem* item = wfSeq->getItem(static_cast<unsigned long>(i));
+            if (!item) {
+                continue;
+            }
+            OFString channels, samples, sampleRate;
+            item->findAndGetOFString(DCM_NumberOfWaveformChannels, channels);
+            item->findAndGetOFString(DCM_NumberOfWaveformSamples, samples);
+            item->findAndGetOFString(DCM_SamplingFrequency, sampleRate);
+
+            report << "Item[" << (i + 1) << "]Channels=" << channels.c_str() << "\n";
+            report << "Item[" << (i + 1) << "]Samples=" << samples.c_str() << "\n";
+            report << "Item[" << (i + 1) << "]SampleRate=" << sampleRate.c_str() << "\n";
+
+            DcmElement* dataElem = nullptr;
+            if (item->findAndGetElement(DCM_WaveformData, dataElem).good() && dataElem) {
+                report << "Item[" << (i + 1) << "]DataLength=" << dataElem->getLength() << "\n";
+            }
+        }
+    } else {
+        report << "WaveformSequence=absent\n";
+    }
+
+    if (isPS) {
+        // Log a few optional PS attributes without attempting full rendering
+        OFString label, description, creator;
+        ds->findAndGetOFString(DCM_ContentLabel, label);
+        ds->findAndGetOFString(DCM_ContentDescription, description);
+        ds->findAndGetOFString(DCM_ContentCreatorName, creator);
+        report << "PS_Label=" << label.c_str() << "\n";
+        report << "PS_Description=" << description.c_str() << "\n";
+        report << "PS_Creator=" << creator.c_str() << "\n";
+    }
+
+    report.close();
+    std::cout << "Waveform/PS summary written to '" << reportPath << "'" << std::endl;
+#else
+    (void)filename;
+    (void)outputDir;
+    std::cout << "DCMTK not enabled." << std::endl;
 #endif
 }
 
