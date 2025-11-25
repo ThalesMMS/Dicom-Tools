@@ -13,7 +13,10 @@ public class DicomNetworkStoreTests
     [Fact]
     public async Task CStore_StoresInstances_OnLocalScp()
     {
-        CiEnvironment.SkipIfCi("Skipping C-STORE network tests in CI to avoid socket restrictions");
+        if (CiEnvironment.ShouldSkip("Skipping C-STORE network tests in CI to avoid socket restrictions"))
+        {
+            return;
+        }
         InMemoryStoreScp.Clear();
         var port = TcpPortHelper.GetFreePort();
 
@@ -49,7 +52,10 @@ public class DicomNetworkStoreTests
     [Fact]
     public async Task CStore_MultipleInstances_PersistsAll()
     {
-        CiEnvironment.SkipIfCi("Skipping C-STORE network tests in CI to avoid socket restrictions");
+        if (CiEnvironment.ShouldSkip("Skipping C-STORE network tests in CI to avoid socket restrictions"))
+        {
+            return;
+        }
         InMemoryStoreScp.Clear();
         var port = TcpPortHelper.GetFreePort();
 

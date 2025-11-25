@@ -85,7 +85,10 @@ public class DicomNetworkTests
     [Fact]
     public async Task CEcho_RoundTrip_Succeeds()
     {
-        CiEnvironment.SkipIfCi("Skipping echo loopback in CI to avoid socket restrictions");
+        if (CiEnvironment.ShouldSkip("Skipping echo loopback in CI to avoid socket restrictions"))
+        {
+            return;
+        }
         var port = TcpPortHelper.GetFreePort();
 
         using var server = DicomServerFactory.Create<DicomCEchoProvider>(port);

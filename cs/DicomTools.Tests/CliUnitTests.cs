@@ -88,7 +88,10 @@ public class CliUnitTests
     [Fact]
     public void Echo_Fails_When_Port_Closed()
     {
-        CiEnvironment.SkipIfCi("Skipping closed-port echo in CI to avoid socket restrictions");
+        if (CiEnvironment.ShouldSkip("Skipping closed-port echo in CI to avoid socket restrictions"))
+        {
+            return;
+        }
         var port = TcpPortHelper.GetFreePort();
         var result = CliRunner.Run("echo", $"127.0.0.1:{port}");
         Assert.NotEqual(0, result.ExitCode);

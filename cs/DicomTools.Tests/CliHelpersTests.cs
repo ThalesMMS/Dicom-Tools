@@ -8,7 +8,10 @@ public class CliHelpersTests
     [Fact]
     public async Task EchoCommand_Succeeds_Against_InMemoryStore()
     {
-        CiEnvironment.SkipIfCi("Skipping echo loopback in CI to avoid socket restrictions");
+        if (CiEnvironment.ShouldSkip("Skipping echo loopback in CI to avoid socket restrictions"))
+        {
+            return;
+        }
         var port = TcpPortHelper.GetFreePort();
         using var server = FellowOakDicom.Network.DicomServerFactory.Create<InMemoryStoreScp>(port);
         await Task.Delay(100);

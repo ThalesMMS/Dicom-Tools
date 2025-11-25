@@ -167,7 +167,10 @@ public class CliContractTests
     [Fact]
     public async Task Echo_Completes_RoundTrip()
     {
-        CiEnvironment.SkipIfCi("Skipping echo loopback in CI to avoid socket restrictions");
+        if (CiEnvironment.ShouldSkip("Skipping echo loopback in CI to avoid socket restrictions"))
+        {
+            return;
+        }
         var port = TcpPortHelper.GetFreePort();
         using var server = DicomServerFactory.Create<DicomCEchoProvider>(port);
         await Task.Delay(100);
