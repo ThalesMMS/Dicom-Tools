@@ -13,6 +13,7 @@ public class QueryRetrieveTests
     [Fact]
     public async Task CFind_Study_Series_And_Image_ReturnsMatches()
     {
+        CiEnvironment.SkipIfCi("Skipping C-FIND/C-MOVE network tests in CI to avoid socket restrictions");
         var sampleFiles = SampleSeriesHelper.GetSeriesFiles(3).Select(path => DicomFile.Open(path)).ToArray();
         InMemoryQueryRetrieveScp.Reset();
         InMemoryQueryRetrieveScp.ConfigureSources(sampleFiles);
@@ -55,6 +56,7 @@ public class QueryRetrieveTests
     [Fact]
     public async Task CMove_Transfers_All_Matching_Instances_To_Destination()
     {
+        CiEnvironment.SkipIfCi("Skipping C-FIND/C-MOVE network tests in CI to avoid socket restrictions");
         var sourceFiles = SampleSeriesHelper.GetSeriesFiles(2).Select(path => DicomFile.Open(path)).ToArray();
         var studyUid = sourceFiles[0].Dataset.GetSingleValue<string>(DicomTag.StudyInstanceUID);
 

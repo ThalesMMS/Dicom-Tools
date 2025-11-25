@@ -13,6 +13,7 @@ public class WorklistTests
     [Fact]
     public async Task Worklist_CFind_ReturnsMatchingStep()
     {
+        CiEnvironment.SkipIfCi("Skipping worklist network tests in CI to avoid socket restrictions");
         var entry = BuildWorklistEntry();
         InMemoryWorklistScp.Reset();
         InMemoryWorklistScp.ConfigureEntries(new[] { entry });

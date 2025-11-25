@@ -85,6 +85,7 @@ public class DicomNetworkTests
     [Fact]
     public async Task CEcho_RoundTrip_Succeeds()
     {
+        CiEnvironment.SkipIfCi("Skipping echo loopback in CI to avoid socket restrictions");
         var port = TcpPortHelper.GetFreePort();
 
         using var server = DicomServerFactory.Create<DicomCEchoProvider>(port);
@@ -97,7 +98,8 @@ public class DicomNetworkTests
         echoRequest.OnResponseReceived += (_, response) => responseStatus = response.Status;
 
         await client.AddRequestAsync(echoRequest);
-        await client.SendAsync();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await client.SendAsync(cts.Token);
 
         Assert.Equal(DicomStatus.Success, responseStatus);
     }

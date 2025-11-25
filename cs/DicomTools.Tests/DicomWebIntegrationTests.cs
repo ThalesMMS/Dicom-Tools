@@ -17,6 +17,7 @@ public class DicomWebIntegrationTests
     [Fact]
     public async Task Stow_Then_CMove_DeliversInstance()
     {
+        CiEnvironment.SkipIfCi("Skipping DICOMweb STOW↔DIMSE bridge test in CI to avoid socket restrictions");
         InMemoryStoreScp.Clear();
         InMemoryQueryRetrieveScp.Reset();
 

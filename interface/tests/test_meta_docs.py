@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 
 def test_artifacts_doc_exists_and_lists_outputs():
     path = Path(__file__).resolve().parents[1] / "ARTIFACTS.md"
