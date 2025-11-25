@@ -2,6 +2,8 @@
 
 Unified DICOM toolkit with CLIs and utilities implemented in Python, Rust, C++, C#, Java, and JS, plus a shared UI and contract runner. Each folder hosts its own backend; `sample_series/` in the repo root provides the reference datasets used across tests and demos.
 
+![Dicom Tools UI](python/screenshots/ui.png)
+
 ## Libraries Covered
 - C++: DCMTK, GDCM, ITK, VTK
 - Python: pydicom, pynetdicom, python-gdcm, SimpleITK, dicom-numpy
