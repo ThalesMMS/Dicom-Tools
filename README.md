@@ -22,6 +22,11 @@ Unified DICOM toolkit with CLIs and utilities implemented in Python, Rust, C++, 
 ## Sample Data
 - `sample_series/` contains the DICOM files used across tests and quickstarts. Most commands/tests assume paths relative to the repo root.
 
+## One-shot Setup
+- Script: `./scripts/setup_all.sh`
+- Installs/Builds: Python editable install (with dev requirements), Rust release, C++ build (`cpp/build`), C# solution restore/build, Java Maven package, JS deps (`viewer-gateway`).
+- Requires tools on PATH: `python3`, `pip`, `cargo`, `cmake`, `.NET SDK 8+ (dotnet)`, `mvn`, `npm`. Set `BUILD_TYPE=Debug` to change the C++ config.
+
 ## Test Shortcuts
 - Python: `cd python && pytest -q`
 - Rust: `cd rust && cargo test`
