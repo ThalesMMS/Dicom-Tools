@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .runner import RunResult, ensure_dir, run_process
+from .runner import RunResult, ensure_dir, run_process, split_cmd
 
 
 class CppCliAdapter:
@@ -22,7 +22,8 @@ class CppCliAdapter:
         output = request.get("output")
         options = request.get("options", {}) or {}
 
-        if not op or not input_path:
+        requires_input = op not in {"custom"}
+        if not op or (requires_input and not input_path):
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
         cmd, output_files = self._build_cmd(op, input_path, output, options)

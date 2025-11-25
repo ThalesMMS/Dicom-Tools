@@ -34,7 +34,8 @@ class CSharpCliAdapter:
         input_path = request.get("input")
         output = request.get("output")
 
-        if not op or (op != "custom" and not input_path):
+        requires_input = op not in {"echo", "custom"}
+        if not op or (requires_input and not input_path):
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
         cmd = self._build_cmd(op, input_path, output, options)

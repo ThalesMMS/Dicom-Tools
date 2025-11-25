@@ -22,7 +22,8 @@ class JsCliAdapter:
         output = request.get("output") or ""
         options = request.get("options") or {}
 
-        if not op or (op != "custom" and not input_path):
+        requires_input = op not in {"echo", "custom"}
+        if not op or (requires_input and not input_path):
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
         if op == "custom":
