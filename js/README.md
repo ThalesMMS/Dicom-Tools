@@ -20,6 +20,7 @@ npm run dev        # demo Vite; sirva sample_series em http://localhost:8080/sam
 npm run build      # build de produção
 npm test           # Vitest (gateway + MPR/MIP/overlay via sample_series)
 npm test -- --coverage   # cobertura V8 (depende de @vitest/coverage-v8)
+npm run test:coverage    # alias para cobertura + testes (usado no CI)
 ```
 
 - Novas utilidades:

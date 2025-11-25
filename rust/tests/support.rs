@@ -462,6 +462,71 @@ pub fn write_secondary_capture(path: &std::path::Path, patient_name: &str) {
         PrimitiveValue::from(patient_name),
     ));
     obj.put(DataElement::new(
+        Tag(0x0010, 0x0020),
+        VR::LO,
+        PrimitiveValue::from("SC123"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0008, 0x0016),
+        VR::UI,
+        PrimitiveValue::from("1.2.840.10008.5.1.4.1.1.7"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0008, 0x0018),
+        VR::UI,
+        PrimitiveValue::from("1.2.826.0.1.3680043.2.1125.9.99"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0008, 0x0060),
+        VR::CS,
+        PrimitiveValue::from("OT"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0008, 0x0020),
+        VR::DA,
+        PrimitiveValue::from("20240101"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0010),
+        VR::US,
+        PrimitiveValue::from(2_u16),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0011),
+        VR::US,
+        PrimitiveValue::from(2_u16),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0002),
+        VR::US,
+        PrimitiveValue::from(1_u16),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0100),
+        VR::US,
+        PrimitiveValue::from(8_u16),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0101),
+        VR::US,
+        PrimitiveValue::from(8_u16),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0102),
+        VR::US,
+        PrimitiveValue::from(7_u16),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0103),
+        VR::US,
+        PrimitiveValue::from(0_u16),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0028, 0x0004),
+        VR::CS,
+        PrimitiveValue::from("MONOCHROME2"),
+    ));
+    obj.put(DataElement::new(
         Tag(0x7FE0, 0x0010),
         VR::OB,
         PrimitiveValue::from(vec![0_u8, 1, 2, 3]),

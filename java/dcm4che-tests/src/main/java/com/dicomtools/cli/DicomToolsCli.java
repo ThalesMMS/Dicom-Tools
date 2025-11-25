@@ -16,6 +16,11 @@ public class DicomToolsCli {
         System.exit(exitCode);
     }
 
+    /** Exposed for tests to execute commands without System.exit. */
+    public static int execute(String... args) {
+        return run(args);
+    }
+
     private static int run(String[] args) {
         if (args.length == 0) {
             usage();

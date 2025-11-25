@@ -272,6 +272,10 @@ fn not_found<E: Display>(err: E) -> (StatusCode, String) {
 mod tests {
     use super::*;
     use crate::models::ValidationSummary;
+    use axum::body::{to_bytes, Body};
+    use axum::http::Request;
+    use tower::ServiceExt;
+    use serde_json::Value;
     use tempfile::tempdir;
 
     #[test]
@@ -339,6 +343,93 @@ mod tests {
             .await
             .expect("validate");
         assert!(json["errors"].as_array().unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn stats_and_image_endpoints_work() {
+        let dir = tempdir().expect("tempdir");
+        let store = FileStore::new(dir.path().to_str().unwrap()).expect("store");
+        let sample_path = dir.path().join("web_stats.dcm");
+        write_minimal_dicom(&sample_path);
+        let bytes = std::fs::read(&sample_path).unwrap();
+        let saved = store
+            .save(Some("web_stats.dcm"), &bytes)
+            .expect("save");
+
+        let state = AppState { store };
+        let app = build_app(state);
+
+        let stats_resp = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/api/stats/{saved}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(stats_resp.status(), StatusCode::OK);
+
+        let image_resp = app
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/api/image/{saved}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(image_resp.status(), StatusCode::OK);
+        let body = to_bytes(image_resp.into_body(), 1_048_576)
+            .await
+            .unwrap();
+        assert!(body.starts_with(&[0x89, b'P', b'N', b'G']));
+    }
+
+    #[tokio::test]
+    async fn json_and_download_endpoints_work() {
+        let dir = tempdir().expect("tempdir");
+        let store = FileStore::new(dir.path().to_str().unwrap()).expect("store");
+        let sample_path = dir.path().join("web_json.dcm");
+        write_minimal_dicom(&sample_path);
+        let bytes = std::fs::read(&sample_path).unwrap();
+        let saved = store.save(Some("web_json.dcm"), &bytes).expect("save");
+
+        let state = AppState { store };
+        let app = build_app(state);
+
+        let json_resp = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/api/json/{saved}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(json_resp.status(), StatusCode::OK);
+        let body = to_bytes(json_resp.into_body(), 1_048_576)
+            .await
+            .unwrap();
+        let parsed: Value = serde_json::from_slice(&body).unwrap();
+        assert!(parsed.get("00080016").is_some());
+
+        let download_resp = app
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/api/download/{saved}"))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(download_resp.status(), StatusCode::OK);
+        let body = to_bytes(download_resp.into_body(), 1_048_576)
+            .await
+            .unwrap();
+        assert_eq!(body.len(), bytes.len());
     }
 
     fn write_minimal_dicom(path: &std::path::Path) {

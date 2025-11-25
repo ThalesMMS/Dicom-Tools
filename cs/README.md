@@ -31,6 +31,7 @@ DOTNET_ROLL_FORWARD=Major dotnet test DicomTools.Tests/DicomTools.Tests.csproj \
   /p:CoverletOutputFormat=cobertura \\
   /p:CoverletOutput=coverage.cobertura.xml \\
   /p:Include=\"[DicomTools*]*\" /p:Exclude=\"[xunit.*]*\"
+# último run: ~93% linhas / ~69% branch no CLI (ver `DicomTools.Tests/coverage.cobertura.xml`).
 ```
 Cobertura recente inclui:
 - SCPs in-memory para C-STORE/C-FIND/C-MOVE e Modality Worklist (SCU↔SCP).

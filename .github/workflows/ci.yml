@@ -86,6 +86,6 @@ jobs:
       - name: Build
         working-directory: js/viewer-gateway
         run: npm run build
-      - name: Test
+      - name: Test + Coverage
         working-directory: js/viewer-gateway
-        run: npm test
+        run: npm run test:coverage

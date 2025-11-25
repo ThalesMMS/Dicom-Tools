@@ -83,3 +83,11 @@ Implementação: usar `@cornerstonejs/core` + `@cornerstonejs/tools` + `@corners
 - Testes Vitest em `js/viewer-gateway/tests`: `viewerGateway*.test.ts` (gateway/API) e `sampleSeries.integration.test.ts` (consistência da série via `dicom-parser`).
 - Sirva `sample_series` via HTTP local (ex.: `npx serve ..` na raiz do repo ou `npx http-server .. -p 8080`) para o viewer Vite.
 - Se quiser um exemplo adicional (React/Angular/Vue), só pedir. 
+
+## Demo DICOMweb (WADO-RS)
+- Configure um servidor DICOMweb (ex.: o mesmo usado pelos testes dcm4che/fo-dicom) acessível em HTTP.
+- Defina no ambiente (ou `window.DICOMWEB_CONFIG` no browser) os valores:
+  - `VITE_DICOMWEB_BASE` — URL base DICOMweb (ex.: `http://localhost:8042/dicom-web`)
+  - `VITE_DICOMWEB_STUDY` — StudyInstanceUID
+  - `VITE_DICOMWEB_SERIES` — SeriesInstanceUID
+- Rode `npm run dev` em `js/viewer-gateway` e abra a demo Vite: haverá três viewports (Stack WADO-URI, Volume MIP/3D local, DICOMweb WADO-RS usando `fetchDicomWebImageIds` + `createVolumeViewport`).

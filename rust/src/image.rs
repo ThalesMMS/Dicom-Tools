@@ -142,6 +142,11 @@ fn build_convert_options(options: &ImageExportOptions) -> ConvertOptions {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dicom::core::{DataElement, PrimitiveValue, Tag, VR};
+    use dicom::dictionary_std::StandardDataDictionary;
+    use dicom::object::{FileDicomObject, FileMetaTableBuilder, InMemDicomObject};
+    use dicom::transfer_syntax::entries::EXPLICIT_VR_LITTLE_ENDIAN;
+    use tempfile::tempdir;
 
     #[test]
     fn convert_options_respect_flags() {
@@ -167,5 +172,93 @@ mod tests {
         };
         let _convert = build_convert_options(&opts);
         assert!(true);
+    }
+
+    fn write_secondary_capture(path: &std::path::Path, patient_name: &str) {
+        let mut obj = InMemDicomObject::new_empty_with_dict(StandardDataDictionary);
+        obj.put(DataElement::new(
+            Tag(0x0010, 0x0010),
+            VR::PN,
+            PrimitiveValue::from(patient_name),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0010, 0x0020),
+            VR::LO,
+            PrimitiveValue::from("SC123"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0008, 0x0016),
+            VR::UI,
+            PrimitiveValue::from("1.2.840.10008.5.1.4.1.1.7"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0008, 0x0018),
+            VR::UI,
+            PrimitiveValue::from("1.2.826.0.1.3680043.2.1125.9.199"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0008, 0x0060),
+            VR::CS,
+            PrimitiveValue::from("OT"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0010),
+            VR::US,
+            PrimitiveValue::from(2_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0011),
+            VR::US,
+            PrimitiveValue::from(2_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0002),
+            VR::US,
+            PrimitiveValue::from(1_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0100),
+            VR::US,
+            PrimitiveValue::from(8_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0101),
+            VR::US,
+            PrimitiveValue::from(8_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0102),
+            VR::US,
+            PrimitiveValue::from(7_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0103),
+            VR::US,
+            PrimitiveValue::from(0_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0004),
+            VR::CS,
+            PrimitiveValue::from("MONOCHROME2"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x7FE0, 0x0010),
+            VR::OB,
+            PrimitiveValue::from(vec![0_u8, 1, 2, 3]),
+        ));
+
+        let meta = FileMetaTableBuilder::new()
+            .transfer_syntax(EXPLICIT_VR_LITTLE_ENDIAN.uid())
+            .media_storage_sop_class_uid("1.2.840.10008.5.1.4.1.1.7")
+            .media_storage_sop_instance_uid("1.2.826.0.1.3680043.2.1125.9.199")
+            .build()
+            .expect("meta");
+
+        let mut file_obj =
+            FileDicomObject::new_empty_with_dict_and_meta(StandardDataDictionary, meta);
+        for elem in obj {
+            file_obj.put(elem);
+        }
+        file_obj.write_to_file(path).expect("write dicom");
     }
 }
