@@ -7,11 +7,14 @@
 # Thales Matheus Mendonça Santos - November 2025
 
 from pathlib import Path
+import sys
 
+import numpy as np
 import pytest
 import pydicom
-from pydicom.uid import RLELossless
+from pydicom.uid import JPEG2000Lossless, RLELossless
 
+from DICOM_reencoder.core import build_segmentation, build_secondary_capture, save_dataset
 from DICOM_reencoder.transcode_dicom import transcode
 
 gdcm = pytest.importorskip("gdcm")
@@ -98,3 +101,37 @@ def test_gdcm_generates_and_reads_dicomdir(synthetic_series, tmp_path):
 
     for p in paths:
         assert any(p.name in ref for ref in referenced)
+
+
+def test_gdcm_transcodes_to_jpeg2000_when_supported(synthetic_dicom_path, tmp_path):
+    try:
+        output = transcode(synthetic_dicom_path, output=tmp_path / "j2k.dcm", syntax="jpeg2000-lossless")
+    except RuntimeError as exc:  # pragma: no cover - environment dependent
+        pytest.skip(f"JPEG2000 transcode unavailable: {exc}")
+
+    ds = pydicom.dcmread(output, force=True)
+    assert ds.file_meta.TransferSyntaxUID == JPEG2000Lossless
+    assert ds.Rows == 32 and ds.Columns == 32
+
+
+def test_gdcm_reads_segmentation_and_reconstructs_mask(synthetic_datasets, tmp_path):
+    if sys.platform == "darwin":
+        pytest.skip("GDCM segmentation read is unstable on this GDCM build")
+
+    source = synthetic_datasets[0]
+    seg = build_segmentation(source)
+    seg_path = save_dataset(seg, tmp_path / "seg_gdcm.dcm")
+
+    reader = gdcm.ImageReader()
+    reader.SetFileName(str(seg_path))
+    if not reader.Read():  # pragma: no cover - environment dependent
+        pytest.skip("GDCM could not read segmentation object")
+
+    image = reader.GetImage()
+    dims = image.GetDimensions()
+    buffer = image.GetBuffer()
+
+    mask = np.frombuffer(buffer, dtype=np.uint8)
+    expected_size = dims[0] * dims[1] * max(1, dims[2])
+    assert mask.size == expected_size
+    assert set(np.unique(mask)).issubset({0, 1})

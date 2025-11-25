@@ -15,7 +15,8 @@
     "@cornerstonejs/core": "^4.12.2",
     "@cornerstonejs/dicom-image-loader": "^4.12.2",
     "@cornerstonejs/tools": "^4.12.2",
-    "dicom-parser": "^1.8.21"
+    "dicom-parser": "^1.8.21",
+    "dicomweb-client": "^0.11.2"
   },
   "devDependencies": {
     "@types/node": "^20.17.6",

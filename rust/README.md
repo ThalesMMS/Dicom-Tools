@@ -23,6 +23,9 @@ This project provides a suite of tools to:
 - Lazy frame reads to avoid loading entire multi-frame pixel data into memory.
 - Deep SR/structured navigation helper for sequence-heavy datasets.
 - In-memory fake C-FIND workflow covered by integration tests.
+- DICOMweb QIDO/WADO coverage using `dicom-web` (mocked with wiremock), including frame retrieval.
+- Compatibility checks for newer transfer syntaxes (JPEG-LS, JPEG 2000, HTJ2K, JPEG-XL) with clear errors when codecs are unavailable.
+- Parallel C-STORE smoke test exercising the async SCU helpers against a lightweight in-process SCP.
 
 ### Key Technologies
 - **Language:** Rust (Edition 2021)
@@ -60,7 +63,7 @@ The project is structured as a single binary with modularized functionality:
 | :--- | :--- | :--- |
 | **Build** | `cargo build` | Compiles the project in debug mode. |
 | **Check** | `cargo check` | Fast compilation check. |
-| **Test** | `cargo test` | Runs unit and integration tests. |
+| **Test** | `cargo test` | Runs unit + integration tests (DICOMweb, transfer syntaxes, networking). |
 | **Format** | `cargo fmt --all` | Formats code to Rust standards. |
 | **Lint** | `cargo clippy --all-targets --all-features` | Runs the linter. |
 

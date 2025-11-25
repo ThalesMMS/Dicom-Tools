@@ -20,6 +20,16 @@ function computeSliceSpacing(zPositions: number[], fallback: number) {
   return total / (zPositions.length - 1);
 }
 
+function parseOrientation(orientationStr?: string) {
+  if (!orientationStr) return undefined;
+  const parts = orientationStr.split('\\').map(Number);
+  if (parts.length !== 6 || parts.some((v) => Number.isNaN(v))) return undefined;
+  return {
+    row: [parts[0], parts[1], parts[2]] as [number, number, number],
+    col: [parts[3], parts[4], parts[5]] as [number, number, number],
+  };
+}
+
 export function loadSampleSeriesVolume(): VolumeData {
   if (cached) return cached;
 
@@ -37,6 +47,9 @@ export function loadSampleSeriesVolume(): VolumeData {
   const spacingCol = spacingTokens[1] ?? 1;
   const voxelData = new Float32Array(pixelCount * files.length);
   const zPositions: number[] = [];
+  const originStr = firstDataset.string('x00200032');
+  const origin = originStr ? (originStr.split('\\').map(Number) as [number, number, number]) : undefined;
+  const orientation = parseOrientation(firstDataset.string('x00200037'));
 
   files.forEach((file, sliceIndex) => {
     const dataset = sliceIndex === 0 ? firstDataset : dicomParser.parseDicom(fs.readFileSync(path.join(seriesDir, file)));
@@ -74,6 +87,8 @@ export function loadSampleSeriesVolume(): VolumeData {
       col: spacingCol,
       slice: spacingSlice,
     },
+    origin,
+    orientation,
     voxelData,
   };
 

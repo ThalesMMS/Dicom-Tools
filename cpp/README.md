@@ -87,7 +87,8 @@ cmake --build build
 | | **Volume Stats** | Computes min/max/mean/stddev for QA regression. |
 | | **Volume Rendering** | Headless volume rendering snapshot via SmartVolumeMapper. |
 | | **Mask Overlay** | Threshold-derived mask overlaid on axial slice. |
-| | **Streaming Reslice** | Processes volume in Z-chunks to mimic streaming. |
+| | **Labelmap → Surface** | Threshold to labelmap, emit voxel stats, and export STL surface. |
+| | **Streaming Reslice** | Processes volume in Z-chunks using update extents to mimic streaming. |
 
 ## Prerequisites
 
@@ -159,7 +160,7 @@ The project generates a single executable `DicomTools` in the `build` directory.
 - `itk:gaussian`, `itk:median`, `itk:threshold`, `itk:otsu`, `itk:aniso`, `itk:histogram`, `itk:slice`, `itk:mip`, `itk:nrrd`, `itk:nifti`, `itk:resample`
 - `itk:distance-map`, `itk:label-stats`, `itk:register`, `itk:vector`, `itk:dicom-series`
 - `vtk:mask`, `vtk:metadata`, `vtk:isosurface`, `vtk:nifti`, `vtk:resample`, `vtk:mip`, `vtk:stats`
-- `vtk:volume-render`, `vtk:mpr-multi`, `vtk:overlay`, `vtk:stream`
+- `vtk:volume-render`, `vtk:mpr-multi`, `vtk:overlay`, `vtk:label-surface`, `vtk:stream`
 
 Note: `dcmtk:dicomdir` copies the source series into `output/dicomdir_media/` and emits the DICOMDIR there so relative references remain valid.
 

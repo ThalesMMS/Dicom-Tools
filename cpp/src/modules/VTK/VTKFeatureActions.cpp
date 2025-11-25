@@ -17,35 +17,39 @@
 
 #ifdef USE_VTK
 #include "vtkDICOMImageReader.h"
+#include "vtkColorTransferFunction.h"
+#include "vtkDiscreteMarchingCubes.h"
+#include "vtkExtractVOI.h"
 #include "vtkImageAccumulate.h"
+#include "vtkImageBlend.h"
 #include "vtkImageConnectivityFilter.h"
 #include "vtkImageData.h"
-#include "vtkImageReslice.h"
+#include "vtkImageMapToWindowLevelColors.h"
 #include "vtkImageResample.h"
+#include "vtkImageReslice.h"
 #include "vtkImageShiftScale.h"
-#include "vtkImageThreshold.h"
 #include "vtkImageSlabReslice.h"
+#include "vtkImageThreshold.h"
 #include "vtkImageViewer2.h"
+#include "vtkInformation.h"
+#include "vtkLookupTable.h"
 #include "vtkMarchingCubes.h"
-#include "vtkNew.h"
+#include "vtkMatrix4x4.h"
 #include "vtkNIFTIImageWriter.h"
+#include "vtkNew.h"
 #include "vtkPNGWriter.h"
+#include "vtkPiecewiseFunction.h"
 #include "vtkRenderWindow.h"
 #include "vtkRenderer.h"
 #include "vtkSmartPointer.h"
 #include "vtkSmartVolumeMapper.h"
 #include "vtkSTLWriter.h"
+#include "vtkStreamingDemandDrivenPipeline.h"
+#include "vtkTriangleFilter.h"
 #include "vtkVolume.h"
 #include "vtkVolumeProperty.h"
-#include "vtkPiecewiseFunction.h"
-#include "vtkColorTransferFunction.h"
-#include "vtkMatrix4x4.h"
 #include "vtkWindowToImageFilter.h"
 #include "vtkXMLImageDataWriter.h"
-#include "vtkExtractVOI.h"
-#include "vtkImageMapToWindowLevelColors.h"
-#include "vtkLookupTable.h"
-#include "vtkImageBlend.h"
 
 namespace fs = std::filesystem;
 
@@ -541,29 +545,91 @@ void VTKTests::TestMaskOverlay(const std::string& filename, const std::string& o
     std::cout << "Saved overlay PNG to '" << writer->GetFileName() << "'" << std::endl;
 }
 
-void VTKTests::TestStreamingReslice(const std::string& filename, const std::string& outputDir) {
-    // Simulate streaming by processing the volume in Z-chunks with vtkExtractVOI
-    std::cout << "--- [VTK] Streaming Reslice ---" << std::endl;
+void VTKTests::TestLabelmapSurface(const std::string& filename, const std::string& outputDir) {
+    // Threshold into a labelmap, compute voxel counts, and export a surface for QA
+    std::cout << "--- [VTK] Labelmap + Surface ---" << std::endl;
 
     vtkNew<vtkDICOMImageReader> reader;
     reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
     reader->Update();
 
-    int extent[6];
-    reader->GetOutput()->GetExtent(extent);
-    const int totalSlices = extent[5] - extent[4] + 1;
+    double spacing[3] = {1.0, 1.0, 1.0};
+    reader->GetOutput()->GetSpacing(spacing);
+
+    vtkNew<vtkImageThreshold> threshold;
+    threshold->SetInputConnection(reader->GetOutputPort());
+    threshold->ThresholdBetween(150, 3000); // default HU window to isolate denser tissue
+    threshold->SetInValue(1);
+    threshold->SetOutValue(0);
+    threshold->SetOutputScalarTypeToUnsignedChar();
+
+    vtkNew<vtkXMLImageDataWriter> labelWriter;
+    labelWriter->SetFileName(JoinPath(outputDir, "vtk_labelmap.vti").c_str());
+    labelWriter->SetInputConnection(threshold->GetOutputPort());
+    labelWriter->Write();
+
+    vtkNew<vtkImageAccumulate> hist;
+    hist->SetInputConnection(threshold->GetOutputPort());
+    hist->SetComponentExtent(0, 1, 0, 0, 0, 0);
+    hist->SetComponentOrigin(0, 0, 0);
+    hist->SetComponentSpacing(1, 1, 1);
+    hist->IgnoreZeroOn();
+    hist->Update();
+
+    const double labelOneCount = hist->GetOutput()->GetScalarComponentAsDouble(1, 0, 0, 0);
+    const double voxelVolume = spacing[0] * spacing[1] * spacing[2];
+    const double volumeMM3 = labelOneCount * voxelVolume;
+
+    vtkNew<vtkDiscreteMarchingCubes> cubes;
+    cubes->SetInputConnection(threshold->GetOutputPort());
+    cubes->SetValue(0, 1);
+
+    vtkNew<vtkTriangleFilter> triangulate;
+    triangulate->SetInputConnection(cubes->GetOutputPort());
+
+    vtkNew<vtkSTLWriter> surfaceWriter;
+    surfaceWriter->SetFileName(JoinPath(outputDir, "vtk_label_surface.stl").c_str());
+    surfaceWriter->SetInputConnection(triangulate->GetOutputPort());
+    surfaceWriter->Write();
+
+    const std::string reportPath = JoinPath(outputDir, "vtk_labelmap_stats.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+    report << "LabelValue=1\n";
+    report << "Voxels=" << labelOneCount << "\n";
+    report << "Spacing=" << spacing[0] << "x" << spacing[1] << "x" << spacing[2] << " mm\n";
+    report << "VolumeMM3=" << volumeMM3 << "\n";
+    report << "Surface=" << surfaceWriter->GetFileName() << "\n";
+    report.close();
+
+    std::cout << "Wrote labelmap, stats, and STL surface to '" << outputDir << "'" << std::endl;
+}
+
+void VTKTests::TestStreamingReslice(const std::string& filename, const std::string& outputDir) {
+    // Stream the volume in Z-chunks using update extents to cap memory consumption
+    std::cout << "--- [VTK] Streaming Reslice ---" << std::endl;
+
+    vtkNew<vtkDICOMImageReader> reader;
+    reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
+    reader->UpdateInformation();
+    reader->Update(); // prime pipeline once so subsequent chunk requests are stable
+
+    vtkInformation* outInfo = reader->GetOutputInformation(0);
+    int wholeExtent[6] = {0, 0, 0, 0, 0, 0};
+    outInfo->Get(vtkStreamingDemandDrivenPipeline::WHOLE_EXTENT(), wholeExtent);
+    const int totalSlices = wholeExtent[5] - wholeExtent[4] + 1;
     const int chunkSize = std::max(1, totalSlices / 4);
 
     std::vector<double> chunkMeans;
-    for (int zStart = extent[4]; zStart <= extent[5]; zStart += chunkSize) {
-        int zEnd = std::min(extent[5], zStart + chunkSize - 1);
+    for (int zStart = wholeExtent[4]; zStart <= wholeExtent[5]; zStart += chunkSize) {
+        const int zEnd = std::min(wholeExtent[5], zStart + chunkSize - 1);
         vtkNew<vtkExtractVOI> extract;
         extract->SetInputConnection(reader->GetOutputPort());
-        extract->SetVOI(extent[0], extent[1], extent[2], extent[3], zStart, zEnd);
+        extract->SetVOI(wholeExtent[0], wholeExtent[1], wholeExtent[2], wholeExtent[3], zStart, zEnd);
         extract->Update();
 
         vtkNew<vtkImageAccumulate> accum;
         accum->SetInputConnection(extract->GetOutputPort());
+        accum->IgnoreZeroOff();
         accum->Update();
         chunkMeans.push_back(accum->GetMean()[0]);
     }

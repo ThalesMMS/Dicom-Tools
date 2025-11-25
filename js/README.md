@@ -21,6 +21,11 @@ npm run build      # build de produção
 npm test           # Vitest (gateway + MPR/MIP/overlay via sample_series)
 ```
 
+- Novas utilidades:
+  - `createVolumeViewport` para inicializar viewports ortográficos (MIP) ou 3D com orientação axial/sagital/coronal, blend mode e slab thickness.
+  - `volumeUtils` inclui spacing/origin/orientation, transforms index↔world (crosshair), ROI stats e helpers de labelmap/segmentação.
+  - `dicomWeb.ts` monta `wadors:` imageIds via `dicomweb-client` (QIDO→WADO-RS), alinhado com os servidores usados por dcm4che/fo-dicom/dicom-rs.
+
 ## Contract CLI
 ```bash
 node js/contract-cli/index.js --op info --input sample_series/IM-0001-0001.dcm --options "{}"

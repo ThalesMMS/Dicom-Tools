@@ -37,7 +37,7 @@ final class LocalDicomServer implements AutoCloseable {
     private final ScheduledExecutorService scheduler;
     private final List<Attributes> receivedInstances = new ArrayList<>();
 
-    private LocalDicomServer(String aet, int port, boolean enableStore, String storeSopClass) throws IOException, InterruptedException {
+    private LocalDicomServer(String aet, int port, boolean enableStore, String... storeSopClasses) throws IOException, InterruptedException {
         this.device = new Device("dicomtools-test-scp");
         this.ae = new ApplicationEntity(aet);
         this.ae.setAssociationAcceptor(true);
@@ -55,23 +55,28 @@ final class LocalDicomServer implements AutoCloseable {
                 TransferCapability.Role.SCP, UID.ImplicitVRLittleEndian));
 
         if (enableStore) {
-            var storeScp = new BasicCStoreSCP(storeSopClass) {
-                @Override
-                protected void store(Association as, PresentationContext pc, Attributes rq, PDVInputStream data, Attributes rsp) throws IOException {
-                    Attributes dataset;
-                    try (DicomInputStream dis = new DicomInputStream(data)) {
-                        dis.setIncludeBulkData(DicomInputStream.IncludeBulkData.YES);
-                        dataset = dis.readDataset(-1, -1);
+            String[] sopClasses = storeSopClasses != null && storeSopClasses.length > 0
+                    ? storeSopClasses
+                    : new String[]{UID.SecondaryCaptureImageStorage};
+            for (String sop : sopClasses) {
+                var storeScp = new BasicCStoreSCP(sop) {
+                    @Override
+                    protected void store(Association as, PresentationContext pc, Attributes rq, PDVInputStream data, Attributes rsp) throws IOException {
+                        Attributes dataset;
+                        try (DicomInputStream dis = new DicomInputStream(data)) {
+                            dis.setIncludeBulkData(DicomInputStream.IncludeBulkData.YES);
+                            dataset = dis.readDataset(-1, -1);
+                        }
+                        synchronized (receivedInstances) {
+                            receivedInstances.add(dataset);
+                        }
+                        rsp.setInt(Tag.Status, VR.US, Status.Success);
                     }
-                    synchronized (receivedInstances) {
-                        receivedInstances.add(dataset);
-                    }
-                    rsp.setInt(Tag.Status, VR.US, Status.Success);
-                }
-            };
-            registry.addDicomService(storeScp);
-            this.ae.addTransferCapability(new TransferCapability(null, storeSopClass,
-                    TransferCapability.Role.SCP, UID.ExplicitVRLittleEndian, UID.ImplicitVRLittleEndian));
+                };
+                registry.addDicomService(storeScp);
+                this.ae.addTransferCapability(new TransferCapability(null, sop,
+                        TransferCapability.Role.SCP, UID.ExplicitVRLittleEndian, UID.ImplicitVRLittleEndian));
+            }
         }
 
         this.device.setDimseRQHandler(registry);
@@ -93,8 +98,8 @@ final class LocalDicomServer implements AutoCloseable {
         return new LocalDicomServer(aet, port, false, null);
     }
 
-    static LocalDicomServer createEchoAndStore(String aet, int port, String storeSopClass) throws IOException, InterruptedException {
-        return new LocalDicomServer(aet, port, true, storeSopClass);
+    static LocalDicomServer createEchoAndStore(String aet, int port, String... storeSopClasses) throws IOException, InterruptedException {
+        return new LocalDicomServer(aet, port, true, storeSopClasses);
     }
 
     int getPort() {

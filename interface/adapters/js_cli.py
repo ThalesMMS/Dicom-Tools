@@ -56,4 +56,6 @@ class JsCliAdapter:
             stderr=proc.stderr,
             output_files=payload.get("output_files") or [],
             metadata=payload.get("metadata"),
+            backend="js",
+            operation=op,
         )

@@ -15,6 +15,7 @@ from typing import Iterable, List, Sequence, Tuple
 import numpy as np
 import pydicom
 from pydicom.dataset import Dataset, FileDataset
+from pydicom.tag import Tag
 from pydicom.uid import (
     BasicTextSRStorage,
     CTImageStorage,
@@ -324,4 +325,34 @@ def build_segmentation(source: FileDataset, mask: np.ndarray | None = None) -> F
     if seg_mask.dtype != np.uint8:
         seg_mask = seg_mask.astype(np.uint8)
     ds.PixelData = seg_mask.tobytes()
+    return ds
+
+
+def build_special_vr_dataset() -> FileDataset:
+    """Create a dataset that exercises uncommon VRs and private tags."""
+    file_meta = _base_file_meta()
+    ds = FileDataset(None, {}, file_meta=file_meta, preamble=b"\0" * 128)
+
+    ds.PatientName = "VR^Tester"
+    ds.PatientID = "VR-001"
+    ds.StudyInstanceUID = generate_uid()
+    ds.SeriesInstanceUID = generate_uid()
+    ds.SOPClassUID = CTImageStorage
+    ds.SOPInstanceUID = file_meta.MediaStorageSOPInstanceUID
+
+    # Private tag block with raw bytes stored as UN to ensure preservation
+    ds.add_new(Tag(0x0099, 0x0010), "LO", "DICOMTOOLS")
+    raw_private = b"\x01\x02\x03\x04"
+    ds.add_new(Tag(0x0099, 0x1001), "UN", raw_private)
+
+    # AT: attribute tag reference
+    ds.add_new(Tag(0x0008, 0x2120), "AT", [Tag(0x0008, 0x103e)])
+
+    # UR: URI VR
+    ds.add_new(Tag(0x0008, 0x0120), "UR", "https://dicom.tools/resource")
+
+    # Other float VRs to ensure encoding is round-tripped
+    ds.add_new(Tag(0x0028, 0x3003), "OF", np.array([1.25, 2.5], dtype=np.float32).tobytes())
+    ds.add_new(Tag(0x0028, 0x3004), "OD", np.array([0.5, 0.75], dtype=np.float64).tobytes())
+
     return ds

@@ -70,11 +70,11 @@ pip install "dicom-tools[extra]"
 
 The `tests/` directory exercises key features of each library:
 
-- **pydicom:** sequences/nested datasets, Basic Text SR, character sets with UTF-8 names, multi-frame functional groups, secondary capture creation, SEG generation.
-- **pynetdicom:** in-process C-ECHO, C-FIND (StudyRoot), C-MOVE with internal C-STORE, C-GET (skips if storage contexts aren’t accepted), timeout/failure handling, optional TLS echo.
-- **GDCM:** transfer syntax transcoding (e.g., RLE), writer round-trip with tag edits, DICOMDIR generation (skips if the generator is unavailable).
-- **SimpleITK:** series IO, basic registration, masking/label stats, NIfTI roundtrip back to DICOM (skips if DICOM writer not supported).
-- **dicom-numpy:** slice ordering edge cases, duplicates, multi-echo stacking, affine comparison against SimpleITK.
+- **pydicom:** uncommon VRs (UN/UR/AT/OF/OD), private tags, DICOM JSON model roundtrip, deferred reads, sequences/nested datasets, Basic Text SR, UTF-8 character sets, multi-frame functional groups, secondary capture creation, SEG generation.
+- **pynetdicom:** in-process C-ECHO, C-FIND (StudyRoot + MWL), C-MOVE with internal C-STORE, C-GET (skips if storage contexts aren’t accepted), timeout/failure handling, optional TLS echo, Storage Commitment (N-ACTION) and MPPS (N-CREATE/N-SET), concurrent C-STORE + C-FIND associations.
+- **GDCM:** transfer syntax transcoding (RLE/JPEG2000), writer round-trip with tag edits, DICOMDIR generation (skips if the generator is unavailable), segmentation readback into NumPy (skipped on macOS builds where GDCM SEG is unstable).
+- **SimpleITK:** series IO, basic registration, masking/label stats, segmentation filters (region growing/watershed), 4D label stats aggregation, multi-label exports to DICOM series, NIfTI roundtrip back to DICOM (skips if DICOM writer not supported).
+- **dicom-numpy:** slice ordering edge cases, irregular spacing tolerance, duplicates, multi-echo stacking, affine comparison against SimpleITK, NIfTI export with histogram/summary validation.
 
 Run the full suite (uses synthetic fixtures by default):
 

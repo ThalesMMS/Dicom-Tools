@@ -26,5 +26,6 @@ namespace VTKTests {
     void TestVolumeRenderingSnapshot(const std::string& filename, const std::string& outputDir);
     void TestMultiplanarMPR(const std::string& filename, const std::string& outputDir);
     void TestMaskOverlay(const std::string& filename, const std::string& outputDir);
+    void TestLabelmapSurface(const std::string& filename, const std::string& outputDir);
     void TestStreamingReslice(const std::string& filename, const std::string& outputDir);
 }

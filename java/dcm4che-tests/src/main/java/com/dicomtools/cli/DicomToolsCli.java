@@ -4,8 +4,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.dcm4che3.data.Tag;
 
 public class DicomToolsCli {
     public static void main(String[] args) {
@@ -36,6 +39,18 @@ public class DicomToolsCli {
                 case "dump" -> result = handleDump(rest);
                 case "stats", "histogram" -> result = handleStats(rest);
                 case "echo" -> result = handleEcho(rest);
+                case "store-scu" -> result = handleStore(rest);
+                case "store-scp" -> result = handleStoreScp(rest);
+                case "find" -> result = handleFind(rest, false);
+                case "mwl" -> result = handleFind(rest, true);
+                case "cmove", "c-move" -> result = handleMove(rest);
+                case "cget", "c-get" -> result = handleGet(rest);
+                case "stgcmt" -> result = handleStorageCommit(rest);
+                case "qido" -> result = handleQido(rest);
+                case "stow" -> result = handleStow(rest);
+                case "wado" -> result = handleWado(rest);
+                case "sr", "sr-summary" -> result = handleStructuredReport(rest);
+                case "rt-check" -> result = handleRtCheck(rest);
                 default -> {
                     System.err.println("Unknown command: " + command);
                     usage();
@@ -147,6 +162,156 @@ public class DicomToolsCli {
         return DicomOperations.echo(host, port, timeout, calling, called);
     }
 
+    private static OperationResult handleStore(String[] args) throws Exception {
+        if (args.length == 0) {
+            throw new IllegalArgumentException("store-scu requires <input> and --target host:port");
+        }
+        Path input = Paths.get(args[0]);
+        String target = optionValue(args, "--target");
+        if (target == null) {
+            throw new IllegalArgumentException("store-scu requires --target host:port");
+        }
+        String[] parts = target.split(":");
+        String host = parts[0];
+        int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 104;
+        String calling = optionValue(args, "--calling");
+        if (calling == null) calling = "STORE-SCU";
+        String called = optionValue(args, "--called");
+        if (called == null) called = "STORE-SCP";
+        int timeout = optionInt(args, "--timeout", 2000);
+        return DicomOperations.store(input, host, port, timeout, calling, called);
+    }
+
+    private static OperationResult handleStoreScp(String[] args) throws Exception {
+        int port = optionInt(args, "--port", -1);
+        if (port < 0) throw new IllegalArgumentException("store-scp requires --port");
+        String aet = optionValue(args, "--aet");
+        if (aet == null) aet = "STORE-SCP";
+        String output = optionValue(args, "--output");
+        if (output == null) throw new IllegalArgumentException("store-scp requires --output <dir>");
+        int duration = optionInt(args, "--duration", 10);
+        return DicomOperations.storeSCP(port, aet, Paths.get(output), duration);
+    }
+
+    private static OperationResult handleFind(String[] args, boolean worklist) throws Exception {
+        if (args.length == 0) {
+            throw new IllegalArgumentException((worklist ? "mwl" : "find") + " requires <host:port>");
+        }
+        String target = args[0];
+        String[] parts = target.split(":");
+        String host = parts[0];
+        int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 104;
+        String calling = optionValue(args, "--calling");
+        if (calling == null) calling = worklist ? "MWL-SCU" : "FIND-SCU";
+        String called = optionValue(args, "--called");
+        if (called == null) called = worklist ? "MWL-SCP" : "FIND-SCP";
+        String level = worklist ? "WORKLIST" : optionValue(args, "--level");
+        if (!worklist && level == null) level = "STUDY";
+        Map<Integer, String> filters = new HashMap<>();
+        String patient = optionValue(args, "--patient");
+        if (patient != null) filters.put(Tag.PatientName, patient);
+        String study = optionValue(args, "--study");
+        if (study != null) filters.put(Tag.StudyInstanceUID, study);
+        return DicomOperations.cfind(host, port, calling, called, level, filters, 2000);
+    }
+
+    private static OperationResult handleMove(String[] args) throws Exception {
+        if (args.length == 0) throw new IllegalArgumentException("c-move requires <host:port>");
+        String target = args[0];
+        String dest = optionValue(args, "--dest");
+        if (dest == null) throw new IllegalArgumentException("c-move requires --dest DEST_AET");
+        String[] parts = target.split(":");
+        String host = parts[0];
+        int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 104;
+        String calling = optionValue(args, "--calling");
+        if (calling == null) calling = "MOVE-SCU";
+        String called = optionValue(args, "--called");
+        if (called == null) called = "MOVE-SCP";
+        Map<Integer, String> filters = new HashMap<>();
+        String study = optionValue(args, "--study");
+        if (study != null) filters.put(Tag.StudyInstanceUID, study);
+        return DicomOperations.cmove(host, port, calling, called, dest, filters, 2000);
+    }
+
+    private static OperationResult handleGet(String[] args) throws Exception {
+        if (args.length == 0) throw new IllegalArgumentException("c-get requires <host:port>");
+        String target = args[0];
+        String[] parts = target.split(":");
+        String host = parts[0];
+        int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 104;
+        String output = optionValue(args, "--output");
+        if (output == null) throw new IllegalArgumentException("c-get requires --output <dir>");
+        String calling = optionValue(args, "--calling");
+        if (calling == null) calling = "GET-SCU";
+        String called = optionValue(args, "--called");
+        if (called == null) called = "GET-SCP";
+        Map<Integer, String> filters = new HashMap<>();
+        String study = optionValue(args, "--study");
+        if (study != null) filters.put(Tag.StudyInstanceUID, study);
+        return DicomOperations.cget(host, port, calling, called, filters, Paths.get(output), 2000);
+    }
+
+    private static OperationResult handleStorageCommit(String[] args) throws Exception {
+        if (args.length == 0) throw new IllegalArgumentException("stgcmt requires <host:port>");
+        String target = args[0];
+        String files = optionValue(args, "--files");
+        if (files == null) throw new IllegalArgumentException("stgcmt requires --files comma-separated list");
+        String[] parts = target.split(":");
+        String host = parts[0];
+        int port = parts.length > 1 ? Integer.parseInt(parts[1]) : 104;
+        String calling = optionValue(args, "--calling");
+        if (calling == null) calling = "STGCMT-SCU";
+        String called = optionValue(args, "--called");
+        if (called == null) called = "STGCMT-SCP";
+        List<Path> paths = Arrays.stream(files.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(Paths::get)
+                .toList();
+        return DicomOperations.storageCommit(host, port, calling, called, paths, 2000);
+    }
+
+    private static OperationResult handleQido(String[] args) throws Exception {
+        if (args.length == 0) throw new IllegalArgumentException("qido requires <url>");
+        return DicomWebOperations.qido(args[0]);
+    }
+
+    private static OperationResult handleStow(String[] args) throws Exception {
+        if (args.length < 2) throw new IllegalArgumentException("stow requires <url> <input>");
+        Path input = Paths.get(args[1]);
+        return DicomWebOperations.stow(input, args[0]);
+    }
+
+    private static OperationResult handleWado(String[] args) throws Exception {
+        if (args.length == 0) throw new IllegalArgumentException("wado requires <url>");
+        String output = optionValue(args, "--output");
+        if (output == null) throw new IllegalArgumentException("wado requires --output <file>");
+        return DicomWebOperations.wado(args[0], Paths.get(output));
+    }
+
+    private static OperationResult handleStructuredReport(String[] args) throws Exception {
+        if (args.length == 0) {
+            throw new IllegalArgumentException("sr-summary requires <input>");
+        }
+        Path input = Paths.get(args[0]);
+        return DicomOperations.structuredReport(input);
+    }
+
+    private static OperationResult handleRtCheck(String[] args) throws Exception {
+        String planOpt = optionValue(args, "--plan");
+        String doseOpt = optionValue(args, "--dose");
+        String structOpt = optionValue(args, "--struct");
+
+        Path plan = planOpt != null ? Paths.get(planOpt) : (args.length > 0 ? Paths.get(args[0]) : null);
+        if (plan == null) {
+            throw new IllegalArgumentException("rt-check requires --plan <plan.dcm> (or first positional argument)");
+        }
+        Path dose = doseOpt != null ? Paths.get(doseOpt) : null;
+        Path struct = structOpt != null ? Paths.get(structOpt) : null;
+
+        return DicomOperations.rtConsistency(plan, dose, struct);
+    }
+
     private static void usage() {
         System.out.println("""
                 Usage: java -jar dcm4che-tests.jar <command> [args]
@@ -157,6 +322,18 @@ public class DicomToolsCli {
                   validate <input>
                   dump <input> [--max-width N]
                   stats <input> [--bins N] [--json] [--pretty]
+                  store-scu <input> --target host:port [--calling AET] [--called AET] [--timeout ms]
+                  store-scp --port N [--aet AET] --output <dir> [--duration seconds]
+                  find <host:port> --level patient|study|series [--called AET] [--calling AET] [--patient PAT] [--study STUDY_UID]
+                  mwl <host:port> [--called AET] [--calling AET] [--patient PAT]
+                  c-move <host:port> --dest DEST_AET [--called AET] [--calling AET] [--study STUDY_UID]
+                  c-get <host:port> --output <dir> [--called AET] [--calling AET] [--study STUDY_UID]
+                  stgcmt <host:port> --files <comma list> [--called AET] [--calling AET]
+                  qido <url>
+                  stow <url> <input>
+                  wado <url> --output <file>
+                  sr-summary <input>
+                  rt-check --plan <plan.dcm> [--dose <dose.dcm>] [--struct <rtstruct.dcm>]
                   echo <host:port> [--timeout ms] [--calling AET] [--called AET]
                 """);
     }

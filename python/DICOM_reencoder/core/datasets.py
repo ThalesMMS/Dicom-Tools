@@ -8,6 +8,7 @@
 
 """Dataset I/O helpers used across the toolkit."""
 
+import json
 from pathlib import Path
 from typing import Union
 
@@ -35,3 +36,19 @@ def ensure_pixel_data(dataset: Dataset) -> None:
     # Many utilities assume pixel data is present; fail fast with a clear message
     if "PixelData" not in dataset:
         raise ValueError("No pixel data present in the dataset")
+
+
+def dataset_to_dicom_json(dataset: Dataset, *, bulk_data_threshold: int = 0) -> str:
+    """Serialize a dataset using the DICOM JSON model (PS3.18).
+
+    bulk_data_threshold=0 forces inline Base64 for small elements so tests
+    can assert byte equality without using external bulk data fetchers.
+    """
+    return dataset.to_json(bulk_data_threshold=bulk_data_threshold)
+
+
+def dataset_from_dicom_json(payload: str | dict) -> Dataset:
+    """Load a dataset from a DICOM JSON representation."""
+    if isinstance(payload, dict):
+        payload = json.dumps(payload)
+    return Dataset.from_json(payload)

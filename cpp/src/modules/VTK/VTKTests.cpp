@@ -33,6 +33,7 @@ void VTKTests::RegisterCommands(CommandRegistry& registry) {
             TestVolumeRenderingSnapshot(ctx.inputPath, ctx.outputDir);
             TestMultiplanarMPR(ctx.inputPath, ctx.outputDir);
             TestMaskOverlay(ctx.inputPath, ctx.outputDir);
+            TestLabelmapSurface(ctx.inputPath, ctx.outputDir);
             TestStreamingReslice(ctx.inputPath, ctx.outputDir);
             TestViewerSnapshot(ctx.inputPath, ctx.outputDir);
             return 0;
@@ -170,9 +171,19 @@ void VTKTests::RegisterCommands(CommandRegistry& registry) {
     });
 
     registry.Register({
+        "vtk:label-surface",
+        "VTK",
+        "Threshold into a labelmap and export an STL surface + stats",
+        [](const CommandContext& ctx) {
+            TestLabelmapSurface(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
         "vtk:stream",
         "VTK",
-        "Process volume in Z-chunks to simulate streaming reslice",
+        "Stream volume in Z-chunks using update extents (memory-friendly)",
         [](const CommandContext& ctx) {
             TestStreamingReslice(ctx.inputPath, ctx.outputDir);
             return 0;

@@ -14,6 +14,8 @@ class RunResult:
     stderr: str
     output_files: List[str]
     metadata: Optional[Dict[str, Any]] = None
+    backend: Optional[str] = None
+    operation: Optional[str] = None
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -22,13 +24,27 @@ class RunResult:
             "stdout": self.stdout,
             "stderr": self.stderr,
             "output_files": self.output_files,
+            "artifacts": self.output_files,
             "metadata": self.metadata,
+            "backend": self.backend,
+            "operation": self.operation,
         }
 
 
-def run_process(cmd: List[str], cwd: Optional[Path] = None) -> RunResult:
-    """Run a command and capture stdout/stderr."""
-    proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+def run_process(cmd: List[str], cwd: Optional[Path] = None, timeout: float | None = None) -> RunResult:
+    """Run a command and capture stdout/stderr with friendly failures."""
+    try:
+        proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+    except FileNotFoundError as exc:
+        message = f"Command not found: {exc.filename}" if exc.filename else str(exc)
+        return RunResult(ok=False, returncode=127, stdout="", stderr=message, output_files=[])
+    except subprocess.TimeoutExpired as exc:
+        stdout = (exc.stdout or "").strip() if hasattr(exc, "stdout") else ""
+        stderr = (exc.stderr or "").strip() if hasattr(exc, "stderr") else ""
+        if not stderr:
+            stderr = f"Command timed out after {timeout} seconds"
+        return RunResult(ok=False, returncode=-1, stdout=stdout, stderr=stderr, output_files=[])
+
     return RunResult(
         ok=proc.returncode == 0,
         returncode=proc.returncode,

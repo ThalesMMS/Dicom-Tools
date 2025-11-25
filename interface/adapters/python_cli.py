@@ -33,6 +33,8 @@ class PythonCliAdapter:
         # Tentar extrair metadata quando a saída for JSON (info/summary)
         meta = parse_json_maybe(result.stdout)
         result.metadata = meta
+        result.backend = "python"
+        result.operation = op
 
         if output:
             result.output_files.append(str(Path(output)))

@@ -36,6 +36,10 @@ public class OperationResult {
         return new OperationResult(false, message, Collections.emptyMap(), Collections.emptyList());
     }
 
+    public static OperationResult failure(String message, Map<String, Object> metadata) {
+        return new OperationResult(false, message, metadata, Collections.emptyList());
+    }
+
     public boolean isSuccess() {
         return success;
     }

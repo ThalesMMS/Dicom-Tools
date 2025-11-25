@@ -32,6 +32,8 @@ class JavaCliAdapter:
         result = run_process(cmd, cwd=self.root / "java")
         meta = parse_json_maybe(result.stdout)
         result.metadata = meta
+        result.backend = "java"
+        result.operation = op
         if output:
             result.output_files.append(str(Path(output)))
         return result

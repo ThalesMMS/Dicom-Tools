@@ -102,3 +102,52 @@ def test_simpleitk_nifti_roundtrip_preserves_geometry(synthetic_series, tmp_path
     reloaded = sitk.ReadImage(file_names)
     assert np.allclose(reloaded.GetSpacing(), image.GetSpacing())
     assert np.allclose(reloaded.GetDirection(), image.GetDirection())
+
+
+def test_simpleitk_segmentation_filters_match_expected_region():
+    array = np.zeros((64, 64), dtype=np.uint8)
+    array[20:44, 20:44] = 180
+    image = sitk.GetImageFromArray(array)
+
+    region_grow = sitk.ConnectedThreshold(image, seedList=[(32, 32)], lower=100, upper=255)
+    mask = sitk.GetArrayFromImage(region_grow)
+    assert np.count_nonzero(mask) == 24 * 24
+
+    gradient = sitk.GradientMagnitude(image)
+    watershed = sitk.MorphologicalWatershed(gradient, level=5.0, markWatershedLine=False)
+    watershed_arr = sitk.GetArrayFromImage(watershed)
+    assert watershed_arr.max() >= 1
+
+
+def test_simpleitk_label_statistics_on_4d_and_multilabel_export(tmp_path):
+    # Build a 4D volume with two time points to exercise LabelStatistics
+    data = np.zeros((2, 2, 8, 8), dtype=np.float32)
+    data[0, 0, 2:6, 2:6] = 5.0
+    data[1, 1, 1:5, 1:5] = 9.0
+
+    total_count = 0
+    max_seen = 0
+    for t in range(data.shape[0]):
+        frame = sitk.GetImageFromArray(data[t])
+        mask = sitk.GetImageFromArray((data[t] > 0).astype(np.uint8))
+        stats = sitk.LabelStatisticsImageFilter()
+        stats.Execute(frame, mask)
+
+        assert stats.HasLabel(1)
+        total_count += stats.GetCount(1)
+        max_seen = max(max_seen, stats.GetMaximum(1))
+
+    assert total_count == 2 * 16  # two labeled cubes of 4x4 voxels
+    assert max_seen == 9.0
+
+    # Multi-label mask export: generate one DICOM series per label
+    multilabel = np.zeros((3, 8, 8), dtype=np.uint8)
+    multilabel[0, 2:5, 2:5] = 1
+    multilabel[1, 3:7, 3:7] = 2
+    label_image = sitk.GetImageFromArray(multilabel)
+    for label in (1, 2):
+        binary = sitk.Equal(label_image, label)
+        out_dir = tmp_path / f"label_{label}"
+        out_dir.mkdir()
+        file_names = _write_dicom_series(binary, out_dir)
+        assert file_names

@@ -7,6 +7,7 @@
 # Thales Matheus Mendonça Santos - November 2025
 
 import contextlib
+from concurrent.futures import ThreadPoolExecutor
 import socket
 import ssl
 import subprocess
@@ -14,10 +15,14 @@ import shutil
 
 import pytest
 from pydicom.dataset import Dataset
+from pydicom.uid import generate_uid
 from pynetdicom import AE, StoragePresentationContexts, evt
 from pynetdicom.sop_class import (
     CTImageStorage,
+    ModalityPerformedProcedureStep,
+    ModalityWorklistInformationFind,
     SecondaryCaptureImageStorage,
+    StorageCommitmentPushModel,
     StudyRootQueryRetrieveInformationModelFind,
     StudyRootQueryRetrieveInformationModelGet,
     StudyRootQueryRetrieveInformationModelMove,
@@ -70,6 +75,27 @@ def _store_scp():
 def _find_scp(responses):
     ae = AE(ae_title="FIND_SCP")
     ae.add_supported_context(StudyRootQueryRetrieveInformationModelFind)
+
+    def handle_find(event):
+        for ds in responses:
+            yield 0xFF00, ds
+        yield 0x0000, None
+
+    port = _free_port()
+    server = ae.start_server(
+        ("127.0.0.1", port), block=False, evt_handlers=[(evt.EVT_C_FIND, handle_find)]
+    )
+    try:
+        yield ("127.0.0.1", port)
+    finally:
+        server.shutdown()
+        ae.shutdown()
+
+
+@contextlib.contextmanager
+def _mwl_scp(responses):
+    ae = AE(ae_title="MWL_SCP")
+    ae.add_supported_context(ModalityWorklistInformationFind)
 
     def handle_find(event):
         for ds in responses:
@@ -243,6 +269,191 @@ def test_cget_returns_instances_to_same_ae(synthetic_datasets):
     if 0x0000 not in statuses:
         pytest.skip("C-GET storage contexts were not accepted by the peer in this environment")
     assert len(stored) == len(datasets)
+
+
+def test_storage_commitment_n_action_cycle():
+    seen = []
+    status = None
+    rsp = None
+
+    def handle_action(event):
+        info = event.action_information
+        seen.append(info)
+        rsp = Dataset()
+        rsp.ReferencedSOPSequence = info.ReferencedSOPSequence
+        return 0x0000, rsp
+
+    ae = AE(ae_title="STGCMT_SCP")
+    ae.add_supported_context(StorageCommitmentPushModel)
+    port = _free_port()
+    server = ae.start_server(("127.0.0.1", port), block=False, evt_handlers=[(evt.EVT_N_ACTION, handle_action)])
+
+    try:
+        scu = AE(ae_title="STGCMT_SCU")
+        scu.add_requested_context(StorageCommitmentPushModel)
+        assoc = scu.associate("127.0.0.1", port, ae_title="STGCMT_SCP")
+        if not assoc.is_established:
+            pytest.skip("N-ACTION association not established")
+
+        ref = Dataset()
+        ref.ReferencedSOPClassUID = CTImageStorage
+        ref.ReferencedSOPInstanceUID = generate_uid()
+        action_info = Dataset()
+        action_info.ReferencedSOPSequence = [ref]
+
+        status, rsp = assoc.send_n_action(
+            action_info,
+            action_type=1,
+            class_uid=StorageCommitmentPushModel,
+            instance_uid=generate_uid(),
+        )
+        assoc.release()
+        scu.shutdown()
+    finally:
+        server.shutdown()
+        ae.shutdown()
+
+    if not seen or status is None or rsp is None:
+        pytest.skip("N-ACTION handler was not invoked by peer")
+    assert status.Status == 0x0000
+    assert rsp.ReferencedSOPSequence[0].ReferencedSOPInstanceUID == ref.ReferencedSOPInstanceUID
+
+
+def test_ncreate_and_nset_for_mpps():
+    created = []
+    updates = []
+
+    def handle_create(event):
+        created.append(event.attribute_list)
+        rsp = Dataset()
+        rsp.AffectedSOPInstanceUID = generate_uid()
+        return 0x0000, rsp
+
+    def handle_set(event):
+        updates.append(event.modification_list)
+        return 0x0000, Dataset()
+
+    ae = AE(ae_title="MPPS_SCP")
+    ae.add_supported_context(ModalityPerformedProcedureStep)
+    port = _free_port()
+    server = ae.start_server(
+        ("127.0.0.1", port),
+        block=False,
+        evt_handlers=[(evt.EVT_N_CREATE, handle_create), (evt.EVT_N_SET, handle_set)],
+    )
+
+    try:
+        scu = AE(ae_title="MPPS_SCU")
+        scu.add_requested_context(ModalityPerformedProcedureStep)
+        assoc = scu.associate("127.0.0.1", port, ae_title="MPPS_SCP")
+        assert assoc.is_established
+
+        attrs = Dataset()
+        attrs.Modality = "CT"
+        attrs.PerformedStationName = "DICOMTOOLS"
+        status, rsp = assoc.send_n_create(attrs, ModalityPerformedProcedureStep)
+        assert status.Status == 0x0000
+
+        instance_uid = getattr(rsp, "AffectedSOPInstanceUID", None) or generate_uid()
+        mods = Dataset()
+        mods.PerformedProcedureStepStatus = "COMPLETED"
+        mods.PerformedSeriesSequence = [Dataset()]
+        status, _ = assoc.send_n_set(mods, ModalityPerformedProcedureStep, instance_uid)
+        assoc.release()
+        scu.shutdown()
+    finally:
+        server.shutdown()
+        ae.shutdown()
+
+    assert any(getattr(ds, "Modality", None) == "CT" for ds in created if ds)
+    assert any(getattr(ds, "PerformedProcedureStepStatus", None) == "COMPLETED" for ds in updates if ds)
+
+
+def test_modality_worklist_find_returns_scheduled_steps():
+    result = Dataset()
+    result.PatientName = "Worklist^Patient"
+    result.AccessionNumber = "ACC-123"
+    sps = Dataset()
+    sps.Modality = "CT"
+    sps.ScheduledProcedureStepDescription = "Synthetic study"
+    result.ScheduledProcedureStepSequence = [sps]
+
+    with _mwl_scp([result]) as (host, port):
+        ae = AE(ae_title="MWL_SCU")
+        ae.add_requested_context(ModalityWorklistInformationFind)
+        assoc = ae.associate(host, port, ae_title="FIND_SCP")
+        if not assoc.is_established:
+            pytest.skip("MWL association not established in this environment")
+
+        query = Dataset()
+        query.PatientName = "*"
+        query.ScheduledProcedureStepSequence = [Dataset()]
+        query.ScheduledProcedureStepSequence[0].Modality = "CT"
+
+        returned = []
+        for status, identifier in assoc.send_c_find(query, ModalityWorklistInformationFind):
+            assert status
+            if status.Status in (0xFF00, 0xFF01):
+                returned.append(identifier)
+
+        assoc.release()
+        ae.shutdown()
+
+    assert returned
+    first = returned[0]
+    assert first.PatientName == "Worklist^Patient"
+    assert first.ScheduledProcedureStepSequence[0].Modality == "CT"
+
+
+def test_concurrent_associations_handle_store_and_find(synthetic_datasets):
+    datasets = [ds.copy() for ds in synthetic_datasets]
+    query_ds = Dataset()
+    query_ds.QueryRetrieveLevel = "STUDY"
+    query_ds.PatientName = "*"
+
+    with _store_scp() as (store_host, store_port, stored):
+        with _find_scp([query_ds]) as (find_host, find_port):
+            def send_store(ds):
+                ae = AE(ae_title="STORE_SCU")
+                ae.add_requested_context(CTImageStorage)
+                assoc = ae.associate(store_host, store_port, ae_title="STORE_SCP")
+                if not assoc.is_established:
+                    return None
+                status = assoc.send_c_store(ds)
+                assoc.release()
+                ae.shutdown()
+                return status.Status if status else None
+
+            def send_find():
+                ae = AE(ae_title="FINDSCU2")
+                ae.add_requested_context(StudyRootQueryRetrieveInformationModelFind)
+                assoc = ae.associate(find_host, find_port, ae_title="FIND_SCP")
+                if not assoc.is_established:
+                    return []
+                results = []
+                for status, identifier in assoc.send_c_find(
+                    query_ds, StudyRootQueryRetrieveInformationModelFind
+                ):
+                    if status and status.Status in (0xFF00, 0xFF01):
+                        results.append(identifier)
+                assoc.release()
+                ae.shutdown()
+                return results
+
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                futures = []
+                for ds in datasets:
+                    futures.append(pool.submit(send_store, ds))
+                futures.append(pool.submit(send_find))
+                futures.append(pool.submit(send_find))
+                results = [f.result() for f in futures]
+
+    store_statuses = [r for r in results if isinstance(r, int)]
+    find_results = [r for r in results if isinstance(r, list)]
+    assert len(store_statuses) == len(datasets)
+    assert all(status == 0x0000 for status in store_statuses if status is not None)
+    assert stored  # Ensure C-STORE handlers ran
+    assert any(find_results)  # At least one C-FIND returned identifiers
 
 
 def test_association_failure_has_clear_status():

@@ -146,6 +146,9 @@ if run_test("test-vtk", "VTK Features"):
     require_file("vtk_volume_render.png")
     require_file("vtk_mpr_sagittal.png")
     require_file("vtk_overlay.png")
+    require_file("vtk_labelmap.vti")
+    require_file("vtk_label_surface.stl")
+    require_file("vtk_labelmap_stats.txt")
     require_file("vtk_streaming.txt")
 else:
     tests_passed = False

@@ -50,7 +50,7 @@ class DicomNetworkingTest {
     void cStoreRoundTripTransfersDataset() throws Exception {
         int port = findOpenPort();
         Attributes dataset = syntheticSecondaryCapture();
-        try (LocalDicomServer server = LocalDicomServer.createEchoAndStore("STORE-SCP", port, UID.SecondaryCaptureImageStorage)) {
+        try (LocalDicomServer server = LocalDicomServer.createEchoAndStore("STORE-SCP", port, dataset.getString(Tag.SOPClassUID))) {
             sendStore(dataset, port, "STORE-SCU", "STORE-SCP");
             List<Attributes> received = server.receivedInstances();
             assertEquals(1, received.size(), "SCP should capture one instance");

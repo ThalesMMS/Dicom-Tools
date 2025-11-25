@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using FellowOakDicom;
 using FellowOakDicom.Imaging;
+using FellowOakDicom.Imaging.Codec;
+using FellowOakDicom.IO.Buffer;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -87,6 +90,55 @@ public class ImagingAndMultiframeTests
         finally
         {
             Directory.Delete(workingDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ColorMultiframe_CompressedRoundTrip_RetainsRgbPixels()
+    {
+        var rows = 2;
+        var columns = 2;
+        var frames = new[]
+        {
+            new byte[]
+            {
+                255, 0, 0,
+                0, 255, 0,
+                0, 0, 255,
+                128, 128, 128
+            },
+            new byte[]
+            {
+                10, 20, 30,
+                40, 50, 60,
+                70, 80, 90,
+                100, 110, 120
+            }
+        };
+
+        var source = new DicomFile(BuildRgbMultiframe(rows, columns, frames));
+
+        DicomFile encoded;
+        try
+        {
+            encoded = new DicomTranscoder(DicomTransferSyntax.ExplicitVRLittleEndian, DicomTransferSyntax.RLELossless).Transcode(source);
+        }
+        catch (DicomCodecException ex) when (ex.Message.Contains("not supported", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        var roundTrip = new DicomTranscoder(encoded.FileMetaInfo.TransferSyntax, DicomTransferSyntax.ExplicitVRLittleEndian).Transcode(encoded);
+        var pixelData = DicomPixelData.Create(roundTrip.Dataset, false);
+
+        Assert.Equal(frames.Length, pixelData.NumberOfFrames);
+        Assert.Equal(PlanarConfiguration.Interleaved, pixelData.PlanarConfiguration);
+        Assert.Equal(PhotometricInterpretation.Rgb, pixelData.PhotometricInterpretation);
+
+        for (var i = 0; i < frames.Length; i++)
+        {
+            var frame = pixelData.GetFrame(i).Data;
+            Assert.Equal(frames[i], frame);
         }
     }
 
@@ -177,5 +229,45 @@ public class ImagingAndMultiframeTests
         }
 
         return buffer;
+    }
+
+    private static DicomDataset BuildRgbMultiframe(int rows, int columns, IReadOnlyList<byte[]> frames)
+    {
+        var dataset = new DicomDataset(DicomTransferSyntax.ExplicitVRLittleEndian)
+        {
+            { DicomTag.PatientName, "Color^Multiframe" },
+            { DicomTag.PatientID, "COLOR-MF" },
+            { DicomTag.StudyInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
+            { DicomTag.SeriesInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
+            { DicomTag.SOPInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
+            { DicomTag.SOPClassUID, DicomUID.SecondaryCaptureImageStorage },
+            { DicomTag.Modality, "OT" },
+            { DicomTag.PhotometricInterpretation, PhotometricInterpretation.Rgb.Value },
+            { DicomTag.SamplesPerPixel, (ushort)3 },
+            { DicomTag.Rows, (ushort)rows },
+            { DicomTag.Columns, (ushort)columns },
+            { DicomTag.BitsAllocated, (ushort)8 },
+            { DicomTag.BitsStored, (ushort)8 },
+            { DicomTag.HighBit, (ushort)7 },
+            { DicomTag.PixelRepresentation, (ushort)0 },
+            { DicomTag.PlanarConfiguration, (ushort)0 },
+            { DicomTag.NumberOfFrames, frames.Count.ToString(CultureInfo.InvariantCulture) }
+        };
+
+        var pixelData = DicomPixelData.Create(dataset, true);
+        pixelData.PlanarConfiguration = PlanarConfiguration.Interleaved;
+
+        var expectedLength = rows * columns * 3;
+        foreach (var frame in frames)
+        {
+            if (frame.Length != expectedLength)
+            {
+                throw new ArgumentException($"Frame length {frame.Length} does not match expected {expectedLength}", nameof(frames));
+            }
+
+            pixelData.AddFrame(new MemoryByteBuffer(frame));
+        }
+
+        return dataset;
     }
 }

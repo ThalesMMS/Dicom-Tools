@@ -71,3 +71,67 @@ def test_dicom_numpy_affine_matches_simpleitk_spacing(synthetic_series, syntheti
     assert voxel_array.shape[0:2] == (32, 32)
     assert voxel_array.shape[2] == len(synthetic_datasets)
     assert np.allclose(sorted(spacing_from_affine), sorted(sitk_spacing))
+
+
+def test_dicom_numpy_handles_irregular_spacing_gracefully(synthetic_datasets):
+    warped = []
+    positions = []
+    for idx, ds in enumerate(synthetic_datasets):
+        cp = ds.copy()
+        cp.ImagePositionPatient = [0.0, 0.0, float(idx) + 0.1 * (idx % 2)]
+        cp.SliceThickness = 1.0 + 0.05 * idx
+        warped.append(cp)
+        positions.append(cp.ImagePositionPatient[2])
+
+    volume, affine = dicom_numpy.combine_slices(warped, enforce_slice_spacing=False)
+    spacing = np.linalg.norm(affine[:3, :3], axis=0)
+
+    assert volume.shape[2] == len(warped)
+    assert np.isclose(np.median(np.diff(positions)), spacing[2], atol=0.2)
+
+
+def test_dicom_numpy_supports_multiecho_fourth_dimension(synthetic_datasets):
+    echoes = []
+    for echo_number in (1, 2, 3):
+        group = []
+        for ds in synthetic_datasets:
+            cp = ds.copy()
+            cp.EchoNumbers = echo_number
+            cp.SOPInstanceUID = generate_uid()
+            group.append(cp)
+        echoes.append(group)
+
+    volumes = []
+    for group in echoes:
+        vol, _ = dicom_numpy.combine_slices(group)
+        volumes.append(vol)
+    stacked = np.stack(volumes, axis=0)
+
+    assert stacked.shape[0] == len(echoes)
+    assert stacked.shape[1:3] == (32, 32)
+    assert stacked.shape[3] == len(synthetic_datasets)
+
+
+def test_dicom_numpy_export_to_nifti_matches_stats(synthetic_datasets, tmp_path):
+    sitk = pytest.importorskip("SimpleITK")
+
+    volume, _ = dicom_numpy.combine_slices(synthetic_datasets)
+    first = synthetic_datasets[0]
+
+    image = sitk.GetImageFromArray(np.moveaxis(volume, -1, 0))
+    spacing = list(first.get("PixelSpacing", [1.0, 1.0])) + [float(first.get("SliceThickness", 1.0))]
+    image.SetSpacing(tuple(reversed(spacing)))  # SimpleITK spacing order: x,y,z
+
+    nifti_path = tmp_path / "volume.nii.gz"
+    sitk.WriteImage(image, str(nifti_path))
+
+    reloaded = sitk.ReadImage(str(nifti_path))
+    reloaded_array = np.moveaxis(sitk.GetArrayFromImage(reloaded), 0, -1)
+
+    assert reloaded_array.shape == volume.shape
+    assert np.isclose(reloaded_array.mean(), volume.mean())
+    assert np.isclose(reloaded_array.std(), volume.std())
+
+    original_hist, _ = np.histogram(volume, bins=16)
+    reloaded_hist, _ = np.histogram(reloaded_array, bins=16)
+    assert np.array_equal(original_hist, reloaded_hist)

@@ -11,15 +11,19 @@ class RustCliAdapter:
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
         self.cwd = self.root / "rust"
-        default_bin = os.environ.get("RUST_DICOM_TOOLS_BIN", str(self.cwd / "target" / "release" / "dicom-tools"))
-        bin_path = Path(default_bin)
-        if not bin_path.is_absolute():
-            bin_path = (self.root / bin_path).resolve()
-        if bin_path.exists():
-            self.base_cmd: List[str] = [str(bin_path)]
+        env_cmd = os.environ.get("RUST_DICOM_TOOLS_CMD")
+        if env_cmd:
+            self.base_cmd = split_cmd(env_cmd)
         else:
-            # Fallback para cargo run --release -- <args>
-            self.base_cmd = ["cargo", "run", "--quiet", "--release", "--"]
+            default_bin = os.environ.get("RUST_DICOM_TOOLS_BIN", str(self.cwd / "target" / "release" / "dicom-tools"))
+            bin_path = Path(default_bin)
+            if not bin_path.is_absolute():
+                bin_path = (self.root / bin_path).resolve()
+            if bin_path.exists():
+                self.base_cmd = [str(bin_path)]
+            else:
+                # Fallback para cargo run --release -- <args>
+                self.base_cmd = ["cargo", "run", "--quiet", "--release", "--"]
 
     def handle(self, request: Dict[str, Any]) -> RunResult:
         op = request.get("op")
@@ -35,6 +39,8 @@ class RustCliAdapter:
             return RunResult(False, 1, "", f"operação não suportada pelo backend Rust: {op}", [], None)
 
         result = run_process(cmd, cwd=self.cwd)
+        result.backend = "rust"
+        result.operation = op
         if output:
             result.output_files.append(str(Path(output)))
         return result

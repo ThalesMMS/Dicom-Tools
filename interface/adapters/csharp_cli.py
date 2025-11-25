@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .runner import RunResult, parse_json_maybe, run_process
+from .runner import RunResult, parse_json_maybe, run_process, split_cmd
 
 
 class CSharpCliAdapter:
@@ -10,8 +10,12 @@ class CSharpCliAdapter:
 
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
-        default_cmd = os.environ.get("CS_DICOM_TOOLS_CMD") or self._find_default_cmd()
-        self.base_cmd: List[str] = [default_cmd]
+        env_cmd = os.environ.get("CS_DICOM_TOOLS_CMD")
+        if env_cmd:
+            self.base_cmd = split_cmd(env_cmd)
+        else:
+            default_cmd = self._find_default_cmd()
+            self.base_cmd = [default_cmd]
 
     def _find_default_cmd(self) -> str:
         candidates = [
@@ -40,6 +44,8 @@ class CSharpCliAdapter:
         result = run_process(cmd, cwd=self.root / "cs")
         meta = parse_json_maybe(result.stdout)
         result.metadata = meta
+        result.backend = "csharp"
+        result.operation = op
         if output:
             result.output_files.append(str(Path(output)))
         return result

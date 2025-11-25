@@ -30,6 +30,8 @@ class CppCliAdapter:
             return RunResult(False, 1, "", f"operação não suportada pelo backend C++: {op}", [], None)
 
         result = run_process(cmd)
+        result.backend = "cpp"
+        result.operation = op
         result.output_files.extend(output_files)
         return result
 
