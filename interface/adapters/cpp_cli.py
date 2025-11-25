@@ -72,4 +72,26 @@ class CppCliAdapter:
             cmd = [*self.base_cmd, "gdcm:dump", "-i", input_path, "-o", str(output_dir)]
             return cmd, [str(output_dir / "dump.txt")]
 
+        # VTK feature demos (require series directory)
+        vtk_map = {
+            "vtk_export": "vtk:export",
+            "vtk_nifti": "vtk:nifti",
+            "vtk_isosurface": "vtk:isosurface",
+            "vtk_resample": "vtk:resample",
+            "vtk_mask": "vtk:mask",
+            "vtk_connectivity": "vtk:connectivity",
+            "vtk_mip": "vtk:mip",
+            "vtk_metadata": "vtk:metadata",
+            "vtk_stats": "vtk:stats",
+            "vtk_viewer": "vtk:viewer",
+            "vtk_volume_render": "vtk:volume-render",
+            "vtk_mpr_multi": "vtk:mpr-multi",
+            "vtk_overlay": "vtk:overlay",
+            "vtk_stream": "vtk:stream",
+            "test_vtk": "test-vtk",
+        }
+        if op in vtk_map:
+            cmd = [*self.base_cmd, vtk_map[op], "-i", input_path, "-o", str(output_dir)]
+            return cmd, [str(output_dir)]
+
         return None, []

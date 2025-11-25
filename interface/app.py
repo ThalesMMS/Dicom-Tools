@@ -17,7 +17,30 @@ OUTPUT_DIR = ROOT_DIR / "output"
 BACKEND_OPS = {
     "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo"],
     "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo"],
-    "cpp": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
+    "cpp": [
+        "info",
+        "anonymize",
+        "to_image",
+        "transcode",
+        "validate",
+        "stats",
+        "dump",
+        "vtk_export",
+        "vtk_nifti",
+        "vtk_isosurface",
+        "vtk_resample",
+        "vtk_mask",
+        "vtk_connectivity",
+        "vtk_mip",
+        "vtk_metadata",
+        "vtk_stats",
+        "vtk_viewer",
+        "vtk_volume_render",
+        "vtk_mpr_multi",
+        "vtk_overlay",
+        "vtk_stream",
+        "test_vtk",
+    ],
     "java": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo"],
     "csharp": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo"],
     "js": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo"],
@@ -51,10 +74,25 @@ DEFAULTS = {
         "info": {"input": DEFAULT_FILE},
         "anonymize": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_cpp_anon.dcm"},
         "to_image": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_cpp_preview.pgm"},
-        "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_cpp_j2k.dcm", "options": {"syntax": "1.2.840.10008.1.2.4.90"}},
+        "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_cpp_j2k.dcm", "options": {"syntax": "j2k"}},
         "validate": {"input": DEFAULT_FILE},
         "stats": {"input": DEFAULT_FILE},
         "dump": {"input": DEFAULT_FILE},
+        "vtk_export": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_nifti": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_isosurface": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_resample": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_mask": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_connectivity": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_mip": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_metadata": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_stats": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_viewer": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_volume_render": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_mpr_multi": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_overlay": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "vtk_stream": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
+        "test_vtk": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
     },
     "java": {
         "info": {"input": DEFAULT_FILE, "options": {"json": True}},
@@ -164,7 +202,7 @@ class TkApp:
 
     def _browse_input(self) -> None:
         op = self.operation.get()
-        if op in {"volume", "nifti"}:
+        if self._op_uses_directory_input(op):
             path = filedialog.askdirectory()
         else:
             path = filedialog.askopenfilename()
@@ -173,12 +211,7 @@ class TkApp:
             self.input_entry.insert(0, path)
 
     def _browse_output(self) -> None:
-        op = self.operation.get()
-        if op in {"volume", "nifti"}:
-            path = filedialog.asksaveasfilename()
-        else:
-            # Allow choosing a directory; we'll infer filenames if only a folder is provided.
-            path = filedialog.asksaveasfilename()
+        path = filedialog.asksaveasfilename()
         if path:
             self.output_entry.delete(0, tk.END)
             self.output_entry.insert(0, path)
@@ -193,6 +226,9 @@ class TkApp:
     def _require_input(self, op: str) -> bool:
         # echo não precisa de input; os demais sim (arquivo ou diretório)
         return op not in {"echo"}
+
+    def _op_uses_directory_input(self, op: str) -> bool:
+        return op in {"volume", "nifti", "vtk_export", "vtk_nifti", "vtk_isosurface", "vtk_resample", "vtk_mask", "vtk_connectivity", "vtk_mip", "vtk_metadata", "vtk_stats", "vtk_viewer", "vtk_volume_render", "vtk_mpr_multi", "vtk_overlay", "vtk_stream", "test_vtk"}
 
     def _normalize_output(self, op: str, input_path: str, output_path: str | None) -> str | None:
         """If the user selected a directory, infer a file name based on op and input."""
