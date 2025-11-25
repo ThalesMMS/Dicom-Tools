@@ -92,9 +92,9 @@ def test_render_result_sets_status(monkeypatch):
             return {"ok": self.ok, "returncode": self.returncode, "output_files": []}
 
     inst._render_result(Result(ok=True))
-    assert inst.status_var.value == "Sucesso"
+    assert inst.status_var.value == "Success"
     inst._render_result(Result(ok=False))
-    assert inst.status_var.value == "Falha"
+    assert inst.status_var.value == "Failure"
 
 
 def test_require_and_directory_detection(monkeypatch):
@@ -136,7 +136,7 @@ def test_run_success(monkeypatch, tmp_path):
     )()
     monkeypatch.setattr(app, "get_adapter", lambda backend: type("Stub", (), {"handle": lambda self, req: result})())
     inst._run()
-    assert inst.status_var.value == "Sucesso"
+    assert inst.status_var.value == "Success"
 
 
 def test_run_suite_with_stub(monkeypatch, tmp_path):
@@ -161,4 +161,4 @@ def test_run_suite_with_stub(monkeypatch, tmp_path):
     )()
     monkeypatch.setattr(app, "get_adapter", lambda backend: type("Stub", (), {"handle": lambda self, req: result})())
     inst._run_suite()
-    assert "Suíte finalizada" in inst.status_var.value
+    assert "Suite completed" in inst.status_var.value
