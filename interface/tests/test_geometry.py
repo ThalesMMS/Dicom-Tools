@@ -22,3 +22,12 @@ def test_bounding_box_and_clip_roi():
     roi = ((-5, -2), (6, 7))
     clipped = clip_roi(roi, width=4, height=4)
     assert clipped == ((0.0, 0.0), (4.0, 4.0))
+
+
+def test_average_and_clamp_edge_cases():
+    from interface.utils.geometry import average, clamp
+
+    assert average([]) == (0.0, 0.0)
+    assert average([(1, 2), (3, 4)]) == (2.0, 3.0)
+    assert clamp(5, 0, 3) == 3
+    assert clamp(-1, 0, 3) == 0

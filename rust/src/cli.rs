@@ -267,3 +267,28 @@ fn parse_window(center: Option<f64>, width: Option<f64>) -> anyhow::Result<Optio
         )),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_window_accepts_complete_pair() {
+        let wl = parse_window(Some(10.0), Some(20.0))
+            .expect("window")
+            .expect("present");
+        assert_eq!(wl.center, 10.0);
+        assert_eq!(wl.width, 20.0);
+    }
+
+    #[test]
+    fn parse_window_rejects_partial_values() {
+        let err = parse_window(Some(10.0), None).unwrap_err();
+        assert!(err.to_string().contains("window-center"));
+    }
+
+    #[test]
+    fn parse_window_none_returns_none() {
+        assert!(parse_window(None, None).unwrap().is_none());
+    }
+}

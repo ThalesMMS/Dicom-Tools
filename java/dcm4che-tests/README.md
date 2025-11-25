@@ -13,6 +13,12 @@ Small CLI/test harness around dcm4che for DICOM operations.
 - Structured report summary: `sr-summary <input>`
 - RT consistency: `rt-check --plan <plan.dcm> [--dose <dose.dcm>] [--struct <rtstruct.dcm>]`
 
+## Code layout
+- `DicomOperations` stays as a thin facade over modular helpers.
+- File/metadata actions live in `DicomFileOperations`; DIMSE echo/store in `DicomDimseOperations`.
+- Query/Retrieve (C-FIND/MOVE/GET/Storage Commitment) is handled by `DicomQueryRetrieveOperations`.
+- SR/RT checks are grouped in `DicomSrRtOperations`; shared IO helpers sit in `DicomIOUtils`.
+
 ## Tests
 - Run fast unit slice: `mvn -q -Dtest=DicomOperationsTest,DicomWebOperationsTest test`
 - DIMSE integration checks (local echo/store/find/move/stg cmt): `mvn -q -Dtest=DimseExpandedTest test`

@@ -6,9 +6,9 @@
 #
 # Thales Matheus Mendonça Santos - November 2025
 
-import contextlib
 from concurrent.futures import ThreadPoolExecutor
-import socket
+from pathlib import Path
+import sys
 import ssl
 import subprocess
 import shutil
@@ -31,6 +31,15 @@ from pynetdicom.sop_class import (
 
 from DICOM_reencoder.core.factories import build_secondary_capture
 from DICOM_reencoder.core.network import VerificationServer, send_c_echo
+sys.path.append(str(Path(__file__).parent))
+from pynetdicom_utils import (  # type: ignore
+    find_scp,
+    free_port,
+    get_scp,
+    move_scp,
+    mwl_scp,
+    store_scp,
+)
 
 
 def test_pynetdicom_echo_roundtrip():
@@ -40,133 +49,6 @@ def test_pynetdicom_echo_roundtrip():
         assert status == 0x0000
 
 
-def _free_port() -> int:
-    sock = socket.socket()
-    sock.bind(("", 0))
-    _, port = sock.getsockname()
-    sock.close()
-    return int(port)
-
-
-@contextlib.contextmanager
-def _store_scp():
-    ae = AE(ae_title="STORE_SCP")
-    ae.add_supported_context(CTImageStorage)
-    ae.add_supported_context(SecondaryCaptureImageStorage)
-    received = []
-
-    def handle_store(event):
-        ds = event.dataset
-        ds.file_meta = event.file_meta
-        received.append(ds)
-        return 0x0000
-
-    handlers = [(evt.EVT_C_STORE, handle_store)]
-    port = _free_port()
-    server = ae.start_server(("127.0.0.1", port), block=False, evt_handlers=handlers)
-    try:
-        yield ("127.0.0.1", port, received)
-    finally:
-        server.shutdown()
-        ae.shutdown()
-
-
-@contextlib.contextmanager
-def _find_scp(responses):
-    ae = AE(ae_title="FIND_SCP")
-    ae.add_supported_context(StudyRootQueryRetrieveInformationModelFind)
-
-    def handle_find(event):
-        for ds in responses:
-            yield 0xFF00, ds
-        yield 0x0000, None
-
-    port = _free_port()
-    server = ae.start_server(
-        ("127.0.0.1", port), block=False, evt_handlers=[(evt.EVT_C_FIND, handle_find)]
-    )
-    try:
-        yield ("127.0.0.1", port)
-    finally:
-        server.shutdown()
-        ae.shutdown()
-
-
-@contextlib.contextmanager
-def _mwl_scp(responses):
-    ae = AE(ae_title="MWL_SCP")
-    ae.add_supported_context(ModalityWorklistInformationFind)
-
-    def handle_find(event):
-        for ds in responses:
-            yield 0xFF00, ds
-        yield 0x0000, None
-
-    port = _free_port()
-    server = ae.start_server(
-        ("127.0.0.1", port), block=False, evt_handlers=[(evt.EVT_C_FIND, handle_find)]
-    )
-    try:
-        yield ("127.0.0.1", port)
-    finally:
-        server.shutdown()
-        ae.shutdown()
-
-
-@contextlib.contextmanager
-def _move_scp(dest_host, dest_port, dest_aet, datasets):
-    ae = AE(ae_title="MOVE_SCP")
-    ae.add_supported_context(StudyRootQueryRetrieveInformationModelMove)
-    ae.add_requested_context(CTImageStorage)
-    ae.add_requested_context(SecondaryCaptureImageStorage)
-    ae.add_supported_context(SecondaryCaptureImageStorage)
-
-    def handle_move(event):
-        kwargs = {"ae_title": dest_aet, "contexts": StoragePresentationContexts}
-        yield dest_host, dest_port, kwargs
-        yield len(datasets)
-        for ds in datasets:
-            yield 0xFF00, ds
-        yield 0x0000, None
-
-    port = _free_port()
-    server = ae.start_server(
-        ("127.0.0.1", port),
-        block=False,
-        evt_handlers=[(evt.EVT_C_MOVE, handle_move)],
-    )
-    try:
-        yield ("127.0.0.1", port)
-    finally:
-        server.shutdown()
-        ae.shutdown()
-
-
-@contextlib.contextmanager
-def _get_scp(datasets):
-    ae = AE(ae_title="GET_SCP")
-    ae.add_supported_context(StudyRootQueryRetrieveInformationModelGet)
-    ae.add_supported_context(CTImageStorage)
-    ae.add_supported_context(SecondaryCaptureImageStorage)
-    ae.supported_contexts = list(StoragePresentationContexts) + ae.supported_contexts
-
-    def handle_get(event):
-        yield len(datasets)
-        for ds in datasets:
-            yield 0xFF00, ds
-        yield 0x0000, None
-
-    port = _free_port()
-    server = ae.start_server(
-        ("127.0.0.1", port),
-        block=False,
-        evt_handlers=[(evt.EVT_C_GET, handle_get)],
-    )
-    try:
-        yield ("127.0.0.1", port)
-    finally:
-        server.shutdown()
-        ae.shutdown()
 
 
 def test_cfind_returns_expected_results():
@@ -176,7 +58,7 @@ def test_cfind_returns_expected_results():
     ds.StudyID = "TEST"
     responses = [ds]
 
-    with _find_scp(responses) as (host, port):
+    with find_scp(responses) as (host, port):
         ae = AE(ae_title="FIND_SCU")
         ae.add_requested_context(StudyRootQueryRetrieveInformationModelFind)
         query = Dataset()
@@ -204,8 +86,8 @@ def test_cfind_returns_expected_results():
 def test_cmove_delivers_instances_to_destination():
     datasets = [build_secondary_capture(shape=(8, 8)) for _ in range(2)]
 
-    with _store_scp() as (dest_host, dest_port, stored):
-        with _move_scp(dest_host, dest_port, "DEST_AE", datasets) as (host, port):
+    with store_scp() as (dest_host, dest_port, stored):
+        with move_scp(dest_host, dest_port, "DEST_AE", datasets) as (host, port):
             ae = AE(ae_title="MOVE_SCU")
             ae.add_requested_context(StudyRootQueryRetrieveInformationModelMove)
             ae.add_requested_context(CTImageStorage)
@@ -240,7 +122,7 @@ def test_cget_returns_instances_to_same_ae(synthetic_datasets):
         stored.append(ds)
         return 0x0000
 
-    with _get_scp(datasets) as (host, port):
+    with get_scp(datasets) as (host, port):
         ae = AE(ae_title="GET_SCU")
         ae.add_requested_context(StudyRootQueryRetrieveInformationModelGet)
         ae.add_requested_context(CTImageStorage)
@@ -285,7 +167,7 @@ def test_storage_commitment_n_action_cycle():
 
     ae = AE(ae_title="STGCMT_SCP")
     ae.add_supported_context(StorageCommitmentPushModel)
-    port = _free_port()
+    port = free_port()
     server = ae.start_server(("127.0.0.1", port), block=False, evt_handlers=[(evt.EVT_N_ACTION, handle_action)])
 
     try:
@@ -335,7 +217,7 @@ def test_ncreate_and_nset_for_mpps():
 
     ae = AE(ae_title="MPPS_SCP")
     ae.add_supported_context(ModalityPerformedProcedureStep)
-    port = _free_port()
+    port = free_port()
     server = ae.start_server(
         ("127.0.0.1", port),
         block=False,
@@ -378,7 +260,7 @@ def test_modality_worklist_find_returns_scheduled_steps():
     sps.ScheduledProcedureStepDescription = "Synthetic study"
     result.ScheduledProcedureStepSequence = [sps]
 
-    with _mwl_scp([result]) as (host, port):
+    with mwl_scp([result]) as (host, port):
         ae = AE(ae_title="MWL_SCU")
         ae.add_requested_context(ModalityWorklistInformationFind)
         assoc = ae.associate(host, port, ae_title="FIND_SCP")
@@ -411,8 +293,8 @@ def test_concurrent_associations_handle_store_and_find(synthetic_datasets):
     query_ds.QueryRetrieveLevel = "STUDY"
     query_ds.PatientName = "*"
 
-    with _store_scp() as (store_host, store_port, stored):
-        with _find_scp([query_ds]) as (find_host, find_port):
+    with store_scp() as (store_host, store_port, stored):
+        with find_scp([query_ds]) as (find_host, find_port):
             def send_store(ds):
                 ae = AE(ae_title="STORE_SCU")
                 ae.add_requested_context(CTImageStorage)
@@ -457,7 +339,7 @@ def test_concurrent_associations_handle_store_and_find(synthetic_datasets):
 
 
 def test_association_failure_has_clear_status():
-    unused_port = _free_port()
+    unused_port = free_port()
     with pytest.raises(RuntimeError):
         send_c_echo("127.0.0.1", unused_port, timeout=1)
 

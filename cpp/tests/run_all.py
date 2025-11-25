@@ -82,6 +82,8 @@ if run_test("test-gdcm", "GDCM Features"):
     require_file("gdcm_stats.txt")
     require_file("gdcm_series_index.csv")
     require_file("gdcm_preview.pgm")
+    require_file("gdcm_jpeg_baseline.dcm")
+    require_file("gdcm_jpeg_lossless_p14.dcm")
 else:
     tests_passed = False
 
@@ -125,7 +127,9 @@ if run_test("test-itk", "ITK Features"):
     require_file("itk_distance_map.nrrd")
     require_file("itk_label_stats.txt")
     require_file("itk_registered.nrrd")
+    require_file("itk_registered_mi.nrrd")
     require_file("itk_registration.txt")
+    require_file("itk_registration_mi.txt")
     require_file("itk_vector.nrrd")
     require_file("itk_series.txt")
 else:

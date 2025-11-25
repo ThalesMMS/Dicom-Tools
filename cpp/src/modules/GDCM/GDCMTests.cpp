@@ -25,6 +25,8 @@ void GDCMTests::RegisterCommands(CommandRegistry& registry) {
             TestDecompression(ctx.inputPath, ctx.outputDir);
             TestUIDRewrite(ctx.inputPath, ctx.outputDir);
             TestDatasetDump(ctx.inputPath, ctx.outputDir);
+            TestJPEGBaselineTranscode(ctx.inputPath, ctx.outputDir);
+            TestJPEGLosslessP14Transcode(ctx.inputPath, ctx.outputDir);
             TestJPEG2000Transcode(ctx.inputPath, ctx.outputDir);
             TestJPEG2000Lossy(ctx.inputPath, ctx.outputDir);
             TestRLETranscode(ctx.inputPath, ctx.outputDir);
@@ -37,6 +39,26 @@ void GDCMTests::RegisterCommands(CommandRegistry& registry) {
             TestDicomdirRead(ctx.inputPath, ctx.outputDir);
             TestStringFilterCharsets(ctx.inputPath, ctx.outputDir);
             TestRTStructRead(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "gdcm:jpeg-baseline",
+        "GDCM",
+        "Transcode to JPEG Baseline (Process 1) for lossy coverage",
+        [](const CommandContext& ctx) {
+            TestJPEGBaselineTranscode(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "gdcm:jpeg-p14",
+        "GDCM",
+        "Transcode to JPEG Lossless Process 14 (12-bit corner cases)",
+        [](const CommandContext& ctx) {
+            TestJPEGLosslessP14Transcode(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });

@@ -33,6 +33,7 @@ cmake --build build
 | | **Tag Inspection** | Reads and displays common tags. |
 | | **UID Rewrite** | Regenerates Study/Series/SOP Instance UIDs. |
 | | **Dataset Dump** | Writes a verbose text dump of the DICOM dataset. |
+| | **JPEG Baseline / Lossless P14** | Transcodes to JPEG P1 (lossy) and P14 (lossless) for codec coverage. |
 | | **JPEG2000 Transcode** | Tests JPEG2000 lossless codec support. |
 | | **RLE Transcode** | Validates encapsulated RLE Lossless support. |
 | | **JPEG-LS Transcode** | Validates JPEG-LS Lossless transfer syntax support. |
@@ -73,7 +74,7 @@ cmake --build build
 | | **NIfTI Export** | Writes the volume to `.nii.gz` for interoperability. |
 | | **Distance Map + Morphology** | Signed distance map + simple closing with summary stats. |
 | | **Label Statistics** | Connected components with per-label min/max/mean/sigma. |
-| | **Registration** | Estimates translation via MI and resamples moving image. |
+| | **Registration** | Translation + affine mutual-information demos with resampling. |
 | | **Vector Volume** | Composes multi-component volume and exports as NRRD. |
 | | **DICOM Series Write** | Emits a fresh DICOM series with new UIDs. |
 | **VTK** | **3D Mesh Generation** | Generates STL surfaces using Marching Cubes. |
@@ -161,7 +162,7 @@ The project generates a single executable `DicomTools` in the `build` directory.
 - `dcmtk:jpeg-lossless`, `dcmtk:jpeg-baseline`, `dcmtk:rle`, `dcmtk:raw-dump`, `dcmtk:bmp`, `dcmtk:dicomdir`, `dcmtk:metadata`, `dcmtk:sr`, `dcmtk:rt`, `dcmtk:fg`
 - `dcmtk:net`, `dcmtk:charset`, `dcmtk:secondary`
 - `itk:gaussian`, `itk:median`, `itk:threshold`, `itk:otsu`, `itk:aniso`, `itk:histogram`, `itk:slice`, `itk:mip`, `itk:nrrd`, `itk:nifti`, `itk:resample`
-- `itk:distance-map`, `itk:label-stats`, `itk:register`, `itk:vector`, `itk:dicom-series`
+- `itk:distance-map`, `itk:label-stats`, `itk:register`, `itk:register-mi`, `itk:vector`, `itk:dicom-series`
 - `vtk:mask`, `vtk:metadata`, `vtk:isosurface`, `vtk:nifti`, `vtk:resample`, `vtk:mip`, `vtk:stats`
 - `vtk:volume-render`, `vtk:mpr-multi`, `vtk:overlay`, `vtk:label-surface`, `vtk:fusion`, `vtk:time-series`, `vtk:stream`
 

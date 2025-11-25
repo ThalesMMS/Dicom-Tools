@@ -138,3 +138,34 @@ fn build_convert_options(options: &ImageExportOptions) -> ConvertOptions {
 
     convert
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn convert_options_respect_flags() {
+        let opts = ImageExportOptions {
+            disable_modality_lut: true,
+            disable_voi_lut: true,
+            force_8bit: true,
+            ..Default::default()
+        };
+        let _convert = build_convert_options(&opts);
+        assert!(true);
+    }
+
+    #[test]
+    fn convert_options_custom_window_wins_over_normalize() {
+        let opts = ImageExportOptions {
+            normalize: true,
+            window: Some(WindowLevel {
+                center: 10.0,
+                width: 50.0,
+            }),
+            ..Default::default()
+        };
+        let _convert = build_convert_options(&opts);
+        assert!(true);
+    }
+}

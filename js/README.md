@@ -19,12 +19,14 @@ npm install
 npm run dev        # demo Vite; sirva sample_series em http://localhost:8080/sample_series
 npm run build      # build de produção
 npm test           # Vitest (gateway + MPR/MIP/overlay via sample_series)
+npm test -- --coverage   # cobertura V8 (depende de @vitest/coverage-v8)
 ```
 
 - Novas utilidades:
   - `createVolumeViewport` para inicializar viewports ortográficos (MIP) ou 3D com orientação axial/sagital/coronal, blend mode e slab thickness.
   - `volumeUtils` inclui spacing/origin/orientation, transforms index↔world (crosshair), ROI stats e helpers de labelmap/segmentação.
   - `dicomWeb.ts` monta `wadors:` imageIds via `dicomweb-client` (QIDO→WADO-RS), alinhado com os servidores usados por dcm4che/fo-dicom/dicom-rs.
+  - `src/main.ts` agora demonstra stack (WADO-URI), volume MIP/3D e um terceiro painel DICOMweb: configure `VITE_DICOMWEB_BASE`, `VITE_DICOMWEB_STUDY`, `VITE_DICOMWEB_SERIES` ou `window.DICOMWEB_CONFIG` para exercitar WADO-RS real.
 
 ## Contract CLI
 ```bash

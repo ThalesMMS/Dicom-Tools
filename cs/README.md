@@ -25,6 +25,12 @@ dotnet build DicomTools.Cli/DicomTools.Cli.csproj
 DOTNET_ROLL_FORWARD=Major dotnet test DicomTools.Tests/DicomTools.Tests.csproj
 # com .NET 8 disponível:
 dotnet test DicomTools.Tests/DicomTools.Tests.csproj
+# cobertura de linhas (coverlet.msbuild):
+DOTNET_ROLL_FORWARD=Major dotnet test DicomTools.Tests/DicomTools.Tests.csproj \\
+  /p:CollectCoverage=true \\
+  /p:CoverletOutputFormat=cobertura \\
+  /p:CoverletOutput=coverage.cobertura.xml \\
+  /p:Include=\"[DicomTools*]*\" /p:Exclude=\"[xunit.*]*\"
 ```
 Cobertura recente inclui:
 - SCPs in-memory para C-STORE/C-FIND/C-MOVE e Modality Worklist (SCU↔SCP).
@@ -49,3 +55,4 @@ Operações suportadas:
 ## Notas
 - Testes de rede usam SCPs in-memory e portas livres; rodar em ambiente local (sem firewalls bloqueando loopback).
 - Cobertura de codecs avançados tenta RLE/JPEG2000/JPEG-LS; se ausentes, os testes retornam sem falha.
+- Código do CLI modularizado em comandos/ajudantes menores (e.g. `InfoCommand`, `StatsCommand`) para manter arquivos abaixo de 500 linhas.

@@ -81,5 +81,8 @@ Todos os viewers compartilham os mesmos comandos: `onScroll`, `onZoom`, `onPan`,
 ## Testes
 ```bash
 python3 -m pytest interface/tests
+# ou com cobertura
+python3 -m pytest interface/tests --cov=interface --cov-report=term-missing
 ```
+Dependências de dev (pytest, pytest-cov, coverage) estão em `interface/requirements-dev.txt`.
 Cobertura inclui runner do contrato e interações de UI (scroll, zoom, pan, WL, overlays, troca de viewer, rebuild MPR).

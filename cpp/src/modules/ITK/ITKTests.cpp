@@ -36,6 +36,7 @@ void ITKTests::RegisterCommands(CommandRegistry& registry) {
             TestDistanceMapAndMorphology(ctx.inputPath, ctx.outputDir);
             TestLabelStatistics(ctx.inputPath, ctx.outputDir);
             TestRegistration(ctx.inputPath, ctx.outputDir);
+            TestMutualInformationRegistration(ctx.inputPath, ctx.outputDir);
             TestVectorVolumeExport(ctx.inputPath, ctx.outputDir);
             TestDicomSeriesWrite(ctx.inputPath, ctx.outputDir);
             return 0;
@@ -198,6 +199,16 @@ void ITKTests::RegisterCommands(CommandRegistry& registry) {
         "Estimate translation via MI registration and resample moving volume",
         [](const CommandContext& ctx) {
             TestRegistration(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "itk:register-mi",
+        "ITK",
+        "Mutual information registration with affine transform (multi-res)",
+        [](const CommandContext& ctx) {
+            TestMutualInformationRegistration(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });

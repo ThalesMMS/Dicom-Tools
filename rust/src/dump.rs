@@ -128,3 +128,60 @@ fn tag_name(tag: Tag) -> String {
         .map(|e| e.alias.to_string())
         .unwrap_or_else(|| "UnknownTag".to_string())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dicom::core::{DataElement, PrimitiveValue, VR};
+    use dicom::dictionary_std::StandardDataDictionary;
+    use dicom::object::{FileDicomObject, FileMetaTableBuilder, InMemDicomObject};
+    use dicom::transfer_syntax::entries::EXPLICIT_VR_LITTLE_ENDIAN;
+    use tempfile::{tempdir, TempDir};
+
+    fn sample_file() -> (TempDir, std::path::PathBuf) {
+        let dir = tempdir().expect("tempdir");
+        let path = dir.path().join("dump.dcm");
+
+        let mut obj = InMemDicomObject::new_empty_with_dict(StandardDataDictionary);
+        obj.put(DataElement::new(
+            Tag(0x0010, 0x0010),
+            VR::PN,
+            PrimitiveValue::from("Dump^Patient"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x7FE0, 0x0010),
+            VR::OB,
+            PrimitiveValue::from(vec![1_u8, 2, 3, 4]),
+        ));
+
+        let meta = FileMetaTableBuilder::new()
+            .transfer_syntax(EXPLICIT_VR_LITTLE_ENDIAN.uid())
+            .media_storage_sop_class_uid("1.2.840.10008.5.1.4.1.1.7")
+            .media_storage_sop_instance_uid("1.2.826.0.1.3680043.2.1125.9.2")
+            .build()
+            .expect("meta");
+
+        let mut file_obj =
+            FileDicomObject::new_empty_with_dict_and_meta(StandardDataDictionary, meta);
+        for elem in obj {
+            file_obj.put(elem);
+        }
+        file_obj.write_to_file(&path).expect("write dicom");
+
+        (dir, path)
+    }
+
+    #[test]
+    fn truncate_limits_preview() {
+        let preview = truncate("ABCDEFGHIJ", 5);
+        assert_eq!(preview, "ABCDE…");
+    }
+
+    #[test]
+    fn dump_to_string_includes_tag_name_and_value() {
+        let (_dir, path) = sample_file();
+        let out = dump_to_string(&path, 2, 16).expect("dump");
+        assert!(out.contains("(0010,0010)"));
+        assert!(out.contains("Dump^Patient"));
+    }
+}

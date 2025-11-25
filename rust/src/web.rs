@@ -44,7 +44,18 @@ pub async fn start_server(host: &str, port: u16) -> anyhow::Result<()> {
         store: FileStore::new("target/uploads")?,
     };
 
-    let app = Router::new()
+    let app = build_app(state).into_make_service();
+
+    let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
+    println!("Server running at http://{}", addr);
+
+    let listener = TcpListener::bind(addr).await?;
+    axum::serve(listener, app).await?;
+    Ok(())
+}
+
+fn build_app(state: AppState) -> Router {
+    Router::new()
         .route("/", get(root_handler))
         .route("/api/metadata/:filename", get(get_metadata))
         .route("/api/upload", post(upload_handler))
@@ -56,14 +67,7 @@ pub async fn start_server(host: &str, port: u16) -> anyhow::Result<()> {
         .route("/api/download/:filename", get(download_handler))
         .route("/api/histogram/:filename", get(histogram_handler))
         .with_state(state)
-        .layer(CorsLayer::permissive());
-
-    let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
-    println!("Server running at http://{}", addr);
-
-    let listener = TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
-    Ok(())
+        .layer(CorsLayer::permissive())
 }
 
 async fn root_handler() -> Html<&'static str> {
@@ -262,4 +266,176 @@ fn internal_error<E: Display>(err: E) -> (StatusCode, String) {
 
 fn not_found<E: Display>(err: E) -> (StatusCode, String) {
     (StatusCode::NOT_FOUND, err.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::ValidationSummary;
+    use tempfile::tempdir;
+
+    #[test]
+    fn validation_messages_splits_errors_and_warnings() {
+        let summary = ValidationSummary {
+            valid: false,
+            missing_tags: vec!["PatientID".into(), "Modality".into()],
+            has_pixel_data: false,
+        };
+        let (errors, warnings) = validation_messages(&summary);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(warnings.len(), 1);
+        assert!(errors[0].contains("Missing 2 attribute"));
+        assert!(warnings[0].contains("Pixel Data"));
+    }
+
+    #[test]
+    fn error_helpers_return_status_and_message() {
+        let e = bad_request("fail");
+        assert_eq!(e.0, StatusCode::BAD_REQUEST);
+        assert_eq!(e.1, "fail");
+
+        let i = internal_error("boom");
+        assert_eq!(i.0, StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(i.1, "boom");
+
+        let n = not_found("missing");
+        assert_eq!(n.0, StatusCode::NOT_FOUND);
+        assert_eq!(n.1, "missing");
+    }
+
+    #[tokio::test]
+    async fn histogram_handler_returns_bins() {
+        let dir = tempdir().expect("tempdir");
+        let store = FileStore::new(dir.path().to_str().unwrap()).expect("store");
+        let sample_path = dir.path().join("web_hist.dcm");
+        write_minimal_dicom(&sample_path);
+        let saved = store
+            .save(Some("web_hist.dcm"), &std::fs::read(&sample_path).unwrap())
+            .expect("save");
+
+        let state = AppState { store };
+        let Json(json) = histogram_handler(
+            State(state),
+            Path(saved),
+            Query(HistogramQuery { bins: Some(4) }),
+        )
+        .await
+        .expect("histogram");
+        assert_eq!(json["bins"].as_array().unwrap().len(), 4);
+    }
+
+    #[tokio::test]
+    async fn validate_handler_reports_missing_tags() {
+        let dir = tempdir().expect("tempdir");
+        let store = FileStore::new(dir.path().to_str().unwrap()).expect("store");
+        let sample_path = dir.path().join("web_validate.dcm");
+        write_minimal_dicom(&sample_path);
+        let saved = store
+            .save(Some("web_validate.dcm"), &std::fs::read(&sample_path).unwrap())
+            .expect("save");
+
+        let state = AppState { store };
+        let Json(json) = validate_handler(State(state), Path(saved))
+            .await
+            .expect("validate");
+        assert!(json["errors"].as_array().unwrap().is_empty());
+    }
+
+    fn write_minimal_dicom(path: &std::path::Path) {
+        use dicom::core::{DataElement, PrimitiveValue, Tag, VR};
+        use dicom::dictionary_std::StandardDataDictionary;
+        use dicom::object::{FileDicomObject, FileMetaTableBuilder, InMemDicomObject};
+        use dicom::transfer_syntax::entries::EXPLICIT_VR_LITTLE_ENDIAN;
+
+        let mut obj = InMemDicomObject::new_empty_with_dict(StandardDataDictionary);
+        obj.put(DataElement::new(
+            Tag(0x0010, 0x0010),
+            VR::PN,
+            PrimitiveValue::from("Web^Patient"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0010, 0x0020),
+            VR::LO,
+            PrimitiveValue::from("WEB123"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0008, 0x0016),
+            VR::UI,
+            PrimitiveValue::from("1.2.840.10008.5.1.4.1.1.7"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0008, 0x0018),
+            VR::UI,
+            PrimitiveValue::from("1.2.826.0.1.3680043.2.1125.9.3.1"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0008, 0x0060),
+            VR::CS,
+            PrimitiveValue::from("OT"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0008, 0x0020),
+            VR::DA,
+            PrimitiveValue::from("20240101"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0010),
+            VR::US,
+            PrimitiveValue::from(2_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0011),
+            VR::US,
+            PrimitiveValue::from(2_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0002),
+            VR::US,
+            PrimitiveValue::from(1_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0100),
+            VR::US,
+            PrimitiveValue::from(8_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0101),
+            VR::US,
+            PrimitiveValue::from(8_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0102),
+            VR::US,
+            PrimitiveValue::from(7_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0103),
+            VR::US,
+            PrimitiveValue::from(0_u16),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x0028, 0x0004),
+            VR::CS,
+            PrimitiveValue::from("MONOCHROME2"),
+        ));
+        obj.put(DataElement::new(
+            Tag(0x7FE0, 0x0010),
+            VR::OB,
+            PrimitiveValue::from(vec![0_u8, 1, 2, 3]),
+        ));
+
+        let meta = FileMetaTableBuilder::new()
+            .transfer_syntax(EXPLICIT_VR_LITTLE_ENDIAN.uid())
+            .media_storage_sop_class_uid("1.2.840.10008.5.1.4.1.1.7")
+            .media_storage_sop_instance_uid("1.2.826.0.1.3680043.2.1125.9.3")
+            .build()
+            .expect("meta");
+
+        let mut file_obj =
+            FileDicomObject::new_empty_with_dict_and_meta(StandardDataDictionary, meta);
+        for elem in obj {
+            file_obj.put(elem);
+        }
+        file_obj.write_to_file(path).expect("write dicom");
+    }
 }

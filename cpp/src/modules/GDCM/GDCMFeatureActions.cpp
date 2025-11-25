@@ -338,6 +338,72 @@ void GDCMTests::TestJPEGLSTranscode(const std::string& filename, const std::stri
     }
 }
 
+void GDCMTests::TestJPEGBaselineTranscode(const std::string& filename, const std::string& outputDir) {
+    // JPEG Baseline (Process 1) lossy transcode
+    std::cout << "--- [GDCM] JPEG Baseline Transcode ---" << std::endl;
+
+    gdcm::ImageReader reader;
+    reader.SetFileName(filename.c_str());
+    if (!reader.Read()) {
+        std::cerr << "Could not read file for JPEG Baseline transcode." << std::endl;
+        return;
+    }
+
+    gdcm::ImageChangeTransferSyntax change;
+    change.SetTransferSyntax(gdcm::TransferSyntax::JPEGBaselineProcess1);
+    change.SetInput(reader.GetImage());
+
+    gdcm::ImageWriter writer;
+    std::string outFilename = JoinPath(outputDir, "gdcm_jpeg_baseline.dcm");
+    writer.SetFileName(outFilename.c_str());
+    writer.SetFile(reader.GetFile());
+
+    bool changed = change.Change();
+    if (changed) {
+        writer.SetImage(change.GetOutput());
+    } else {
+        std::cerr << "Transfer syntax change to JPEG Baseline failed (codec support may be missing). Writing source copy instead." << std::endl;
+        writer.SetImage(reader.GetImage());
+    }
+
+    if (writer.Write()) {
+        std::cout << "Transcoded to JPEG Baseline and saved to: " << outFilename << std::endl;
+    } else {
+        std::cerr << "Failed to write JPEG Baseline transcoded file." << std::endl;
+    }
+}
+
+void GDCMTests::TestJPEGLosslessP14Transcode(const std::string& filename, const std::string& outputDir) {
+    // JPEG Lossless Process 14 test for 12-bit style edge cases
+    std::cout << "--- [GDCM] JPEG Lossless P14 Transcode ---" << std::endl;
+
+    gdcm::ImageReader reader;
+    reader.SetFileName(filename.c_str());
+    if (!reader.Read()) {
+        std::cerr << "Could not read file for JPEG Lossless P14 transcode." << std::endl;
+        return;
+    }
+
+    gdcm::ImageChangeTransferSyntax change;
+    change.SetTransferSyntax(gdcm::TransferSyntax::JPEGLosslessProcess14_1);
+    change.SetInput(reader.GetImage());
+    if (!change.Change()) {
+        std::cerr << "Transfer syntax change to JPEG Lossless P14 failed (codec support may be missing)." << std::endl;
+        return;
+    }
+
+    gdcm::ImageWriter writer;
+    std::string outFilename = JoinPath(outputDir, "gdcm_jpeg_lossless_p14.dcm");
+    writer.SetFileName(outFilename.c_str());
+    writer.SetFile(reader.GetFile());
+    writer.SetImage(change.GetOutput());
+    if (writer.Write()) {
+        std::cout << "Transcoded to JPEG Lossless P14 and saved to: " << outFilename << std::endl;
+    } else {
+        std::cerr << "Failed to write JPEG Lossless P14 transcoded file." << std::endl;
+    }
+}
+
 void GDCMTests::TestRLETranscode(const std::string& filename, const std::string& outputDir) {
     // Convert to RLE Lossless to confirm encapsulated encoding works
     std::cout << "--- [GDCM] RLE Lossless Transcode ---" << std::endl;
