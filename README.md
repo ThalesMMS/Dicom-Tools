@@ -9,7 +9,7 @@ Unified repository for DICOM utilities across multiple languages with a shared c
 - `interface/` — Tkinter UI + contract adapters (CLI/JSON).
 - `java/` — dcm4chee tests/CLI (contract integration pending).
 - `cs/` — fo-dicom CLI/tests (contract adapter ready).
-- `js/` — Cornerstone integration notes (no repo cloned).
+- `js/` — Cornerstone integration (`viewer-gateway`) and contract CLI shim (`contract-cli`).
 - `sample_series/` — DICOM samples for tests.
 - `scripts/` — setup/package helpers.
 
@@ -25,8 +25,9 @@ Unified repository for DICOM utilities across multiple languages with a shared c
 
 ## Contract & UI
 - Contract spec: `interface/CONTRACT.md` (operations, envelopes, backend mapping).
-- Adapters: `interface/adapters/*` (Python, Rust, C++, Java, C#).
+- Adapters: `interface/adapters/*` (Python, Rust, C++, Java, C#, JS shim).
 - UI: `python -m interface.app` (Tkinter) uses the contract; headless runner: `python -m interface.contract_runner`.
+- JS shim: `node js/contract-cli/index.js` (delegates to Python by default; override with `JS_DICOM_TOOLS_CMD`).
 
 ## CI
 - GitHub Actions workflow in `.github/workflows/ci.yml` runs Python, Rust, Java, C#, C++ (configure+build), and JS (build + vitest). Interface/UI still omitted from CI because of GUI deps; add when headless coverage is available.

@@ -28,7 +28,8 @@ Helpers:
 - Interface: `cd interface && pytest`
 - Java: `cd java/dcm4che-tests && mvn test`
 - C#: `cd cs && dotnet test` (or `DOTNET_ROLL_FORWARD=Major dotnet test` if .NET 8 runtime is missing)
-- JS: no workspace cloned; use npm/nx scripts when present
+- JS viewer: `cd js/viewer-gateway && npm ci && npm run build && npm test`
+- JS contract shim: `node js/contract-cli/index.js --op info --input sample_series/IM-0001-0001.dcm --options '{}'`
 
 ## Contract & Env Vars
 - Python CLI: `python -m DICOM_reencoder.cli` (cwd `python/`)
@@ -36,6 +37,7 @@ Helpers:
 - C++ binary: `cpp/build/DicomTools`
 - Java CLI jar: `java/dcm4che-tests/target/dcm4che-tests.jar` (`JAVA_DICOM_TOOLS_CMD` to override)
 - C# CLI: `cs/bin/(Release|Debug)/net8.0/DicomTools.Cli` (`CS_DICOM_TOOLS_CMD` to override)
+- JS CLI shim: `node js/contract-cli/index.js` (`JS_DICOM_TOOLS_CMD` to override; backing Python command via `BACKING_CMD`)
 
 ## Artifacts & Outputs
 - Defaults: write to `output/` (backend-specific) when not provided

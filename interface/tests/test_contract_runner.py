@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -80,3 +81,23 @@ def test_invalid_backend():
     result = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     assert result.returncode != 0
     assert result.stderr
+
+
+def _has_node():
+    return subprocess.run(["node", "--version"], capture_output=True).returncode == 0
+
+
+def _js_cli_exists():
+    return (ROOT / "js" / "contract-cli" / "index.js").exists()
+
+
+@pytest.mark.skipif(not SAMPLE.exists(), reason="sample_series missing")
+@pytest.mark.skipif(not _has_node() or not _js_cli_exists(), reason="JS CLI not available")
+def test_js_info_json():
+    cmd = RUNNER + ["--backend", "js", "--op", "info", "--input", str(SAMPLE)]
+    env = dict(**os.environ, JS_DICOM_TOOLS_CMD="node js/contract-cli/index.js")
+    result = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["ok"] is True
+    assert payload.get("metadata") is None or isinstance(payload.get("metadata"), dict)

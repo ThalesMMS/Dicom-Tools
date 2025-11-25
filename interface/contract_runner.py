@@ -38,7 +38,7 @@ def load_request_from_args(args: argparse.Namespace) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Executor do contrato CLI/JSON (sem UI)")
     parser.add_argument("--request-file", help="Arquivo JSON com a requisição completa")
-    parser.add_argument("--backend", help="Backend (python|rust|cpp)")
+    parser.add_argument("--backend", help="Backend (python|rust|cpp|java|csharp|js)")
     parser.add_argument("--op", help="Operação (info, anonymize, ...)")
     parser.add_argument("--input", help="Caminho de entrada")
     parser.add_argument("--output", help="Caminho de saída opcional")

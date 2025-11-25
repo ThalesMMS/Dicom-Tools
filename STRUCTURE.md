@@ -6,7 +6,7 @@
 - `interface/`: Tkinter UI and contract adapters (CLI/JSON).
 - `cs/`: fo-dicom CLI/tests.
 - `java/`: dcm4chee tests/CLI.
-- `js/`: Cornerstone integration notes (no repo cloned).
+- `js/`: Cornerstone integration (`viewer-gateway`) and contract CLI shim (`contract-cli`).
 - `sample_series/`: DICOM samples for tests.
 - `plano.md`: Integration plan with status.
 - `scripts/`: setup/package utilities.
