@@ -17,6 +17,7 @@ class RenderLoop:
     def __init__(self, bus: EventBus, engine: FrameEngine) -> None:
         self.bus = bus
         self.engine = engine
+        self._rendering = False
         self.bus.subscribe("frame_requested", self._on_frame_requested)
 
     def _on_frame_requested(self, event: Event) -> None:
@@ -24,6 +25,12 @@ class RenderLoop:
         request: FrameRequest = payload.get("request")
         if request is None:
             return
-        frame = self.engine.render(request)
-        self.bus.emit(Event("frame_ready", {"frame": frame, "viewer": request.viewer}))
-
+        if self._rendering:
+            # Drop recursive frame requests to avoid infinite loops
+            return
+        self._rendering = True
+        try:
+            frame = self.engine.render(request)
+            self.bus.emit(Event("frame_ready", {"frame": frame, "viewer": request.viewer, "frame_request": request}))
+        finally:
+            self._rendering = False

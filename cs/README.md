@@ -29,6 +29,7 @@ dotnet test DicomTools.Tests/DicomTools.Tests.csproj
 Cobertura recente inclui:
 - SCPs in-memory para C-STORE/C-FIND/C-MOVE e Modality Worklist (SCU↔SCP).
 - Validação de multi-frame color (RGB) com round-trip de compressão (RLE) mantendo pixels/frames.
+- Stub DICOMweb STOW→DIMSE bridge para validar ingestão via HTTP e recuperação por C-MOVE.
 
 ## CLI
 ```bash

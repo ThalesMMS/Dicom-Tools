@@ -24,6 +24,8 @@ namespace VTKTests {
     void TestConnectivityLabels(const std::string& filename, const std::string& outputDir);
     void TestViewerSnapshot(const std::string& filename, const std::string& outputDir);
     void TestVolumeRenderingSnapshot(const std::string& filename, const std::string& outputDir);
+    void TestMultiVolumeFusion(const std::string& filename, const std::string& outputDir);
+    void TestTimeSeries(const std::string& filename, const std::string& outputDir);
     void TestMultiplanarMPR(const std::string& filename, const std::string& outputDir);
     void TestMaskOverlay(const std::string& filename, const std::string& outputDir);
     void TestLabelmapSurface(const std::string& filename, const std::string& outputDir);

@@ -88,7 +88,14 @@ public class InMemoryStoreScp : DicomService, IDicomServiceProvider, IDicomCStor
             {
                 context.AcceptTransferSyntaxes(
                     DicomTransferSyntax.ExplicitVRLittleEndian,
-                    DicomTransferSyntax.ImplicitVRLittleEndian);
+                    DicomTransferSyntax.ImplicitVRLittleEndian,
+                    DicomTransferSyntax.DeflatedExplicitVRLittleEndian,
+                    DicomTransferSyntax.ExplicitVRBigEndian,
+                    DicomTransferSyntax.RLELossless,
+                    DicomTransferSyntax.JPEG2000Lossless,
+                    DicomTransferSyntax.JPEGLSLossless,
+                    DicomTransferSyntax.JPEGProcess14SV1,
+                    DicomTransferSyntax.JPEGProcess1);
             }
             else
             {
@@ -131,6 +138,7 @@ public class InMemoryQueryRetrieveScp : DicomService, IDicomServiceProvider, IDi
 {
     private static readonly List<DicomFile> SourceFiles = new();
     private static readonly ConcurrentDictionary<string, (string Host, int Port)> Destinations = new(StringComparer.OrdinalIgnoreCase);
+    private static string? LastMoveError;
 
     public InMemoryQueryRetrieveScp(INetworkStream stream, Encoding fallbackEncoding, ILogger logger, DicomServiceDependencies dependencies)
         : base(stream, fallbackEncoding, logger, dependencies)
@@ -145,6 +153,7 @@ public class InMemoryQueryRetrieveScp : DicomService, IDicomServiceProvider, IDi
         }
 
         Destinations.Clear();
+        LastMoveError = null;
     }
 
     public static void ConfigureSources(IEnumerable<DicomFile> files)
@@ -221,7 +230,23 @@ public class InMemoryQueryRetrieveScp : DicomService, IDicomServiceProvider, IDi
         var remaining = matches.Count;
         foreach (var match in matches)
         {
-            await SendStoreRequestAsync(destination, match.File);
+            var failed = false;
+            try
+            {
+                await SendStoreRequestAsync(destination, match.File);
+            }
+            catch (Exception ex)
+            {
+                failed = true;
+                LastMoveError = ex.ToString();
+            }
+
+            if (failed)
+            {
+                yield return new DicomCMoveResponse(request, DicomStatus.ProcessingFailure);
+                yield break;
+            }
+
             remaining--;
             yield return new DicomCMoveResponse(request, DicomStatus.Pending)
             {
@@ -303,6 +328,14 @@ public class InMemoryQueryRetrieveScp : DicomService, IDicomServiceProvider, IDi
         }
     }
 
+    public static int GetSourceCount()
+    {
+        lock (SourceFiles)
+        {
+            return SourceFiles.Count;
+        }
+    }
+
     private static DicomDataset BuildResponseDataset(DicomDataset source, DicomQueryRetrieveLevel level)
     {
         var response = new DicomDataset
@@ -344,6 +377,16 @@ public class InMemoryQueryRetrieveScp : DicomService, IDicomServiceProvider, IDi
         await client.AddRequestAsync(new DicomCStoreRequest(new DicomFile(file.Dataset.Clone())));
         await client.SendAsync();
     }
+
+    public static void AddSource(DicomFile file)
+    {
+        lock (SourceFiles)
+        {
+            SourceFiles.Add(new DicomFile(file.Dataset.Clone()));
+        }
+    }
+
+    public static string? GetLastMoveError() => LastMoveError;
 }
 
 public class InMemoryWorklistScp : DicomService, IDicomServiceProvider, IDicomCFindProvider, IDicomCEchoProvider
@@ -496,6 +539,90 @@ public class InMemoryWorklistScp : DicomService, IDicomServiceProvider, IDicomCF
 }
 
 internal sealed record CliResult(int ExitCode, string Stdout, string Stderr);
+
+internal sealed class DicomWebStowServer : IAsyncDisposable
+{
+    private readonly HttpListener _listener = new();
+    private readonly CancellationTokenSource _cts = new();
+    private readonly Task _loopTask;
+
+    private DicomWebStowServer(int port)
+    {
+        _listener.Prefixes.Add($"http://localhost:{port}/");
+        _listener.Start();
+        _loopTask = Task.Run(() => RunAsync(_cts.Token));
+    }
+
+    internal static Task<DicomWebStowServer> StartAsync(int port) =>
+        Task.FromResult(new DicomWebStowServer(port));
+
+    private async Task RunAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            HttpListenerContext? context = null;
+            try
+            {
+                context = await _listener.GetContextAsync();
+            }
+            catch (HttpListenerException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
+            _ = Task.Run(() => HandleRequestAsync(context), cancellationToken);
+        }
+    }
+
+    private static async Task HandleRequestAsync(HttpListenerContext context)
+    {
+        try
+        {
+            if (!string.Equals(context.Request.HttpMethod, "POST", StringComparison.OrdinalIgnoreCase)
+                || context.Request.Url?.AbsolutePath != "/dicomweb/stow")
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.NotFound;
+                return;
+            }
+
+            using var ms = new MemoryStream();
+            await context.Request.InputStream.CopyToAsync(ms);
+            ms.Position = 0;
+            var dicomFile = DicomFile.Open(ms, FileReadOption.ReadAll);
+            InMemoryQueryRetrieveScp.AddSource(dicomFile);
+
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+        }
+        catch
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        }
+        finally
+        {
+            context.Response.OutputStream.Close();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _cts.Cancel();
+        _listener.Stop();
+        _listener.Close();
+        try
+        {
+            await _loopTask;
+        }
+        catch
+        {
+        }
+
+        _cts.Dispose();
+    }
+}
 
 internal static class CliRunner
 {

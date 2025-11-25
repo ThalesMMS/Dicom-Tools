@@ -72,7 +72,7 @@ The `tests/` directory exercises key features of each library:
 
 - **pydicom:** uncommon VRs (UN/UR/AT/OF/OD), private tags, DICOM JSON model roundtrip, deferred reads, sequences/nested datasets, Basic Text SR, UTF-8 character sets, multi-frame functional groups, secondary capture creation, SEG generation.
 - **pynetdicom:** in-process C-ECHO, C-FIND (StudyRoot + MWL), C-MOVE with internal C-STORE, C-GET (skips if storage contexts aren’t accepted), timeout/failure handling, optional TLS echo, Storage Commitment (N-ACTION) and MPPS (N-CREATE/N-SET), concurrent C-STORE + C-FIND associations.
-- **GDCM:** transfer syntax transcoding (RLE/JPEG2000), writer round-trip with tag edits, DICOMDIR generation (skips if the generator is unavailable), segmentation readback into NumPy (skipped on macOS builds where GDCM SEG is unstable).
+- **GDCM:** transfer syntax transcoding (RLE/JPEG2000), writer round-trip with tag edits, DICOMDIR generation (skips if the generator is unavailable), segmentation readback into NumPy (isolated in a subprocess and skipped if the local python-gdcm build aborts—macOS + Python 3.14 wheels are known to be fragile here).
 - **SimpleITK:** series IO, basic registration, masking/label stats, segmentation filters (region growing/watershed), 4D label stats aggregation, multi-label exports to DICOM series, NIfTI roundtrip back to DICOM (skips if DICOM writer not supported).
 - **dicom-numpy:** slice ordering edge cases, irregular spacing tolerance, duplicates, multi-echo stacking, affine comparison against SimpleITK, NIfTI export with histogram/summary validation.
 

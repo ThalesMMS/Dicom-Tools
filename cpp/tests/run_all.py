@@ -144,6 +144,8 @@ if run_test("test-vtk", "VTK Features"):
     require_file("vtk_metadata.txt")
     require_file("vtk_stats.txt")
     require_file("vtk_volume_render.png")
+    require_file("vtk_fusion.png")
+    require_file("vtk_time_series.txt")
     require_file("vtk_mpr_sagittal.png")
     require_file("vtk_overlay.png")
     require_file("vtk_labelmap.vti")

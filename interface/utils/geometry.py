@@ -6,6 +6,7 @@ from typing import Iterable, Tuple
 
 Matrix = Tuple[Tuple[float, float, float], Tuple[float, float, float], Tuple[float, float, float]]
 Point = Tuple[float, float]
+ROI = Tuple[Point, Point]
 
 
 def identity_matrix() -> Matrix:
@@ -55,3 +56,21 @@ def average(points: Iterable[Point]) -> Point:
     sy = sum(p[1] for p in pts)
     return (sx / len(pts), sy / len(pts))
 
+
+def bounding_box(points: Iterable[Point]) -> ROI:
+    pts = list(points)
+    if not pts:
+        return ((0.0, 0.0), (0.0, 0.0))
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    return ((min(xs), min(ys)), (max(xs), max(ys)))
+
+
+def clip_roi(roi: ROI, width: float, height: float) -> ROI:
+    """Clamp ROI to image boundaries (canvas coordinates)."""
+    (x1, y1), (x2, y2) = roi
+    x1c = clamp(x1, 0.0, width)
+    x2c = clamp(x2, 0.0, width)
+    y1c = clamp(y1, 0.0, height)
+    y2c = clamp(y2, 0.0, height)
+    return ((x1c, y1c), (x2c, y2c))

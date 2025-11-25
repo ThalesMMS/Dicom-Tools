@@ -26,3 +26,24 @@ def test_render_loop_emits_frame_ready_once():
     assert len(engine.requests) == 1
     assert len(ready_events) == 1
     assert ready_events[0].payload["frame"].viewer == "2d"
+
+
+def test_render_loop_blocks_reentrant_requests():
+    bus = EventBus()
+    engine = FakeEngine()
+    ready_events: list[Event] = []
+
+    def on_frame_ready(event: Event):
+        ready_events.append(event)
+        # Trigger another request that should be ignored while rendering
+        bus.emit(Event("frame_requested", {"request": event.payload["frame_request"]}))
+
+    bus.subscribe("frame_ready", on_frame_ready)
+    RenderLoop(bus, engine)
+
+    request = FrameRequest(viewer="2d", slice_index=0, zoom=1.0, pan=(0.0, 0.0), window_center=0, window_width=0, frame_count=1)
+    # Attach original request to inspect inside handler
+    bus.emit(Event("frame_requested", {"request": request, "frame_request": request}))
+
+    assert len(engine.requests) == 1
+    assert len(ready_events) == 1

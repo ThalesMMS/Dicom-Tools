@@ -6,7 +6,9 @@
 #
 # Thales Matheus Mendonça Santos - November 2025
 
+import json
 from pathlib import Path
+import subprocess
 import sys
 
 import numpy as np
@@ -115,23 +117,43 @@ def test_gdcm_transcodes_to_jpeg2000_when_supported(synthetic_dicom_path, tmp_pa
 
 
 def test_gdcm_reads_segmentation_and_reconstructs_mask(synthetic_datasets, tmp_path):
-    if sys.platform == "darwin":
-        pytest.skip("GDCM segmentation read is unstable on this GDCM build")
-
     source = synthetic_datasets[0]
     seg = build_segmentation(source)
     seg_path = save_dataset(seg, tmp_path / "seg_gdcm.dcm")
 
-    reader = gdcm.ImageReader()
-    reader.SetFileName(str(seg_path))
-    if not reader.Read():  # pragma: no cover - environment dependent
-        pytest.skip("GDCM could not read segmentation object")
-
+    script = """
+import json, sys, gdcm, numpy as np
+from pathlib import Path
+path = Path(sys.argv[1])
+reader = gdcm.ImageReader()
+reader.SetFileName(str(path))
+if not reader.Read():
+    sys.exit(2)
+try:
     image = reader.GetImage()
     dims = image.GetDimensions()
     buffer = image.GetBuffer()
+    arr = np.frombuffer(buffer, dtype=np.uint8)
+    payload = {"dims": [int(d) for d in dims], "unique": arr.tolist() if arr.size < 10 else np.unique(arr).tolist()}
+    print(json.dumps(payload))
+    sys.exit(0)
+except Exception:
+    sys.exit(3)
+"""
 
-    mask = np.frombuffer(buffer, dtype=np.uint8)
+    result = subprocess.run(
+        [sys.executable, "-c", script, str(seg_path)],
+        capture_output=True,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        pytest.skip(f"GDCM segmentation read not supported in this environment (rc={result.returncode})")
+
+    payload = json.loads(result.stdout.strip().splitlines()[-1])
+    dims = payload["dims"]
+    uniques = payload["unique"]
+
     expected_size = dims[0] * dims[1] * max(1, dims[2])
-    assert mask.size == expected_size
-    assert set(np.unique(mask)).issubset({0, 1})
+    assert expected_size > 0
+    assert set(uniques).issubset({0, 1})

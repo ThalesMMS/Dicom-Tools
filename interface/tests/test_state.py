@@ -40,3 +40,13 @@ def test_snapshot_contains_viewers():
     assert set(snap.keys()) == {"2d", "volume"}
     assert snap["2d"]["pan"] == (1.0, -1.0)
     assert snap["volume"]["slice_index"] == 2
+
+
+def test_frames_multi_frame_handling():
+    viewer = UIState().get_viewer("mpr")
+    viewer.set_frame_count(5)
+    viewer.slice_index = 4
+    viewer.apply_scroll(10)
+    assert viewer.slice_index == 4
+    viewer.apply_scroll(-10)
+    assert viewer.slice_index == 0

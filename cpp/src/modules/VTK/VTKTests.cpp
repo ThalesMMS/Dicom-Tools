@@ -31,6 +31,8 @@ void VTKTests::RegisterCommands(CommandRegistry& registry) {
             TestVolumeStatistics(ctx.inputPath, ctx.outputDir);
             TestMetadataExport(ctx.inputPath, ctx.outputDir);
             TestVolumeRenderingSnapshot(ctx.inputPath, ctx.outputDir);
+            TestMultiVolumeFusion(ctx.inputPath, ctx.outputDir);
+            TestTimeSeries(ctx.inputPath, ctx.outputDir);
             TestMultiplanarMPR(ctx.inputPath, ctx.outputDir);
             TestMaskOverlay(ctx.inputPath, ctx.outputDir);
             TestLabelmapSurface(ctx.inputPath, ctx.outputDir);
@@ -146,6 +148,26 @@ void VTKTests::RegisterCommands(CommandRegistry& registry) {
         "Off-screen volume rendering snapshot via vtkSmartVolumeMapper",
         [](const CommandContext& ctx) {
             TestVolumeRenderingSnapshot(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "vtk:fusion",
+        "VTK",
+        "Blend two volumes (PET/CT style) into a fused PNG",
+        [](const CommandContext& ctx) {
+            TestMultiVolumeFusion(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "vtk:time-series",
+        "VTK",
+        "Inspect time dimension/spacing for 4D series",
+        [](const CommandContext& ctx) {
+            TestTimeSeries(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });

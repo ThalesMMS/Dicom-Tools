@@ -24,6 +24,7 @@
 #include "vtkImageBlend.h"
 #include "vtkImageConnectivityFilter.h"
 #include "vtkImageData.h"
+#include "vtkImageMapToColors.h"
 #include "vtkImageMapToWindowLevelColors.h"
 #include "vtkImageResample.h"
 #include "vtkImageReslice.h"
@@ -424,6 +425,85 @@ void VTKTests::TestVolumeRenderingSnapshot(const std::string& filename, const st
     writer->Write();
 
     std::cout << "Saved volume rendering snapshot to '" << outFile << "'" << std::endl;
+}
+
+void VTKTests::TestTimeSeries(const std::string& filename, const std::string& outputDir) {
+    // Inspect time dimension and spacing to validate 4D series handling
+    std::cout << "--- [VTK] Time Series Inspection ---" << std::endl;
+
+    vtkNew<vtkDICOMImageReader> reader;
+    reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
+    reader->UpdateInformation();
+    reader->Update();
+
+    int dims[3] = {0, 0, 0};
+    reader->GetOutput()->GetDimensions(dims);
+    const int timeDim = 1; // vtkDICOMImageReader does not expose temporal dim; assume 1 for now
+    const double timeSpacing = 0.0;
+    const int slicesPerVolume = dims[2];
+
+    std::string reportPath = JoinPath(outputDir, "vtk_time_series.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+    report << "Dimensions=" << dims[0] << "x" << dims[1] << "x" << dims[2] << "\n";
+    report << "TimeDimension=" << timeDim << "\n";
+    report << "TimeSpacing=" << timeSpacing << "\n";
+    report << "SlicesPerVolume=" << slicesPerVolume << "\n";
+    report.close();
+
+    std::cout << "Time series report written to '" << reportPath << "'" << std::endl;
+}
+
+void VTKTests::TestMultiVolumeFusion(const std::string& filename, const std::string& outputDir) {
+    // Simple PET/CT-like fusion using two color maps blended together
+    std::cout << "--- [VTK] Multi-Volume Fusion ---" << std::endl;
+
+    vtkNew<vtkDICOMImageReader> reader;
+    reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
+    reader->Update();
+
+    double range[2];
+    reader->GetOutput()->GetScalarRange(range);
+
+    // Base grayscale CT
+    vtkNew<vtkImageMapToWindowLevelColors> baseColor;
+    baseColor->SetInputConnection(reader->GetOutputPort());
+    baseColor->SetWindow(std::max(1.0, range[1] - range[0]));
+    baseColor->SetLevel((range[0] + range[1]) / 2.0);
+    baseColor->Update();
+
+    // Synthetic PET-like mask emphasizing higher HU values
+    vtkNew<vtkImageThreshold> hotMask;
+    hotMask->SetInputConnection(reader->GetOutputPort());
+    hotMask->ThresholdByUpper(std::max(range[0] + 300.0, range[1] * 0.6));
+    hotMask->SetInValue(1.0);
+    hotMask->SetOutValue(0.0);
+
+    vtkNew<vtkLookupTable> hotLut;
+    hotLut->SetNumberOfTableValues(256);
+    hotLut->SetTableRange(0.0, 1.0);
+    hotLut->Build();
+    for (int i = 0; i < 256; ++i) {
+        const double t = static_cast<double>(i) / 255.0;
+        hotLut->SetTableValue(i, t, std::min(1.0, t * 1.5), 0.2 + 0.5 * t, t);
+    }
+
+    vtkNew<vtkImageMapToColors> hotColor;
+    hotColor->SetLookupTable(hotLut);
+    hotColor->SetInputConnection(hotMask->GetOutputPort());
+    hotColor->SetOutputFormatToRGBA();
+
+    vtkNew<vtkImageBlend> blend;
+    blend->AddInputConnection(baseColor->GetOutputPort());
+    blend->AddInputConnection(hotColor->GetOutputPort());
+    blend->SetOpacity(0, 1.0);
+    blend->SetOpacity(1, 0.55);
+
+    vtkNew<vtkPNGWriter> writer;
+    writer->SetFileName(JoinPath(outputDir, "vtk_fusion.png").c_str());
+    writer->SetInputConnection(blend->GetOutputPort());
+    writer->Write();
+
+    std::cout << "Saved fused multi-volume snapshot to '" << writer->GetFileName() << "'" << std::endl;
 }
 
 void VTKTests::TestMultiplanarMPR(const std::string& filename, const std::string& outputDir) {

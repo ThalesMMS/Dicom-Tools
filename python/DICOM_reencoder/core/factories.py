@@ -266,7 +266,7 @@ def build_segmentation(source: FileDataset, mask: np.ndarray | None = None) -> F
     ds.NumberOfFrames = 1
     ds.SamplesPerPixel = 1
     ds.PhotometricInterpretation = "MONOCHROME2"
-    ds.BitsAllocated = 8
+    ds.BitsAllocated = 1
     ds.BitsStored = 1
     ds.HighBit = 0
     ds.PixelRepresentation = 0
@@ -321,10 +321,11 @@ def build_segmentation(source: FileDataset, mask: np.ndarray | None = None) -> F
     derivation.SourceImageSequence = [ref_image]
     ds.DerivationImageSequence = [derivation]
 
-    # Pack the binary mask; pydicom will unpack bits for pixel_array
+    # Pack the binary mask; pydicom/gdcm expect bit-packed segmentation frames
     if seg_mask.dtype != np.uint8:
         seg_mask = seg_mask.astype(np.uint8)
-    ds.PixelData = seg_mask.tobytes()
+    packed = np.packbits(seg_mask.reshape(-1), bitorder="little").tobytes()
+    ds.PixelData = packed
     return ds
 
 

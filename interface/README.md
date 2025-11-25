@@ -11,10 +11,11 @@ Este diretório concentra a UI Tkinter e os adaptadores que chamam os backends C
 
 Optional env vars to point binaries:
 - `PYTHON_DICOM_TOOLS_CMD` (default `python -m DICOM_reencoder.cli`, cwd `python/`)
-- `RUST_DICOM_TOOLS_BIN` (default `rust/target/release/dicom-tools`; fallback `cargo run --release --`)
+- `RUST_DICOM_TOOLS_CMD` (overrides rust binary) ou `RUST_DICOM_TOOLS_BIN` (default `rust/target/release/dicom-tools`; fallback `cargo run --release --`)
 - `CPP_DICOM_TOOLS_BIN` (default `cpp/build/DicomTools`)
-- `CS_DICOM_TOOLS_CMD` (default `cs/bin/Release/net8.0/DicomTools.Cli` or Debug fallback)
+- `CS_DICOM_TOOLS_CMD` (default `cs/bin/Release/net8.0/DicomTools.Cli` ou Debug fallback)
 - `JAVA_DICOM_TOOLS_CMD` (default `java/dcm4che-tests/target/dcm4che-tests.jar` via `java -jar`)
+- `JS_DICOM_TOOLS_CMD` (default `node js/contract-cli/index.js`)
 
 ## Usando a UI Tkinter
 ```bash
@@ -35,7 +36,7 @@ echo '{"backend":"rust","op":"dump","input":"file.dcm"}' | python -m interface.c
 ```
 
 ## Contrato
-O formato de requisição/resposta e o mapeamento mínimo de operações estão em `CONTRACT.md`.
+O formato de requisição/resposta e o mapeamento mínimo de operações estão em `CONTRACT.md`. As respostas do runner incluem sempre `ok`, `returncode`, `stdout/stderr`, `artifacts` (aliases de `output_files`), `metadata`, além de `backend` e `operation` para facilitar depuração.
 
 ## Arquitetura reativa da UI
 - Event bus + Command pattern (`interface/input/event_bus.py`) mantêm UI e engine desacoplados.
@@ -43,6 +44,8 @@ O formato de requisição/resposta e o mapeamento mínimo de operações estão 
 - `RenderLoop` (`interface/components/render_loop.py`) consome os requests e emite `frame_ready` assim que o core terminar.
 - Viewers (`TwoDViewer`, `MPRViewer`, `VolumeViewer`) só reagem a `frame_ready` e renderizam overlays via `OverlayManager`.
 - Pipeline alvo: `UI Input → Command → Core → Frame → Viewer → UI`.
+
+O render loop tem proteção contra reentrância: eventos `frame_ready` que disparem novos `frame_requested` são ignorados enquanto um frame está sendo gerado, evitando loops infinitos.
 
 Para uso headless/testável:
 ```python
@@ -68,7 +71,7 @@ Todos os viewers compartilham os mesmos comandos: `onScroll`, `onZoom`, `onPan`,
 - `input/`: event bus, controller unificado, adapters 2D/MPR/Volume, `ToolManager`.
 - `overlays/`: `OverlayManager` e overlays padrão.
 - `state/`: `UIState`, `ViewerState`, `FrameRequest/Frame`.
-- `utils/`: helpers de geometria (pan/zoom/transform).
+- `utils/`: helpers de geometria (pan/zoom/transform, clipping de ROI, bounding boxes).
 
 ## Convenções de coordenadas
 - Pan/zoom operam em coordenadas de canvas (origem no canto superior esquerdo).
