@@ -22,16 +22,27 @@ class JsCliAdapter:
         output = request.get("output") or ""
         options = request.get("options") or {}
 
-        args = self.cmd + [
-            "--op",
-            op,
-            "--input",
-            str(input_path),
-        ]
-        if output:
-            args += ["--output", str(output)]
-        if options:
-            args += ["--options", json.dumps(options)]
+        if not op or (op != "custom" and not input_path):
+            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+
+        if op == "custom":
+            custom_cmd = options.get("custom_cmd")
+            if not custom_cmd:
+                return RunResult(False, 1, "", "custom_cmd ausente", [], None)
+            parts = shlex.split(str(custom_cmd))
+            parts = [str(input_path) if p == "{input}" else str(output) if p == "{output}" else p for p in parts]
+            args = self.cmd + parts
+        else:
+            args = self.cmd + [
+                "--op",
+                op,
+                "--input",
+                str(input_path),
+            ]
+            if output:
+                args += ["--output", str(output)]
+            if options:
+                args += ["--options", json.dumps(options)]
 
         proc = subprocess.run(args, capture_output=True, text=True)
         try:

@@ -94,4 +94,13 @@ class CppCliAdapter:
             cmd = [*self.base_cmd, vtk_map[op], "-i", input_path, "-o", str(output_dir)]
             return cmd, [str(output_dir)]
 
+        if op == "custom":
+            custom_cmd = options.get("custom_cmd")
+            if not custom_cmd:
+                return None, []
+            parts = split_cmd(str(custom_cmd))
+            parts = [str(input_path) if p == "{input}" else str(output_dir) if p == "{output}" else p for p in parts]
+            cmd = [*self.base_cmd, *parts]
+            return cmd, []
+
         return None, []

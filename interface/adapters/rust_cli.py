@@ -111,6 +111,14 @@ class RustCliAdapter:
                 cmd.extend(["--bins", str(options["bins"])])
             return cmd
 
+        if op == "custom":
+            custom_cmd = options.get("custom_cmd")
+            if not custom_cmd:
+                return None
+            parts = split_cmd(str(custom_cmd))
+            parts = [str(input_path) if p == "{input}" else str(output) if p == "{output}" else p for p in parts]
+            return [*self.base_cmd, *parts]
+
         return None
 
     def _infer_output(self, input_path: str, *, suffix: str) -> str:

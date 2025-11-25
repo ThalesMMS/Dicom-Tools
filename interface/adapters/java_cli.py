@@ -22,7 +22,7 @@ class JavaCliAdapter:
         input_path = request.get("input")
         output = request.get("output")
 
-        if not op or not input_path:
+        if not op or (op != "custom" and not input_path):
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
         cmd = self._build_cmd(op, input_path, output, options)
@@ -92,4 +92,11 @@ class JavaCliAdapter:
             if options.get("pretty"):
                 cmd.append("--pretty")
             return cmd
+        if op == "custom":
+            custom_cmd = options.get("custom_cmd")
+            if not custom_cmd:
+                return None
+            parts = str(custom_cmd).split()
+            parts = [str(input_path) if p == "{input}" else str(output) if p == "{output}" else p for p in parts]
+            return [*self.base_cmd, *parts]
         return None

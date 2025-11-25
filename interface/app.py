@@ -15,8 +15,8 @@ OUTPUT_DIR = ROOT_DIR / "output"
 
 # Supported ops per backend (only what each CLI advertises today)
 BACKEND_OPS = {
-    "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo"],
-    "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo"],
+    "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo", "custom"],
+    "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo", "custom"],
     "cpp": [
         "info",
         "anonymize",
@@ -25,6 +25,7 @@ BACKEND_OPS = {
         "validate",
         "stats",
         "dump",
+        "custom",
         "vtk_export",
         "vtk_nifti",
         "vtk_isosurface",
@@ -162,7 +163,6 @@ class TkApp:
         ttk.Label(frm, text="Operação").grid(row=1, column=0, sticky="w")
         self.operation = ttk.Combobox(frm, state="readonly")
         self.operation.grid(row=1, column=1, sticky="ew")
-        self._update_operations()
 
         ttk.Label(frm, text="Entrada").grid(row=2, column=0, sticky="w")
         self.input_entry = ttk.Entry(frm)
@@ -178,6 +178,10 @@ class TkApp:
         self.options_text = tk.Text(frm, height=5, width=60)
         self.options_text.insert("1.0", "{}")
         self.options_text.grid(row=4, column=1, columnspan=2, sticky="nsew", pady=4)
+
+        ttk.Label(frm, text="Comando custom").grid(row=5, column=0, sticky="w")
+        self.custom_cmd_entry = ttk.Entry(frm)
+        self.custom_cmd_entry.grid(row=5, column=1, columnspan=2, sticky="ew")
 
         ttk.Button(frm, text="Carregar defaults", command=self._load_defaults).grid(row=5, column=0, sticky="w", pady=6)
         self.run_button = ttk.Button(frm, text="Executar", command=self._run)
@@ -199,6 +203,7 @@ class TkApp:
         for col in range(3):
             frm.columnconfigure(col, weight=1)
         frm.rowconfigure(6, weight=1)
+        self._update_operations()
 
     def _browse_input(self) -> None:
         op = self.operation.get()
@@ -222,13 +227,21 @@ class TkApp:
         self.operation["values"] = ops
         if ops:
             self.operation.set(ops[0])
+        self._toggle_custom_field()
 
     def _require_input(self, op: str) -> bool:
         # echo não precisa de input; os demais sim (arquivo ou diretório)
-        return op not in {"echo"}
+        return op not in {"echo", "custom"}
 
     def _op_uses_directory_input(self, op: str) -> bool:
         return op in {"volume", "nifti", "vtk_export", "vtk_nifti", "vtk_isosurface", "vtk_resample", "vtk_mask", "vtk_connectivity", "vtk_mip", "vtk_metadata", "vtk_stats", "vtk_viewer", "vtk_volume_render", "vtk_mpr_multi", "vtk_overlay", "vtk_stream", "test_vtk"}
+
+    def _toggle_custom_field(self) -> None:
+        op = self.operation.get()
+        state = "normal" if op == "custom" else "disabled"
+        self.custom_cmd_entry.configure(state=state)
+        if op != "custom":
+            self.custom_cmd_entry.delete(0, tk.END)
 
     def _normalize_output(self, op: str, input_path: str, output_path: str | None) -> str | None:
         """If the user selected a directory, infer a file name based on op and input."""
@@ -288,6 +301,8 @@ class TkApp:
             "output": self._normalize_output(op, input_path, output_path),
             "options": options,
         }
+        if op == "custom":
+            request["options"] = {**options, "custom_cmd": self.custom_cmd_entry.get().strip()}
 
         self._set_status("Executando...")
         self.run_button.state(["disabled"])
@@ -354,6 +369,8 @@ class TkApp:
                 "output": self._normalize_output(op, input_path, str(output_path) if output_path else None),
                 "options": options,
             }
+            if op == "custom":
+                request["options"] = {**options, "custom_cmd": self.custom_cmd_entry.get().strip()}
 
             try:
                 result = adapter.handle(request)
