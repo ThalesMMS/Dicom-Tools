@@ -135,6 +135,10 @@ export async function createVolumeViewport(options: VolumeViewportOptions) {
       viewport.setOrientation?.(nextAxis);
       viewport.render?.();
     },
+    setSlabThickness: (value: number) => {
+      viewport.setSlabThickness?.(value);
+      viewport.render?.();
+    },
     destroy: () => renderingEngine.destroy(),
   };
 }

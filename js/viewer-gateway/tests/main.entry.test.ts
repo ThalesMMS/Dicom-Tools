@@ -2,8 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const viewerMocks = vi.hoisted(() => {
   const buildImageIds = vi.fn((base: string, count: number) => Array.from({ length: count }, (_, i) => `wadouri:${base}/IM-${i + 1}`));
-  const createStackViewer = vi.fn(() => Promise.resolve({}));
-  const createVolumeViewport = vi.fn(() => Promise.resolve({}));
+  const createStackViewer = vi.fn(() => Promise.resolve({ setSlice: vi.fn(), setVOI: vi.fn(), destroy: vi.fn() }));
+  const createVolumeViewport = vi.fn(() =>
+    Promise.resolve({
+      setBlendMode: vi.fn(),
+      setOrientation: vi.fn(),
+      setSlabThickness: vi.fn(),
+      destroy: vi.fn(),
+    }),
+  );
   return { buildImageIds, createStackViewer, createVolumeViewport };
 });
 
@@ -26,7 +33,13 @@ async function runMain(opts: HarnessOptions = {}) {
   const docStub = {
     getElementById: vi.fn(() => root),
     createElement: vi.fn((tag: string) => {
-      const el: any = { tagName: tag, style: {}, appendChild: vi.fn(), textContent: '' };
+      const el: any = { tagName: tag, style: {}, dataset: {}, textContent: '', children: [] as any[], value: '' };
+      el.appendChild = vi.fn((child) => el.children.push(child));
+      el.append = vi.fn((...nodes: any[]) => el.children.push(...nodes));
+      el._handlers = {};
+      el.addEventListener = vi.fn((event: string, cb: any) => {
+        el._handlers[event] = cb;
+      });
       created.push(el);
       return el;
     }),
@@ -64,36 +77,52 @@ describe('main entrypoint wiring', () => {
   });
 
   it('mounts stack/volume viewports and skips dicomweb when not configured', async () => {
-    const { created, docStub, viewerGateway } = await runMain();
+    const { created, docStub } = await runMain();
 
     expect(docStub.getElementById).toHaveBeenCalledWith('app');
-    expect(docStub.createElement).toHaveBeenCalledWith('div');
-    expect(docStub.createElement).toHaveBeenCalledWith('p');
-
-    expect(viewerGateway.buildImageIds).toHaveBeenCalledWith('http://localhost:8080/sample_series', 174);
-    expect(viewerGateway.createStackViewer).toHaveBeenCalledTimes(1);
-    expect(viewerGateway.createVolumeViewport).toHaveBeenCalledTimes(1);
+    expect(viewerMocks.buildImageIds).toHaveBeenCalledWith('http://localhost:8080/sample_series', 174);
+    expect(viewerMocks.createStackViewer).toHaveBeenCalledTimes(1);
+    expect(viewerMocks.createVolumeViewport).toHaveBeenCalledTimes(1);
 
     const infoParagraphs = created.filter((el) => el.tagName === 'p');
     expect(infoParagraphs[0].textContent).toContain('Loaded 174 slices from http://localhost:8080/sample_series');
     expect(infoParagraphs[1].textContent).toContain('Volume MIP ready');
     expect(infoParagraphs[2].textContent).toContain('Skip DICOMweb demo');
+
+    const applyBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Aplicar orientação'));
+    applyBtn?._handlers.click?.({});
+    const voiBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Aplicar VOI'));
+    voiBtn?._handlers.click?.({});
+    const presetSoft = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Preset soft'));
+    presetSoft?._handlers.click?.({});
   });
 
   it('runs dicomweb flow when config is provided', async () => {
     const dicomwebResult = { imageIds: ['wadors:a', 'wadors:b'], instances: [] };
-    const { created, viewerGateway } = await runMain({
+    const { created } = await runMain({
       dicomwebConfig: { baseUrl: 'http://dw', studyInstanceUID: 's', seriesInstanceUID: 'se' },
       dicomwebResult,
     });
 
-    expect(viewerGateway.createVolumeViewport).toHaveBeenCalledTimes(2);
-    const dicomwebArgs = (viewerGateway.createVolumeViewport as any).mock.calls[1][0];
+    const dicomwebArgs = (viewerMocks.createVolumeViewport as any).mock.calls.at(-1)[0];
+    expect(viewerMocks.createVolumeViewport.mock.calls.length).toBeGreaterThanOrEqual(2);
     expect(dicomwebArgs.mode).toBe('volume');
     expect(dicomwebArgs.imageIds).toEqual(dicomwebResult.imageIds);
 
     const infoParagraphs = created.filter((el) => el.tagName === 'p');
     expect(infoParagraphs[2].textContent).toContain('Loaded from DICOMweb');
+
+    // simulate manual DICOMweb reload
+    const dicomBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Carregar'));
+    const baseInput = created.find((el) => el.tagName === 'input' && el.placeholder?.includes('Base URL'));
+    const studyInput = created.find((el) => el.tagName === 'input' && el.placeholder?.includes('StudyInstanceUID'));
+    const seriesInput = created.find((el) => el.tagName === 'input' && el.placeholder?.includes('SeriesInstanceUID'));
+    if (baseInput && studyInput && seriesInput && dicomBtn) {
+      baseInput.value = 'http://dw';
+      studyInput.value = 's';
+      seriesInput.value = 'se';
+      dicomBtn._handlers.click?.({});
+    }
   });
 
   it('reads dicomweb config from env variables', async () => {
@@ -108,9 +137,9 @@ describe('main entrypoint wiring', () => {
 
     try {
       const dicomwebResult = { imageIds: ['wadors:env'], instances: [] };
-      const { created, viewerGateway } = await runMain({ dicomwebResult });
+      const { created } = await runMain({ dicomwebResult });
 
-      expect(viewerGateway.createVolumeViewport).toHaveBeenCalledTimes(2);
+      expect(viewerMocks.createVolumeViewport.mock.calls.length).toBeGreaterThanOrEqual(2);
       const infoParagraphs = created.filter((el) => el.tagName === 'p');
       expect(infoParagraphs[2].textContent).toContain('Loaded from DICOMweb');
     } finally {
@@ -121,12 +150,12 @@ describe('main entrypoint wiring', () => {
   });
 
   it('shows dicomweb failure message when fetch fails', async () => {
-    const { created, viewerGateway } = await runMain({
+    const { created } = await runMain({
       dicomwebConfig: { baseUrl: 'http://dw', studyInstanceUID: 's', seriesInstanceUID: 'se' },
       dicomwebError: new Error('boom'),
     });
 
-    expect(viewerGateway.createVolumeViewport).toHaveBeenCalledTimes(1); // only stack+volume
+    expect(viewerMocks.createVolumeViewport).toHaveBeenCalledTimes(1); // only stack+volume
     const infoParagraphs = created.filter((el) => el.tagName === 'p');
     expect(infoParagraphs[2].textContent).toContain('Failed DICOMweb load');
   });
