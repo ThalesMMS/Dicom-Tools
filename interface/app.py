@@ -183,77 +183,77 @@ CANONICAL_OP_SPECS = {
     "info": {
         "input": "file",
         "output": "display",
-        "description": "Lê e imprime metadados do DICOM.",
+        "description": "Reads and prints DICOM metadata.",
         "option_keys": ["json", "verbose"],
         "has_options": True,
     },
     "anonymize": {
         "input": "file",
         "output": "file",
-        "description": "Gera cópia anonimizada do arquivo.",
+        "description": "Generates an anonymized copy of the file.",
         "option_keys": [],
         "has_options": False,
     },
     "to_image": {
         "input": "file",
         "output": "file",
-        "description": "Exporta um frame para imagem (png/jpeg).",
+        "description": "Exports a frame as an image (PNG/JPEG).",
         "option_keys": ["format", "frame"],
         "has_options": True,
     },
     "transcode": {
         "input": "file",
         "output": "file",
-        "description": "Converte a transfer syntax do DICOM.",
+        "description": "Converts the DICOM transfer syntax.",
         "option_keys": ["syntax"],
         "has_options": True,
     },
     "validate": {
         "input": "file",
         "output": "display",
-        "description": "Validação básica do arquivo.",
+        "description": "Performs basic file validation.",
         "option_keys": [],
         "has_options": False,
     },
     "echo": {
         "input": "none",
         "output": "display",
-        "description": "C-ECHO/Ping de PACS (não exige arquivo).",
+        "description": "Sends a C-ECHO/Ping to a PACS (no file required).",
         "option_keys": ["host", "port", "calling_aet", "called_aet", "timeout"],
         "has_options": True,
     },
     "stats": {
         "input": "file",
         "output": "display",
-        "description": "Estatísticas/histograma de pixels.",
+        "description": "Pixel statistics/histogram.",
         "option_keys": ["bins", "frame", "json", "pretty"],
         "has_options": True,
     },
     "dump": {
         "input": "file",
         "output": "display",
-        "description": "Dump textual do dataset.",
+        "description": "Textual dump of the dataset.",
         "option_keys": ["depth", "max_value_len", "max_width"],
         "has_options": True,
     },
     "volume": {
         "input": "directory",
         "output": "file",
-        "description": "Reconstrói volume 3D a partir de uma pasta/série.",
+        "description": "Reconstructs a 3D volume from a folder/series.",
         "option_keys": ["preview", "metadata"],
         "has_options": True,
     },
     "nifti": {
         "input": "directory",
         "output": "file",
-        "description": "Exporta série (pasta) para NIfTI.",
+        "description": "Exports a series (folder) to NIfTI.",
         "option_keys": ["series_uid", "metadata", "no_compress"],
         "has_options": True,
     },
     "custom": {
         "input": "optional",
         "output": "file",
-        "description": "Executa comando customizado (use {input}/{output}).",
+        "description": "Executes a custom command (use {input}/{output}).",
         "option_keys": ["custom_cmd"],
         "has_options": True,
     },
@@ -261,9 +261,9 @@ CANONICAL_OP_SPECS = {
 
 BACKEND_SPEC_OVERRIDES = {
     "python": {
-        "stats": {"option_keys": ["bins"], "description": "Histograma rápido via Python."},
-        "dump": {"option_keys": ["max_value_len"], "description": "Dump textual via CLI Python."},
-        "volume": {"option_keys": ["preview", "metadata"], "description": "Gera .npy e metadata.json."},
+        "stats": {"option_keys": ["bins"], "description": "Quick histogram via Python."},
+        "dump": {"option_keys": ["max_value_len"], "description": "Textual dump via the Python CLI."},
+        "volume": {"option_keys": ["preview", "metadata"], "description": "Produces .npy and metadata.json."},
         "nifti": {"option_keys": ["series_uid", "metadata", "no_compress"]},
         "echo": {"option_keys": ["host", "port", "calling_aet", "called_aet", "timeout"]},
     },
@@ -280,36 +280,36 @@ BACKEND_SPEC_OVERRIDES = {
                 "force_8bit",
                 "force_16bit",
             ],
-            "description": "Exporta imagem com ajustes de janela e LUT.",
+            "description": "Exports an image with window and LUT adjustments.",
         },
         "stats": {"option_keys": [], "has_options": False},
         "dump": {"option_keys": ["max_depth", "max_value_len"]},
         "echo": {"option_keys": ["host", "port"]},
     },
     "cpp": {
-        "info": {"output": "directory", "has_options": False, "option_keys": [], "description": "Gera dump.txt na pasta."},
-        "dump": {"output": "directory", "has_options": False, "option_keys": [], "description": "Dump gdcm para arquivo."},
-        "stats": {"output": "directory", "has_options": False, "option_keys": [], "description": "Escreve pixel_stats.txt."},
+        "info": {"output": "directory", "has_options": False, "option_keys": [], "description": "Generates dump.txt in the folder."},
+        "dump": {"output": "directory", "has_options": False, "option_keys": [], "description": "Dumps GDCM output to a file."},
+        "stats": {"output": "directory", "has_options": False, "option_keys": [], "description": "Writes pixel_stats.txt."},
         "validate": {"output": "directory", "has_options": False},
         "anonymize": {"output": "directory"},
         "to_image": {"output": "directory"},
         "transcode": {"output": "directory", "option_keys": ["syntax"], "has_options": True},
     },
     "java": {
-        "info": {"option_keys": ["json"], "description": "Metadados via dcm4che."},
+        "info": {"option_keys": ["json"], "description": "Metadata via dcm4che."},
         "stats": {"option_keys": ["bins", "json", "pretty"]},
         "dump": {"option_keys": ["max_width"]},
         "echo": {"option_keys": ["host", "port", "calling_aet", "called_aet", "timeout"]},
     },
     "csharp": {
-        "transcode": {"option_keys": ["syntax"], "description": "Define transfer-syntax de saída."},
+        "transcode": {"option_keys": ["syntax"], "description": "Sets the output transfer syntax."},
         "dump": {"option_keys": ["max_depth", "max_value_len"]},
-        "stats": {"option_keys": ["frame"], "description": "Estatísticas de frame (JSON)."},
-        "histogram": {"option_keys": ["bins", "frame"], "description": "Histograma por frame (JSON)."},
+        "stats": {"option_keys": ["frame"], "description": "Frame statistics (JSON)."},
+        "histogram": {"option_keys": ["bins", "frame"], "description": "Histogram per frame (JSON)."},
     },
     "js": {
-        "volume": {"description": "Shim JS → Python; gera .npy opcional."},
-        "nifti": {"description": "Shim JS → Python; gera .nii.gz."},
+        "volume": {"description": "JS shim → Python; produces an optional .npy file."},
+        "nifti": {"description": "JS shim → Python; produces a .nii.gz file."},
     },
 }
 
@@ -331,13 +331,13 @@ VTK_OPS = [
     "test_vtk",
 ]
 for _vtk_op in VTK_OPS:
-    BACKEND_SPEC_OVERRIDES.setdefault("cpp", {})[_vtk_op] = {
-        "input": "directory",
-        "output": "directory",
-        "description": "VTK demo: pasta de série → artefatos na saída.",
-        "option_keys": [],
-        "has_options": False,
-    }
+        BACKEND_SPEC_OVERRIDES.setdefault("cpp", {})[_vtk_op] = {
+            "input": "directory",
+            "output": "directory",
+            "description": "VTK demo: series folder → artifacts in the output.",
+            "option_keys": [],
+            "has_options": False,
+        }
 
 
 def get_operation_spec(backend: str, op: str) -> dict:
@@ -365,7 +365,7 @@ def get_operation_spec(backend: str, op: str) -> dict:
 class TkApp:
     def __init__(self) -> None:
         self.root = tk.Tk()
-        self.root.title("Dicom Tools – UI unificada (CLI/JSON)")
+        self.root.title("Dicom Tools – Unified UI (CLI/JSON)")
         self.status_var = tk.StringVar(value="Ready")
         self.preview_img = None
         self._build_form()
@@ -382,49 +382,49 @@ class TkApp:
         self.backend.set(BACKENDS[0])
         self.backend.grid(row=0, column=1, sticky="ew")
 
-        ttk.Label(frm, text="Biblioteca").grid(row=1, column=0, sticky="w")
+        ttk.Label(frm, text="Library").grid(row=1, column=0, sticky="w")
         self.library = ttk.Combobox(frm, state="readonly")
         self.library.bind("<<ComboboxSelected>>", self._on_library_change)
         self.library.grid(row=1, column=1, sticky="ew")
 
-        ttk.Label(frm, text="Operação").grid(row=2, column=0, sticky="w")
+        ttk.Label(frm, text="Operation").grid(row=2, column=0, sticky="w")
         self.operation = ttk.Combobox(frm, state="readonly")
         self.operation.bind("<<ComboboxSelected>>", self._on_operation_change)
         self.operation.grid(row=2, column=1, sticky="ew")
 
-        self.input_label = ttk.Label(frm, text="Entrada")
+        self.input_label = ttk.Label(frm, text="Input")
         self.input_label.grid(row=3, column=0, sticky="w")
         self.input_entry = ttk.Entry(frm)
         self.input_entry.grid(row=3, column=1, sticky="ew")
-        self.input_browse_btn = ttk.Button(frm, text="Selecionar", command=self._browse_input)
+        self.input_browse_btn = ttk.Button(frm, text="Browse", command=self._browse_input)
         self.input_browse_btn.grid(row=3, column=2, padx=4)
 
-        self.output_label = ttk.Label(frm, text="Saída (opcional)")
+        self.output_label = ttk.Label(frm, text="Output (optional)")
         self.output_label.grid(row=4, column=0, sticky="w")
         self.output_entry = ttk.Entry(frm)
         self.output_entry.grid(row=4, column=1, sticky="ew")
-        self.output_browse_btn = ttk.Button(frm, text="Selecionar", command=self._browse_output)
+        self.output_browse_btn = ttk.Button(frm, text="Browse", command=self._browse_output)
         self.output_browse_btn.grid(row=4, column=2, padx=4)
 
-        self.options_label = ttk.Label(frm, text="Options JSON (opcional)")
+        self.options_label = ttk.Label(frm, text="Options JSON (optional)")
         self.options_label.grid(row=5, column=0, sticky="w")
         self.options_text = tk.Text(frm, height=5, width=60)
         self.options_text.insert("1.0", "{}")
         self.options_text.grid(row=5, column=1, columnspan=2, sticky="nsew", pady=4)
 
-        ttk.Label(frm, text="Comando custom").grid(row=6, column=0, sticky="w")
+        ttk.Label(frm, text="Custom command").grid(row=6, column=0, sticky="w")
         self.custom_cmd_entry = ttk.Entry(frm)
         self.custom_cmd_entry.grid(row=6, column=1, columnspan=2, sticky="ew")
 
-        ttk.Button(frm, text="Carregar defaults", command=self._load_defaults).grid(row=6, column=0, sticky="w", pady=6)
-        self.run_button = ttk.Button(frm, text="Executar", command=self._run)
+        ttk.Button(frm, text="Load defaults", command=self._load_defaults).grid(row=6, column=0, sticky="w", pady=6)
+        self.run_button = ttk.Button(frm, text="Run", command=self._run)
         self.run_button.grid(row=6, column=1, sticky="e", pady=6)
-        ttk.Button(frm, text="Rodar suíte completa", command=self._run_suite).grid(row=6, column=2, sticky="e", pady=6)
+        ttk.Button(frm, text="Run full suite", command=self._run_suite).grid(row=6, column=2, sticky="e", pady=6)
 
         self.hint_label = ttk.Label(frm, text="", foreground="gray", wraplength=680)
         self.hint_label.grid(row=7, column=0, columnspan=3, sticky="w", pady=(2, 4))
 
-        ttk.Label(frm, text="Resultado").grid(row=8, column=0, sticky="nw")
+        ttk.Label(frm, text="Result").grid(row=8, column=0, sticky="nw")
         self.result_text = tk.Text(frm, height=18, width=80)
         self.result_text.grid(row=8, column=1, columnspan=2, sticky="nsew")
 
@@ -432,7 +432,7 @@ class TkApp:
         self.status_label = ttk.Label(frm, textvariable=self.status_var)
         self.status_label.grid(row=9, column=1, sticky="w")
 
-        ttk.Label(frm, text="Preview (imagem)").grid(row=10, column=0, sticky="nw")
+        ttk.Label(frm, text="Preview (image)").grid(row=10, column=0, sticky="nw")
         self.preview_label = ttk.Label(frm)
         self.preview_label.grid(row=10, column=1, columnspan=2, sticky="w")
 
@@ -475,14 +475,14 @@ class TkApp:
     def _update_library_options(self, backend: str) -> None:
         libs = BACKEND_LIBRARIES.get(backend, {})
         if len(libs) > 1:
-            values = ["Todos"] + list(libs.keys())
-            default = "Todos"
+            values = ["All"] + list(libs.keys())
+            default = "All"
         elif libs:
             values = list(libs.keys())
             default = values[0]
         else:
-            values = ["Padrão"]
-            default = "Padrão"
+            values = ["Default"]
+            default = "Default"
         self.library["values"] = values
         if not self.library.get() or self.library.get() not in values:
             self.library.set(default)
@@ -493,7 +493,7 @@ class TkApp:
 
     def _ops_for_backend(self, backend: str, library: str | None) -> list[str]:
         libs = BACKEND_LIBRARIES.get(backend, {})
-        if library and library not in {"Todos", "Padrão", "All"}:
+        if library and library not in {"All", "Default"}:
             return libs.get(library, [])
         if libs:
             ops: list[str] = []
@@ -541,15 +541,15 @@ class TkApp:
 
     def _update_input_controls(self, spec: dict) -> None:
         input_kind = spec.get("input")
-        label = "Entrada"
+        label = "Input"
         if input_kind == "directory":
-            label = "Entrada (pasta/série)"
+            label = "Input (folder/series)"
         elif input_kind == "file":
-            label = "Entrada (arquivo)"
+            label = "Input (file)"
         elif input_kind == "optional":
-            label = "Entrada (opcional)"
+            label = "Input (optional)"
         elif input_kind == "none":
-            label = "Entrada (não necessária)"
+            label = "Input (not required)"
         self.input_label.configure(text=label)
         input_disabled = input_kind == "none"
         self.input_entry.configure(state="disabled" if input_disabled else "normal")
@@ -559,22 +559,22 @@ class TkApp:
 
     def _update_output_controls(self, spec: dict) -> None:
         output_kind = spec.get("output")
-        label = "Saída"
+        label = "Output"
         if output_kind == "display":
-            label = "Saída (somente exibição)"
+            label = "Output (display only)"
             self.output_entry.delete(0, tk.END)
             self.output_entry.configure(state="disabled")
             self.output_browse_btn.state(["disabled"])
             self.preview_img = None
             self.preview_label.configure(image="", text="")
         elif output_kind == "directory":
-            label = "Saída (pasta)"
+            label = "Output (folder)"
             self.output_entry.configure(state="normal")
             self.output_browse_btn.state(["!disabled"])
         else:
-            label = "Saída (arquivo"
+            label = "Output (file"
             if not spec.get("output_required"):
-                label += " opcional"
+                label += " optional"
             label += ")"
             self.output_entry.configure(state="normal")
             self.output_browse_btn.state(["!disabled"])
@@ -588,7 +588,7 @@ class TkApp:
         elif has_options:
             label = "Options JSON"
         else:
-            label = "Options JSON (não se aplica)"
+            label = "Options JSON (not applicable)"
         self.options_label.configure(text=label)
         if has_options:
             self.options_text.configure(state="normal")
@@ -608,22 +608,22 @@ class TkApp:
         backend = self.backend.get() if hasattr(self.backend, "get") else ""
         library = self.library.get() if hasattr(self, "library") and hasattr(self.library, "get") else ""
         input_map = {
-            "file": "Arquivo único",
-            "directory": "Pasta/série (múltiplos arquivos)",
-            "none": "Sem entrada",
-            "optional": "Entrada opcional",
+            "file": "Single file",
+            "directory": "Folder/series (multiple files)",
+            "none": "No input",
+            "optional": "Optional input",
         }
-        output_map = {"display": "Só exibe informações", "file": "Arquivo de saída", "directory": "Pasta de saída"}
-        options = ", ".join(spec.get("option_keys") or []) or "sem opções"
-        base = f"Entrada: {input_map.get(spec.get('input'), 'Arquivo/pasta')} | Saída: {output_map.get(spec.get('output'), 'Arquivo')}"
+        output_map = {"display": "Display only", "file": "Output file", "directory": "Output folder"}
+        options = ", ".join(spec.get("option_keys") or []) or "no options"
+        base = f"Input: {input_map.get(spec.get('input'), 'File/folder')} | Output: {output_map.get(spec.get('output'), 'File')}"
         desc = spec.get("description", "").strip()
-        hint = f"{base} | Opções: {options}"
+        hint = f"{base} | Options: {options}"
         if desc:
             hint = f"{hint} | {desc}"
         prefix = []
         if backend:
             prefix.append(f"Backend: {backend}")
-        if library and library not in {"Todos", "Padrão"}:
+        if library and library not in {"All", "Default"}:
             prefix.append(f"Lib: {library}")
         if prefix:
             hint = f"{' · '.join(prefix)} | {hint}"
@@ -692,7 +692,7 @@ class TkApp:
         try:
             return json.loads(text)
         except json.JSONDecodeError as exc:
-            messagebox.showerror("Erro no JSON de options", str(exc))
+            messagebox.showerror("Options JSON Error", str(exc))
             return {}
 
     def _run(self) -> None:
@@ -704,16 +704,16 @@ class TkApp:
         spec = self._current_spec()
 
         if self._requires_input(spec, op) and not input_path:
-            messagebox.showerror("Erro", "Informe o caminho de entrada")
+            messagebox.showerror("Error", "Provide the input path")
             return
         if self._requires_input(spec, op) and not Path(input_path).exists():
-            messagebox.showerror("Erro", f"Caminho de entrada não existe:\n{input_path}")
+            messagebox.showerror("Error", f"Input path does not exist:\n{input_path}")
             return
         if self._requires_input(spec, op) and spec.get("input") == "directory" and not Path(input_path).is_dir():
-            messagebox.showerror("Erro", "Esta operação espera uma pasta/série como entrada.")
+            messagebox.showerror("Error", "This operation expects a folder/series as input.")
             return
         if self._requires_input(spec, op) and spec.get("input") == "file" and Path(input_path).is_dir():
-            messagebox.showerror("Erro", "Esta operação espera um arquivo único como entrada.")
+            messagebox.showerror("Error", "This operation expects a single file as input.")
             return
         if spec.get("input") == "none" and not input_path:
             input_path = ""
@@ -721,13 +721,13 @@ class TkApp:
         if spec.get("output") == "directory" and output_path:
             existing = Path(output_path)
             if existing.exists() and existing.is_file():
-                messagebox.showerror("Erro", "Selecione uma pasta para saída desta operação.")
+                messagebox.showerror("Error", "Please select a folder for this operation's output.")
                 return
 
         try:
             adapter = get_adapter(backend)
         except ValueError as exc:
-            messagebox.showerror("Erro", str(exc))
+            messagebox.showerror("Error", str(exc))
             return
 
         normalized_output = self._normalize_output(op, input_path, output_path, spec)
@@ -742,14 +742,14 @@ class TkApp:
         if op == "custom":
             request["options"] = {**options, "custom_cmd": self.custom_cmd_entry.get().strip()}
 
-        self._set_status("Executando...")
+        self._set_status("Running...")
         self.run_button.state(["disabled"])
         try:
             result = adapter.handle(request)
             self._render_result(result)
         except Exception as exc:
-            messagebox.showerror("Erro de execução", str(exc))
-            self._set_status("Falha")
+            messagebox.showerror("Execution error", str(exc))
+            self._set_status("Failure")
         finally:
             self.run_button.state(["!disabled"])
 
@@ -758,7 +758,7 @@ class TkApp:
         op = self.operation.get()
         defaults = DEFAULTS.get(backend, {}).get(op)
         if not defaults:
-            messagebox.showinfo("Info", "Nenhum default disponível para esta combinação.")
+            messagebox.showinfo("Info", "No defaults available for this combination.")
             return
         input_path = defaults.get("input")
         output_path = defaults.get("output")
@@ -771,22 +771,22 @@ class TkApp:
             self.output_entry.insert(0, str(output_path))
         self._set_options_text(options)
         self._apply_operation_spec()
-        self._set_status("Defaults carregados")
+        self._set_status("Defaults loaded")
 
     def _run_suite(self) -> None:
         backend = self.backend.get().lower()
         ops = SUITE_OPS.get(backend, [])
         if not ops:
-            messagebox.showinfo("Info", "Nenhuma suíte definida para este backend.")
+            messagebox.showinfo("Info", "No suite defined for this backend.")
             return
         try:
             adapter = get_adapter(backend)
         except ValueError as exc:
-            messagebox.showerror("Erro", str(exc))
+            messagebox.showerror("Error", str(exc))
             return
 
         suite_results = []
-        self._set_status(f"Rodando suíte ({backend})...")
+        self._set_status(f"Running suite ({backend})...")
         for op in ops:
             spec = get_operation_spec(backend, op)
             defaults = DEFAULTS.get(backend, {}).get(op, {})
@@ -796,10 +796,10 @@ class TkApp:
 
             if self._requires_input(spec, op):
                 if not input_path or not Path(input_path).exists():
-                    suite_results.append({"op": op, "ok": False, "error": f"Entrada ausente para {op}"})
+                    suite_results.append({"op": op, "ok": False, "error": f"Missing input for {op}"})
                     continue
                 if spec.get("input") == "directory" and not Path(input_path).is_dir():
-                    suite_results.append({"op": op, "ok": False, "error": f"Entrada precisa ser pasta para {op}"})
+                    suite_results.append({"op": op, "ok": False, "error": f"Input must be a folder for {op}"})
                     continue
             elif spec.get("input") == "none" and not input_path:
                 input_path = ""
@@ -807,7 +807,7 @@ class TkApp:
             if spec.get("output") == "directory" and output_path:
                 existing_out = Path(output_path)
                 if existing_out.exists() and existing_out.is_file():
-                    suite_results.append({"op": op, "ok": False, "error": "Saída deve ser uma pasta"})
+                    suite_results.append({"op": op, "ok": False, "error": "Output must be a folder"})
                     continue
 
             normalized_output = self._normalize_output(op, input_path, str(output_path) if output_path else None, spec)
@@ -833,11 +833,11 @@ class TkApp:
         self.result_text.insert(tk.END, json.dumps(suite_results, indent=2, ensure_ascii=False))
         failures = [r for r in suite_results if not r.get("ok", True)]
         if failures:
-            self._set_status(f"Suíte finalizada com falhas ({len(failures)})")
-            messagebox.showwarning("Suíte com falhas", f"{len(failures)} operações falharam. Ver detalhes no resultado.")
+            self._set_status(f"Suite completed with failures ({len(failures)})")
+            messagebox.showwarning("Suite failures", f"{len(failures)} operations failed. See details in the result.")
         else:
-            self._set_status("Suíte finalizada com sucesso")
-            messagebox.showinfo("Sucesso", f"Suíte {backend} executada com sucesso.")
+            self._set_status("Suite completed successfully")
+            messagebox.showinfo("Success", f"Suite {backend} ran successfully.")
 
     def _render_result(self, result) -> None:
         payload = result.as_dict() if hasattr(result, "as_dict") else result
@@ -845,14 +845,14 @@ class TkApp:
         self.result_text.insert(tk.END, json.dumps(payload, indent=2, ensure_ascii=False))
 
         if not result.ok:
-            messagebox.showwarning("Falha", f"Comando retornou código {result.returncode}")
-            self._set_status("Falha")
+            messagebox.showwarning("Failure", f"Command returned exit code {result.returncode}")
+            self._set_status("Failure")
         else:
-            self._set_status("Sucesso")
+            self._set_status("Success")
         self._render_preview(result)
 
     def _render_preview(self, result) -> None:
-        # Exibe primeira imagem gerada (png/pgm/ppm/jpeg)
+        # Show first generated image (png/pgm/ppm/jpeg)
         self.preview_img = None
         self.preview_label.configure(image="", text="")
         files = getattr(result, "output_files", []) or []
@@ -863,7 +863,7 @@ class TkApp:
                     self.preview_img = tk.PhotoImage(file=str(path))
                     self.preview_label.configure(image=self.preview_img, text="")
                 except Exception:
-                    self.preview_label.configure(text=f"Pré-visualização indisponível: {path.name}")
+                    self.preview_label.configure(text=f"Preview unavailable: {path.name}")
                 break
 
     def _set_status(self, msg: str) -> None:

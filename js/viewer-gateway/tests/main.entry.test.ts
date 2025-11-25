@@ -89,9 +89,9 @@ describe('main entrypoint wiring', () => {
     expect(infoParagraphs[1].textContent).toContain('Volume MIP ready');
     expect(infoParagraphs[2].textContent).toContain('Skip DICOMweb demo');
 
-    const applyBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Aplicar orientação'));
+    const applyBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Apply orientation'));
     applyBtn?._handlers.click?.({});
-    const voiBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Aplicar VOI'));
+    const voiBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Apply VOI'));
     voiBtn?._handlers.click?.({});
     const presetSoft = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Preset soft'));
     presetSoft?._handlers.click?.({});
@@ -113,8 +113,8 @@ describe('main entrypoint wiring', () => {
     expect(infoParagraphs[2].textContent).toContain('Loaded from DICOMweb');
 
     // simulate manual DICOMweb reload
-    const dicomBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Carregar'));
-    const baseInput = created.find((el) => el.tagName === 'input' && el.placeholder?.includes('Base URL'));
+    const dicomBtn = created.find((el) => el.tagName === 'button' && el.textContent?.includes('Load'));
+    const baseInput = created.find((el) => el.tagName === 'input' && el.placeholder?.includes('DICOMweb Base URL'));
     const studyInput = created.find((el) => el.tagName === 'input' && el.placeholder?.includes('StudyInstanceUID'));
     const seriesInput = created.find((el) => el.tagName === 'input' && el.placeholder?.includes('SeriesInstanceUID'));
     if (baseInput && studyInput && seriesInput && dicomBtn) {

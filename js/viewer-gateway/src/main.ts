@@ -35,7 +35,7 @@ function createControls(root: HTMLElement) {
   const section = document.createElement('section');
   section.className = 'controls';
   const heading = document.createElement('h3');
-  heading.textContent = 'Controles';
+  heading.textContent = 'Controls';
   section.appendChild(heading);
 
   const orientationSelect = document.createElement('select');
@@ -71,10 +71,10 @@ function createControls(root: HTMLElement) {
   voiWidth.value = '400';
 
   const applyBtn = document.createElement('button');
-  applyBtn.textContent = 'Aplicar orientação/mode/slab';
+  applyBtn.textContent = 'Apply orientation/mode/slab';
 
   const voiBtn = document.createElement('button');
-  voiBtn.textContent = 'Aplicar VOI';
+  voiBtn.textContent = 'Apply VOI';
 
   const presetButtons = (['soft', 'bone', 'lung'] as const).map((key) => {
     const btn = document.createElement('button');
@@ -85,13 +85,13 @@ function createControls(root: HTMLElement) {
 
   const dicomwebForm = document.createElement('div');
   const dicomBase = document.createElement('input');
-  dicomBase.placeholder = 'Base URL DICOMweb';
+  dicomBase.placeholder = 'DICOMweb Base URL';
   const dicomStudy = document.createElement('input');
   dicomStudy.placeholder = 'StudyInstanceUID';
   const dicomSeries = document.createElement('input');
   dicomSeries.placeholder = 'SeriesInstanceUID';
   const dicomBtn = document.createElement('button');
-  dicomBtn.textContent = 'Carregar DICOMweb';
+  dicomBtn.textContent = 'Load DICOMweb';
 
   [dicomBase, dicomStudy, dicomSeries].forEach((el) => (el.size = 40));
 
@@ -135,7 +135,7 @@ async function bootstrap() {
   let dicomwebHandle: VolumeHandle | null = null;
 
   const imageIds = buildImageIds(config.sampleBaseUrl, config.sampleCount);
-  reportStatus(stackSection.info, 'info', 'Carregando sample_series via WADO-URI...');
+  reportStatus(stackSection.info, 'info', 'Loading sample_series via WADO-URI...');
 
   createStackViewer({ element: stackSection.viewport, imageIds, useCPU: config.useCPU })
     .then((viewer) => {
