@@ -23,5 +23,11 @@ namespace DCMTKTests {
     void TestJPEGBaseline(const std::string& filename, const std::string& outputDir);
     void TestBMPPreview(const std::string& filename, const std::string& outputDir);
     void TestSegmentationExport(const std::string& filename, const std::string& outputDir);
+    void TestNetworkEchoAndStore(const std::string& filename, const std::string& outputDir);
+    void TestCharacterSetRoundTrip(const std::string& outputDir);
+    void TestSecondaryCapture(const std::string& sourceForMetadata, const std::string& outputDir);
+    void TestStructuredReport(const std::string& sourceFile, const std::string& outputDir);
+    void TestRTStructRead(const std::string& filename, const std::string& outputDir);
+    void TestFunctionalGroupRead(const std::string& filename, const std::string& outputDir);
     int ValidateDicomFile(const std::string& filename, const std::string& outputDir, bool jsonOutput);
 }

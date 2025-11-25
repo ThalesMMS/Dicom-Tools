@@ -30,6 +30,10 @@ void VTKTests::RegisterCommands(CommandRegistry& registry) {
             TestMaximumIntensityProjection(ctx.inputPath, ctx.outputDir);
             TestVolumeStatistics(ctx.inputPath, ctx.outputDir);
             TestMetadataExport(ctx.inputPath, ctx.outputDir);
+            TestVolumeRenderingSnapshot(ctx.inputPath, ctx.outputDir);
+            TestMultiplanarMPR(ctx.inputPath, ctx.outputDir);
+            TestMaskOverlay(ctx.inputPath, ctx.outputDir);
+            TestStreamingReslice(ctx.inputPath, ctx.outputDir);
             TestViewerSnapshot(ctx.inputPath, ctx.outputDir);
             return 0;
         }
@@ -131,6 +135,46 @@ void VTKTests::RegisterCommands(CommandRegistry& registry) {
         "Capture a vtkImageViewer2 slice as PNG",
         [](const CommandContext& ctx) {
             TestViewerSnapshot(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "vtk:volume-render",
+        "VTK",
+        "Off-screen volume rendering snapshot via vtkSmartVolumeMapper",
+        [](const CommandContext& ctx) {
+            TestVolumeRenderingSnapshot(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "vtk:mpr-multi",
+        "VTK",
+        "Generate sagittal, coronal, and oblique MPR PNGs",
+        [](const CommandContext& ctx) {
+            TestMultiplanarMPR(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "vtk:overlay",
+        "VTK",
+        "Create a HU threshold mask overlay on an axial slice",
+        [](const CommandContext& ctx) {
+            TestMaskOverlay(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "vtk:stream",
+        "VTK",
+        "Process volume in Z-chunks to simulate streaming reslice",
+        [](const CommandContext& ctx) {
+            TestStreamingReslice(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });

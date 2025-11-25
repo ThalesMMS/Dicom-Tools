@@ -153,7 +153,7 @@ public class DicomToolsCli {
                   info <input> [--json] [--pretty]
                   anonymize <input> [--output <file>]
                   to-image <input> [--output <file>] [--format png|jpeg] [--frame N]
-                  transcode <input> [--output <file>] [--syntax explicit|implicit|rle|jpeg2000|jpegls]
+                  transcode <input> [--output <file>] [--syntax explicit|implicit|rle|jpeg2000]
                   validate <input>
                   dump <input> [--max-width N]
                   stats <input> [--bins N] [--json] [--pretty]

@@ -99,6 +99,15 @@ pub fn first_frame_png_bytes(input: &Path) -> Result<Vec<u8>> {
     encode_image(&dynamic_image, ImageFormat::Png)
 }
 
+/// Decode a single frame without loading every frame into memory.
+pub fn read_frame_lazy(input: &Path, frame: u32) -> Result<Vec<u8>> {
+    let obj = open_file(input).context("Failed to open DICOM file")?;
+    let decoded = obj
+        .decode_pixel_data_frame(frame)
+        .context("Failed to decode requested frame")?;
+    Ok(decoded.data().to_vec())
+}
+
 fn encode_image(image: &DynamicImage, format: ImageFormat) -> Result<Vec<u8>> {
     let mut buffer = Vec::new();
     image.write_to(&mut Cursor::new(&mut buffer), format)?;

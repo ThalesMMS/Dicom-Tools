@@ -21,7 +21,7 @@ cmake --build build
 ./build/DicomTools --list
 
 # Run everything on the sample DICOM
-./build/DicomTools all -i input/dcm_series/IM-0001-0190.dcm -o output
+./build/DicomTools all -i sample_series/IM-0001-0001.dcm -o output
 ```
 
 ## Features Implemented
@@ -39,6 +39,10 @@ cmake --build build
 | | **Pixel Stats** | Computes min/max/mean pixel statistics to text. |
 | | **Directory Scan** | Recursively indexes series/tags into a CSV for QA. |
 | | **Preview Export** | Writes an 8-bit PGM preview of the first slice. |
+| | **Sequence Editing** | Creates/updates nested ReferencedSeriesSequence items. |
+| | **DICOMDIR Read** | Summarizes patients/series from a DICOMDIR. |
+| | **StringFilter Charset** | Exercises PN/LO decoding under non-default SpecificCharacterSet. |
+| | **RT/SEG Read** | Summarizes ROI names and contour frames from RTSTRUCT/SEG. |
 | **DCMTK** | **Tag Modification** | Modifies metadata (e.g., PatientID) and saves new files. |
 | | **Pixel Extraction** | Extracts pixel data and exports as PGM/PPM images. |
 | | **JPEG Lossless** | Re-encodes to JPEG Lossless (Process 14 SV1). |
@@ -49,6 +53,12 @@ cmake --build build
 | | **Metadata Report** | Exports common patient/study attributes to text. |
 | | **BMP Preview** | Generates an 8-bit BMP frame for quick visualization. |
 | | **DICOMDIR Build** | Creates a lightweight DICOMDIR for the current series. |
+| | **C-ECHO / C-STORE Loopback** | Spins up in-process SCP and validates round-trip store. |
+| | **Charset Round-trip** | Writes UTF-8 PN/LO and validates reload consistency. |
+| | **Secondary Capture** | Builds a brand-new SC instance with synthetic pixels. |
+| | **Structured Report** | Generates a small SR (NUM + TEXT) and validates it. |
+| | **RTSTRUCT Read** | Summarizes ROIs/contours from RTSTRUCT. |
+| | **Functional Groups** | Dumps per-frame functional group info and frame preview. |
 | **ITK** | **Edge Detection** | Applies Canny Edge Detection filter. |
 | | **Smoothing** | Reduces noise using Discrete Gaussian Smoothing. |
 | | **Median Filter** | Removes salt-and-pepper noise with a 3D median. |
@@ -60,8 +70,14 @@ cmake --build build
 | | **MIP** | Axial maximum intensity projection to PNG. |
 | | **NRRD Export** | Writes the processed volume to `.nrrd` for interchange. |
 | | **NIfTI Export** | Writes the volume to `.nii.gz` for interoperability. |
+| | **Distance Map + Morphology** | Signed distance map + simple closing with summary stats. |
+| | **Label Statistics** | Connected components with per-label min/max/mean/sigma. |
+| | **Registration** | Estimates translation via MI and resamples moving image. |
+| | **Vector Volume** | Composes multi-component volume and exports as NRRD. |
+| | **DICOM Series Write** | Emits a fresh DICOM series with new UIDs. |
 | **VTK** | **3D Mesh Generation** | Generates STL surfaces using Marching Cubes. |
 | | **MPR** | Extracts 2D slices (Multi-Planar Reformatting) from 3D volumes. |
+| | **Multiplanar MPR** | Sagittal, coronal, and oblique slice exports. |
 | | **Isotropic Resample** | Resamples volume to 1mm spacing and saves VTI. |
 | | **Volume Export** | Converts DICOM series to VTK XML Image Data (`.vti`). |
 | | **NIfTI Export** | Writes the volume to `.nii.gz` for interoperability. |
@@ -69,6 +85,9 @@ cmake --build build
 | | **MIP** | Axial maximum intensity projection to PNG. |
 | | **Metadata Export** | Writes patient/study metadata to text. |
 | | **Volume Stats** | Computes min/max/mean/stddev for QA regression. |
+| | **Volume Rendering** | Headless volume rendering snapshot via SmartVolumeMapper. |
+| | **Mask Overlay** | Threshold-derived mask overlaid on axial slice. |
+| | **Streaming Reslice** | Processes volume in Z-chunks to mimic streaming. |
 
 ## Prerequisites
 
@@ -133,17 +152,21 @@ The project generates a single executable `DicomTools` in the `build` directory.
 - `all`: Run every available test (shortcut to the above).
 
 **Granular commands (examples):**
-- `gdcm:anonymize`, `gdcm:dump`, `gdcm:transcode-j2k`, `gdcm:transcode-rle`, `gdcm:jpegls`, `gdcm:scan`, `gdcm:preview`, `gdcm:stats`
-- `dcmtk:jpeg-lossless`, `dcmtk:jpeg-baseline`, `dcmtk:rle`, `dcmtk:raw-dump`, `dcmtk:bmp`, `dcmtk:dicomdir`, `dcmtk:metadata`
+- `gdcm:anonymize`, `gdcm:dump`, `gdcm:transcode-j2k`, `gdcm:transcode-j2k-lossy`, `gdcm:transcode-rle`, `gdcm:transcode-rle-planar`, `gdcm:jpegls`, `gdcm:scan`, `gdcm:preview`, `gdcm:stats`
+- `gdcm:sequence`, `gdcm:dicomdir`, `gdcm:charset`, `gdcm:rt`
+- `dcmtk:jpeg-lossless`, `dcmtk:jpeg-baseline`, `dcmtk:rle`, `dcmtk:raw-dump`, `dcmtk:bmp`, `dcmtk:dicomdir`, `dcmtk:metadata`, `dcmtk:sr`, `dcmtk:rt`, `dcmtk:fg`
+- `dcmtk:net`, `dcmtk:charset`, `dcmtk:secondary`
 - `itk:gaussian`, `itk:median`, `itk:threshold`, `itk:otsu`, `itk:aniso`, `itk:histogram`, `itk:slice`, `itk:mip`, `itk:nrrd`, `itk:nifti`, `itk:resample`
+- `itk:distance-map`, `itk:label-stats`, `itk:register`, `itk:vector`, `itk:dicom-series`
 - `vtk:mask`, `vtk:metadata`, `vtk:isosurface`, `vtk:nifti`, `vtk:resample`, `vtk:mip`, `vtk:stats`
+- `vtk:volume-render`, `vtk:mpr-multi`, `vtk:overlay`, `vtk:stream`
 
 Note: `dcmtk:dicomdir` copies the source series into `output/dicomdir_media/` and emits the DICOMDIR there so relative references remain valid.
 
 **Examples:**
 ```bash
 ./build/DicomTools --list
-./build/DicomTools test-itk --input input/dcm_series/IM-0001-0190.dcm --output tmp/itk_out
+./build/DicomTools test-itk --input sample_series/IM-0001-0001.dcm --output tmp/itk_out
 ./build/DicomTools vtk:mask
 ```
 

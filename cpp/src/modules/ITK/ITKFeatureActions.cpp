@@ -10,6 +10,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <memory>
 
 #ifdef USE_ITK
 #include "itkAdaptiveHistogramEqualizationImageFilter.h"
@@ -34,6 +35,24 @@
 #include "itkPNGImageIO.h"
 #include "itkResampleImageFilter.h"
 #include "itkRescaleIntensityImageFilter.h"
+#include "itkSignedMaurerDistanceMapImageFilter.h"
+#include "itkBinaryBallStructuringElement.h"
+#include "itkBinaryDilateImageFilter.h"
+#include "itkBinaryErodeImageFilter.h"
+#include "itkStatisticsImageFilter.h"
+#include "itkConnectedComponentImageFilter.h"
+#include "itkRelabelComponentImageFilter.h"
+#include "itkLabelStatisticsImageFilter.h"
+#include "itkImageRegistrationMethodv4.h"
+#include "itkMattesMutualInformationImageToImageMetricv4.h"
+#include "itkRegularStepGradientDescentOptimizerv4.h"
+#include "itkTranslationTransform.h"
+#include "itkResampleImageFilter.h"
+#include "itkComposeImageFilter.h"
+#include "itkVectorImage.h"
+#include "itkImageSeriesWriter.h"
+#include "itkNumericSeriesFileNames.h"
+#include "gdcmUIDGenerator.h"
 
 namespace {
 std::string JoinPath(const std::string& base, const std::string& filename) {
@@ -670,6 +689,393 @@ void ITKTests::TestNiftiExport(const std::string& filename, const std::string& o
     }
 }
 
+void ITKTests::TestDistanceMapAndMorphology(const std::string& filename, const std::string& outputDir) {
+    // Build a binary mask, compute its signed distance map, and run a simple morphological closing
+    std::cout << "--- [ITK] Distance Map + Morphology ---" << std::endl;
+
+    using InputPixelType = signed short;
+    using InputImageType = itk::Image<InputPixelType, 3>;
+    using MaskImageType = itk::Image<unsigned char, 3>;
+    using FloatImageType = itk::Image<float, 3>;
+
+    using ReaderType = itk::ImageFileReader<InputImageType>;
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(filename);
+    ImageIOType::Pointer gdcmIO = ImageIOType::New();
+    reader->SetImageIO(gdcmIO);
+
+    try {
+        reader->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "ITK Exception: " << err << std::endl;
+        return;
+    }
+
+    using OtsuType = itk::OtsuThresholdImageFilter<InputImageType, MaskImageType>;
+    OtsuType::Pointer otsu = OtsuType::New();
+    otsu->SetInput(reader->GetOutput());
+    otsu->SetInsideValue(1);
+    otsu->SetOutsideValue(0);
+
+    using DistanceType = itk::SignedMaurerDistanceMapImageFilter<MaskImageType, FloatImageType>;
+    DistanceType::Pointer distance = DistanceType::New();
+    distance->SetInput(otsu->GetOutput());
+    distance->SetUseImageSpacing(true);
+    distance->SetSquaredDistance(false);
+
+    using StatsType = itk::StatisticsImageFilter<FloatImageType>;
+    StatsType::Pointer stats = StatsType::New();
+    stats->SetInput(distance->GetOutput());
+
+    using StructuringType = itk::BinaryBallStructuringElement<unsigned char, 3>;
+    StructuringType kernel;
+    kernel.SetRadius(1);
+    kernel.CreateStructuringElement();
+
+    using DilateType = itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, StructuringType>;
+    using ErodeType = itk::BinaryErodeImageFilter<MaskImageType, MaskImageType, StructuringType>;
+
+    DilateType::Pointer dilate = DilateType::New();
+    dilate->SetInput(otsu->GetOutput());
+    dilate->SetKernel(kernel);
+    dilate->SetForegroundValue(1);
+
+    ErodeType::Pointer erode = ErodeType::New();
+    erode->SetInput(dilate->GetOutput());
+    erode->SetKernel(kernel);
+    erode->SetForegroundValue(1);
+
+    using FloatWriter = itk::ImageFileWriter<FloatImageType>;
+    FloatWriter::Pointer distanceWriter = FloatWriter::New();
+    distanceWriter->SetFileName(JoinPath(outputDir, "itk_distance_map.nrrd"));
+    distanceWriter->SetInput(distance->GetOutput());
+    distanceWriter->SetImageIO(itk::NrrdImageIO::New());
+    distanceWriter->UseCompressionOn();
+
+    using MaskWriter = itk::ImageFileWriter<MaskImageType>;
+    MaskWriter::Pointer maskWriter = MaskWriter::New();
+    maskWriter->SetFileName(JoinPath(outputDir, "itk_morphology_mask.dcm"));
+    maskWriter->SetInput(erode->GetOutput());
+    maskWriter->SetImageIO(gdcmIO);
+
+    try {
+        stats->Update();
+        distanceWriter->Update();
+        maskWriter->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "ITK Write Exception: " << err << std::endl;
+        return;
+    }
+
+    const std::string reportPath = JoinPath(outputDir, "itk_distance_stats.txt");
+    std::ofstream out(reportPath, std::ios::out | std::ios::trunc);
+    out << "Min=" << stats->GetMinimum() << "\n";
+    out << "Max=" << stats->GetMaximum() << "\n";
+    out << "Mean=" << stats->GetMean() << "\n";
+    out << "Variance=" << stats->GetVariance() << "\n";
+    out.close();
+
+    std::cout << "Saved distance map + morphology outputs (report: " << reportPath << ")" << std::endl;
+}
+
+void ITKTests::TestLabelStatistics(const std::string& filename, const std::string& outputDir) {
+    // Compute per-label statistics after connected components on an Otsu mask
+    std::cout << "--- [ITK] Label Statistics ---" << std::endl;
+
+    using InputPixelType = signed short;
+    using InputImageType = itk::Image<InputPixelType, 3>;
+    using MaskImageType = itk::Image<unsigned char, 3>;
+    using LabelImageType = itk::Image<unsigned int, 3>;
+
+    using ReaderType = itk::ImageFileReader<InputImageType>;
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(filename);
+    ImageIOType::Pointer gdcmIO = ImageIOType::New();
+    reader->SetImageIO(gdcmIO);
+
+    try {
+        reader->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "ITK Exception: " << err << std::endl;
+        return;
+    }
+
+    using OtsuType = itk::OtsuThresholdImageFilter<InputImageType, MaskImageType>;
+    OtsuType::Pointer otsu = OtsuType::New();
+    otsu->SetInput(reader->GetOutput());
+    otsu->SetInsideValue(1);
+    otsu->SetOutsideValue(0);
+
+    using ConnectedType = itk::ConnectedComponentImageFilter<MaskImageType, LabelImageType>;
+    ConnectedType::Pointer connected = ConnectedType::New();
+    connected->SetInput(otsu->GetOutput());
+
+    using RelabelType = itk::RelabelComponentImageFilter<LabelImageType, LabelImageType>;
+    RelabelType::Pointer relabel = RelabelType::New();
+    relabel->SetInput(connected->GetOutput());
+    relabel->SetMinimumObjectSize(10);
+
+    using StatsType = itk::LabelStatisticsImageFilter<InputImageType, LabelImageType>;
+    StatsType::Pointer stats = StatsType::New();
+    stats->SetInput(reader->GetOutput());
+    stats->SetLabelInput(relabel->GetOutput());
+
+    using LabelWriter = itk::ImageFileWriter<LabelImageType>;
+    LabelWriter::Pointer labelWriter = LabelWriter::New();
+    labelWriter->SetFileName(JoinPath(outputDir, "itk_labels.nrrd"));
+    labelWriter->SetInput(relabel->GetOutput());
+    labelWriter->UseCompressionOn();
+    labelWriter->SetImageIO(itk::NrrdImageIO::New());
+
+    try {
+        stats->Update();
+        labelWriter->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "ITK Write Exception: " << err << std::endl;
+        return;
+    }
+
+    const std::string reportPath = JoinPath(outputDir, "itk_label_stats.txt");
+    std::ofstream out(reportPath, std::ios::out | std::ios::trunc);
+    const auto& labels = stats->GetValidLabelValues();
+    for (const auto& label : labels) {
+        if (label == 0) continue; // skip background
+        out << "Label=" << label
+            << ",Count=" << stats->GetCount(label)
+            << ",Min=" << stats->GetMinimum(label)
+            << ",Max=" << stats->GetMaximum(label)
+            << ",Mean=" << stats->GetMean(label)
+            << ",Sigma=" << stats->GetSigma(label)
+            << "\n";
+    }
+    out.close();
+
+    std::cout << "Label statistics written to '" << reportPath << "' with "
+              << (labels.size() > 0 ? labels.size() - 1 : 0) << " object(s)" << std::endl;
+}
+
+void ITKTests::TestRegistration(const std::string& filename, const std::string& outputDir) {
+    // Simple translation registration between original and synthetically shifted volume
+    std::cout << "--- [ITK] Registration (Translation) ---" << std::endl;
+
+    using PixelType = float;
+    const unsigned int Dimension = 3;
+    using ImageType = itk::Image<PixelType, Dimension>;
+    using ReaderType = itk::ImageFileReader<ImageType>;
+    using TransformType = itk::TranslationTransform<double, Dimension>;
+    using OptimizerType = itk::RegularStepGradientDescentOptimizerv4<double>;
+    using MetricType = itk::MattesMutualInformationImageToImageMetricv4<ImageType, ImageType>;
+    using RegistrationType = itk::ImageRegistrationMethodv4<ImageType, ImageType>;
+    using ResampleType = itk::ResampleImageFilter<ImageType, ImageType>;
+    using WriterType = itk::ImageFileWriter<ImageType>;
+
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(filename);
+    ImageIOType::Pointer gdcmIO = ImageIOType::New();
+    reader->SetImageIO(gdcmIO);
+    try {
+        reader->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "ITK Exception: " << err << std::endl;
+        return;
+    }
+
+    // Create a synthetically shifted moving image
+    TransformType::Pointer initShift = TransformType::New();
+    TransformType::OutputVectorType shiftVec;
+    shiftVec[0] = 3.0;
+    shiftVec[1] = -2.0;
+    shiftVec[2] = 1.0;
+    initShift->SetOffset(shiftVec);
+
+    ResampleType::Pointer shifter = ResampleType::New();
+    shifter->SetInput(reader->GetOutput());
+    shifter->SetTransform(initShift);
+    shifter->SetSize(reader->GetOutput()->GetLargestPossibleRegion().GetSize());
+    shifter->SetOutputSpacing(reader->GetOutput()->GetSpacing());
+    shifter->SetOutputOrigin(reader->GetOutput()->GetOrigin());
+    shifter->SetOutputDirection(reader->GetOutput()->GetDirection());
+    shifter->SetDefaultPixelValue(0);
+
+    MetricType::Pointer metric = MetricType::New();
+    metric->SetNumberOfHistogramBins(32);
+
+    OptimizerType::Pointer optimizer = OptimizerType::New();
+    optimizer->SetMinimumStepLength(0.01);
+    optimizer->SetRelaxationFactor(0.7);
+    optimizer->SetNumberOfIterations(60);
+
+    RegistrationType::Pointer registration = RegistrationType::New();
+    registration->SetFixedImage(reader->GetOutput());
+    registration->SetMovingImage(shifter->GetOutput());
+    registration->SetMetric(metric);
+    registration->SetOptimizer(optimizer);
+
+    TransformType::Pointer initialTransform = TransformType::New();
+    TransformType::OutputVectorType zeroVec;
+    zeroVec.Fill(0.0);
+    initialTransform->SetOffset(zeroVec);
+    registration->SetInitialTransform(initialTransform);
+    registration->InPlaceOn();
+
+    bool regOk = true;
+    TransformType::ParametersType params(initialTransform->GetParameters());
+    try {
+        registration->Update();
+        params = registration->GetOutput()->Get()->GetParameters();
+    } catch (itk::ExceptionObject& err) {
+        regOk = false;
+        std::cerr << "Registration failed: " << err << std::endl;
+    }
+
+    ResampleType::Pointer resample = ResampleType::New();
+    resample->SetInput(shifter->GetOutput());
+    resample->SetTransform(regOk ? registration->GetModifiableTransform() : initialTransform);
+    resample->SetSize(reader->GetOutput()->GetLargestPossibleRegion().GetSize());
+    resample->SetOutputSpacing(reader->GetOutput()->GetSpacing());
+    resample->SetOutputOrigin(reader->GetOutput()->GetOrigin());
+    resample->SetOutputDirection(reader->GetOutput()->GetDirection());
+    resample->SetDefaultPixelValue(0);
+
+    WriterType::Pointer writer = WriterType::New();
+    writer->SetFileName(JoinPath(outputDir, "itk_registered.nrrd"));
+    writer->SetInput(resample->GetOutput());
+    writer->SetImageIO(itk::NrrdImageIO::New());
+    writer->UseCompressionOn();
+    writer->Update();
+
+    const std::string reportPath = JoinPath(outputDir, "itk_registration.txt");
+    std::ofstream out(reportPath, std::ios::out | std::ios::trunc);
+    out << "EstimatedOffset=" << params[0] << "," << params[1] << "," << params[2] << "\n";
+    out << "GroundTruth=3,-2,1\n";
+    out << "Status=" << (regOk ? "ok" : "failed") << "\n";
+    out.close();
+
+    std::cout << "Registration completed. Estimated offset: " << params[0] << "," << params[1] << "," << params[2]
+              << " (report: " << reportPath << ")" << std::endl;
+}
+
+void ITKTests::TestVectorVolumeExport(const std::string& filename, const std::string& outputDir) {
+    // Build a 2-component vector volume and export to NRRD
+    std::cout << "--- [ITK] Vector / Multi-Component Volume ---" << std::endl;
+
+    using PixelType = signed short;
+    const unsigned int Dimension = 3;
+    using ImageType = itk::Image<PixelType, Dimension>;
+    using VectorImageType = itk::VectorImage<PixelType, Dimension>;
+    using ReaderType = itk::ImageFileReader<ImageType>;
+    using GaussianType = itk::DiscreteGaussianImageFilter<ImageType, ImageType>;
+    using ComposeType = itk::ComposeImageFilter<ImageType, VectorImageType>;
+    using WriterType = itk::ImageFileWriter<VectorImageType>;
+
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(filename);
+    ImageIOType::Pointer gdcmIO = ImageIOType::New();
+    reader->SetImageIO(gdcmIO);
+    try {
+        reader->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "ITK Exception: " << err << std::endl;
+        return;
+    }
+
+    GaussianType::Pointer blur = GaussianType::New();
+    blur->SetInput(reader->GetOutput());
+    blur->SetVariance(2.0);
+
+    ComposeType::Pointer compose = ComposeType::New();
+    compose->SetInput1(reader->GetOutput());
+    compose->SetInput2(blur->GetOutput());
+
+    WriterType::Pointer writer = WriterType::New();
+    writer->SetFileName(JoinPath(outputDir, "itk_vector.nrrd"));
+    writer->SetInput(compose->GetOutput());
+    writer->SetImageIO(itk::NrrdImageIO::New());
+    writer->UseCompressionOn();
+    try {
+        writer->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "Failed to write vector volume: " << err << std::endl;
+        return;
+    }
+
+    std::cout << "Multi-component volume written to '" << writer->GetFileName() << "'" << std::endl;
+}
+
+void ITKTests::TestDicomSeriesWrite(const std::string& filename, const std::string& outputDir) {
+    // Write a fresh DICOM series from the loaded volume with new UIDs
+    std::cout << "--- [ITK] DICOM Series Write ---" << std::endl;
+
+    using PixelType = signed short;
+    const unsigned int Dimension = 3;
+    using ImageType = itk::Image<PixelType, Dimension>;
+    using ReaderType = itk::ImageFileReader<ImageType>;
+    using WriterType = itk::ImageSeriesWriter<ImageType, itk::Image<PixelType, 2>>;
+
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName(filename);
+    ImageIOType::Pointer gdcmIO = ImageIOType::New();
+    reader->SetImageIO(gdcmIO);
+    try {
+        reader->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "ITK Exception: " << err << std::endl;
+        return;
+    }
+
+    ImageType::RegionType region = reader->GetOutput()->GetLargestPossibleRegion();
+    const auto size = region.GetSize();
+
+    std::filesystem::path seriesDir = std::filesystem::path(outputDir) / "itk_series";
+    std::filesystem::create_directories(seriesDir);
+
+    itk::NumericSeriesFileNames::Pointer names = itk::NumericSeriesFileNames::New();
+    names->SetSeriesFormat((seriesDir / "IM%04d.dcm").string());
+    names->SetStartIndex(1);
+    names->SetEndIndex(static_cast<int>(size[2]));
+    names->SetIncrementIndex(1);
+
+    gdcm::UIDGenerator uidGen;
+    const std::string studyUID = uidGen.Generate();
+    const std::string seriesUID = uidGen.Generate();
+
+    WriterType::Pointer writer = WriterType::New();
+    writer->SetInput(reader->GetOutput());
+    writer->SetImageIO(gdcmIO);
+    writer->SetFileNames(names->GetFileNames());
+
+    WriterType::DictionaryArrayType dictArray;
+    std::vector<std::unique_ptr<itk::MetaDataDictionary>> dictOwners;
+    for (unsigned int i = 0; i < size[2]; ++i) {
+        auto dictPtr = std::make_unique<itk::MetaDataDictionary>();
+        itk::EncapsulateMetaData<std::string>(*dictPtr, "0008|0016", "1.2.840.10008.5.1.4.1.1.2");
+        itk::EncapsulateMetaData<std::string>(*dictPtr, "0008|0018", uidGen.Generate());
+        itk::EncapsulateMetaData<std::string>(*dictPtr, "0020|000D", studyUID);
+        itk::EncapsulateMetaData<std::string>(*dictPtr, "0020|000E", seriesUID);
+        itk::EncapsulateMetaData<std::string>(*dictPtr, "0020|0013", std::to_string(i + 1));
+        dictArray.push_back(dictPtr.get());
+        dictOwners.push_back(std::move(dictPtr));
+    }
+    writer->SetMetaDataDictionaryArray(&dictArray);
+
+    try {
+        writer->Update();
+    } catch (itk::ExceptionObject& err) {
+        std::cerr << "Failed to write DICOM series: " << err << std::endl;
+        return;
+    }
+
+    const std::string reportPath = JoinPath(outputDir, "itk_series.txt");
+    std::ofstream out(reportPath, std::ios::out | std::ios::trunc);
+    out << "Slices=" << size[2] << "\n";
+    out << "SeriesUID=" << seriesUID << "\n";
+    out << "StudyUID=" << studyUID << "\n";
+    out << "OutputDir=" << seriesDir << "\n";
+    out.close();
+
+    std::cout << "Wrote DICOM series (" << size[2] << " slices) to " << seriesDir << std::endl;
+}
+
 #else
 namespace ITKTests {
 void TestCannyEdgeDetection(const std::string&, const std::string&) { std::cout << "ITK not enabled." << std::endl; }
@@ -685,5 +1091,10 @@ void TestOtsuSegmentation(const std::string&, const std::string&) {}
 void TestAnisotropicDenoise(const std::string&, const std::string&) {}
 void TestMaximumIntensityProjection(const std::string&, const std::string&) {}
 void TestNiftiExport(const std::string&, const std::string&) {}
+void TestDistanceMapAndMorphology(const std::string&, const std::string&) {}
+void TestLabelStatistics(const std::string&, const std::string&) {}
+void TestRegistration(const std::string&, const std::string&) {}
+void TestVectorVolumeExport(const std::string&, const std::string&) {}
+void TestDicomSeriesWrite(const std::string&, const std::string&) {}
 } // namespace ITKTests
 #endif

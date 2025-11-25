@@ -16,10 +16,12 @@
 #include <limits>
 #include <vector>
 #include <set>
+#include <sstream>
 
 #ifdef USE_GDCM
 #include "gdcmAnonymizer.h"
 #include "gdcmAttribute.h"
+#include "gdcmDataElement.h"
 #include "gdcmDirectory.h"
 #include "gdcmDefs.h"
 #include "gdcmGlobal.h"
@@ -27,6 +29,7 @@
 #include "gdcmImageReader.h"
 #include "gdcmImageWriter.h"
 #include "gdcmReader.h"
+#include "gdcmSequenceOfItems.h"
 #include "gdcmScanner.h"
 #include "gdcmStringFilter.h"
 #include "gdcmUIDs.h"
@@ -561,6 +564,384 @@ void GDCMTests::TestPreviewExport(const std::string& filename, const std::string
     }
 }
 
+void GDCMTests::TestSequenceEditing(const std::string& filename, const std::string& outputDir) {
+    // Create or extend a ReferencedSeriesSequence item and persist the changes
+    std::cout << "--- [GDCM] Sequence Editing ---" << std::endl;
+
+    gdcm::Reader reader;
+    reader.SetFileName(filename.c_str());
+    if (!reader.Read()) {
+        std::cerr << "Could not read file for sequence editing." << std::endl;
+        return;
+    }
+
+    gdcm::DataSet& ds = reader.GetFile().GetDataSet();
+    const gdcm::Tag refSeriesSeq(0x0008, 0x1115);
+    gdcm::SmartPointer<gdcm::SequenceOfItems> seq;
+    if (ds.FindDataElement(refSeriesSeq)) {
+        seq = ds.GetDataElement(refSeriesSeq).GetValueAsSQ();
+    }
+    if (!seq) {
+        seq = new gdcm::SequenceOfItems();
+    }
+
+    gdcm::Item item;
+    item.SetVLToUndefined();
+    gdcm::DataSet& nested = item.GetNestedDataSet();
+
+    gdcm::UIDGenerator uidGen;
+    const std::string seriesUID = uidGen.Generate();
+    const std::string sopUID = uidGen.Generate();
+
+    gdcm::Attribute<0x0020, 0x000E> seriesAttr;
+    seriesAttr.SetValue(seriesUID.c_str());
+    gdcm::Attribute<0x0008, 0x1155> sopAttr;
+    sopAttr.SetValue(sopUID.c_str());
+    nested.Insert(seriesAttr.GetAsDataElement());
+    nested.Insert(sopAttr.GetAsDataElement());
+
+    seq->AddItem(item);
+
+    gdcm::DataElement seqElement(refSeriesSeq);
+    seqElement.SetVR(gdcm::VR::SQ);
+    seqElement.SetValue(*seq);
+    seqElement.SetVLToUndefined();
+    ds.Replace(seqElement);
+
+    const std::string outPath = JoinPath(outputDir, "gdcm_sequence.dcm");
+    gdcm::Writer writer;
+    writer.SetFileName(outPath.c_str());
+    writer.SetFile(reader.GetFile());
+    if (!writer.Write()) {
+        std::cerr << "Failed to write updated sequence file." << std::endl;
+        return;
+    }
+
+    size_t itemCount = seq->GetNumberOfItems();
+    gdcm::Reader verify;
+    verify.SetFileName(outPath.c_str());
+    if (verify.Read() && verify.GetFile().GetDataSet().FindDataElement(refSeriesSeq)) {
+        auto seqCheck = verify.GetFile().GetDataSet().GetDataElement(refSeriesSeq).GetValueAsSQ();
+        if (seqCheck) {
+            itemCount = seqCheck->GetNumberOfItems();
+        }
+    }
+
+    const std::string summaryPath = JoinPath(outputDir, "gdcm_sequence.txt");
+    std::ofstream summary(summaryPath, std::ios::out | std::ios::trunc);
+    summary << "Items=" << itemCount << "\n";
+    summary << "LastSeriesInstanceUID=" << seriesUID << "\n";
+    summary << "LastReferencedSOPInstanceUID=" << sopUID << "\n";
+    summary.close();
+
+    std::cout << "Inserted sequence item (total " << itemCount << ") into '" << outPath << "'" << std::endl;
+}
+
+void GDCMTests::TestDicomdirRead(const std::string& path, const std::string& outputDir) {
+    // Open a DICOMDIR and emit a summary of its records and referenced files
+    std::cout << "--- [GDCM] DICOMDIR Read ---" << std::endl;
+
+    std::filesystem::path inputPath(path);
+    std::filesystem::path dicomdir = inputPath;
+    if (std::filesystem::is_directory(inputPath)) {
+        dicomdir /= "DICOMDIR";
+    } else if (inputPath.filename() != "DICOMDIR") {
+        dicomdir = inputPath.parent_path() / "DICOMDIR";
+    }
+
+    if (!std::filesystem::exists(dicomdir)) {
+        std::cerr << "DICOMDIR not found near " << inputPath << std::endl;
+        return;
+    }
+
+    gdcm::Reader reader;
+    reader.SetFileName(dicomdir.string().c_str());
+    if (!reader.Read()) {
+        std::cerr << "Failed to read DICOMDIR at " << dicomdir << std::endl;
+        return;
+    }
+
+    const gdcm::DataSet& ds = reader.GetFile().GetDataSet();
+    const gdcm::Tag recordSeqTag(0x0004, 0x1220);
+    size_t patientCount = 0, studyCount = 0, seriesCount = 0, instanceCount = 0;
+    std::vector<std::string> refs;
+
+    if (ds.FindDataElement(recordSeqTag)) {
+        const gdcm::DataElement& elem = ds.GetDataElement(recordSeqTag);
+        auto seq = elem.GetValueAsSQ();
+        if (seq) {
+            for (auto it = seq->Begin(); it != seq->End(); ++it) {
+                const gdcm::DataSet& itemDs = it->GetNestedDataSet();
+                if (!itemDs.FindDataElement(gdcm::Tag(0x0004, 0x1430))) {
+                    continue;
+                }
+                gdcm::Attribute<0x0004, 0x1430> recordTypeAttr;
+                recordTypeAttr.SetFromDataElement(itemDs.GetDataElement(gdcm::Tag(0x0004, 0x1430)));
+                std::string recordType = recordTypeAttr.GetValue();
+                while (!recordType.empty() && recordType.back() == ' ') {
+                    recordType.pop_back();
+                }
+                if (recordType == "PATIENT") patientCount++;
+                else if (recordType == "STUDY") studyCount++;
+                else if (recordType == "SERIES") seriesCount++;
+                else if (recordType == "IMAGE") instanceCount++;
+
+                if (itemDs.FindDataElement(gdcm::Tag(0x0004, 0x1500))) {
+                    gdcm::Attribute<0x0004, 0x1500> refId;
+                    refId.SetFromDataElement(itemDs.GetDataElement(gdcm::Tag(0x0004, 0x1500)));
+                    refs.emplace_back(refId.GetValue());
+                }
+            }
+        }
+    }
+
+    const std::string outPath = JoinPath(outputDir, "gdcm_dicomdir.txt");
+    std::ofstream out(outPath, std::ios::out | std::ios::trunc);
+    out << "Patients=" << patientCount << "\n";
+    out << "Studies=" << studyCount << "\n";
+    out << "Series=" << seriesCount << "\n";
+    out << "Instances=" << instanceCount << "\n";
+    out << "Refs=" << refs.size() << "\n";
+    size_t toPrint = std::min<size_t>(refs.size(), 8);
+    for (size_t i = 0; i < toPrint; ++i) {
+        out << "- " << refs[i] << "\n";
+    }
+    out.close();
+
+    std::cout << "Parsed DICOMDIR (" << patientCount << " patients, " << seriesCount
+              << " series) -> " << outPath << std::endl;
+}
+
+void GDCMTests::TestStringFilterCharsets(const std::string& filename, const std::string& outputDir) {
+    // Exercise gdcm::StringFilter on UTF-8 fields
+    std::cout << "--- [GDCM] StringFilter Character Sets ---" << std::endl;
+
+    gdcm::Reader reader;
+    reader.SetFileName(filename.c_str());
+    if (!reader.Read()) {
+        std::cerr << "Could not read file for charset test." << std::endl;
+        return;
+    }
+
+    gdcm::File& file = reader.GetFile();
+    gdcm::DataSet& ds = file.GetDataSet();
+    const std::string charset = "ISO_IR 192";
+    const std::string pnValue = "André Gödel^Teste";
+    const std::string institution = "Clínica São Paulo";
+
+    gdcm::DataElement charsetElem(gdcm::Tag(0x0008, 0x0005));
+    charsetElem.SetVR(gdcm::VR::CS);
+    charsetElem.SetByteValue(charset.c_str(), static_cast<uint32_t>(charset.size()));
+    ds.Replace(charsetElem);
+
+    gdcm::DataElement pnElem(gdcm::Tag(0x0010, 0x0010));
+    pnElem.SetVR(gdcm::VR::PN);
+    pnElem.SetByteValue(pnValue.c_str(), static_cast<uint32_t>(pnValue.size()));
+    ds.Replace(pnElem);
+
+    gdcm::DataElement instElem(gdcm::Tag(0x0008, 0x0080));
+    instElem.SetVR(gdcm::VR::LO);
+    instElem.SetByteValue(institution.c_str(), static_cast<uint32_t>(institution.size()));
+    ds.Replace(instElem);
+
+    const std::string outPath = JoinPath(outputDir, "gdcm_charset.dcm");
+    gdcm::Writer writer;
+    writer.SetFileName(outPath.c_str());
+    writer.SetFile(file);
+    if (!writer.Write()) {
+        std::cerr << "Failed to write charset test file." << std::endl;
+        return;
+    }
+
+    gdcm::Reader reload;
+    reload.SetFileName(outPath.c_str());
+    if (!reload.Read()) {
+        std::cerr << "Could not reload charset test file." << std::endl;
+        return;
+    }
+
+    gdcm::StringFilter sf;
+    sf.SetFile(reload.GetFile());
+    const std::string decodedPN = sf.ToString(gdcm::Tag(0x0010, 0x0010));
+    const std::string decodedInst = sf.ToString(gdcm::Tag(0x0008, 0x0080));
+
+    const std::string reportPath = JoinPath(outputDir, "gdcm_charset.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+    report << "ExpectedPN=" << pnValue << "\n";
+    report << "DecodedPN=" << decodedPN << "\n";
+    report << "ExpectedInstitution=" << institution << "\n";
+    report << "DecodedInstitution=" << decodedInst << "\n";
+    report << "PNMatch=" << (decodedPN == pnValue ? "yes" : "no") << "\n";
+    report << "InstitutionMatch=" << (decodedInst == institution ? "yes" : "no") << "\n";
+    report.close();
+
+    std::cout << "StringFilter decoded PN=" << decodedPN << " (report: " << reportPath << ")" << std::endl;
+}
+
+void GDCMTests::TestRTStructRead(const std::string& filename, const std::string& outputDir) {
+    // Parse a RTSTRUCT/SEG and emit basic ROI/contour summaries
+    std::cout << "--- [GDCM] RTSTRUCT/SEG Inspection ---" << std::endl;
+
+    gdcm::Reader reader;
+    reader.SetFileName(filename.c_str());
+    if (!reader.Read()) {
+        std::cerr << "Could not read file for RTSTRUCT inspection." << std::endl;
+        return;
+    }
+
+    const gdcm::DataSet& ds = reader.GetFile().GetDataSet();
+    const gdcm::Tag modalityTag(0x0008, 0x0060);
+    std::string modality;
+    if (ds.FindDataElement(modalityTag)) {
+        gdcm::Attribute<0x0008, 0x0060> attr;
+        attr.SetFromDataElement(ds.GetDataElement(modalityTag));
+        modality = attr.GetValue();
+    }
+
+    const gdcm::Tag ssRoiSeq(0x3006, 0x0020);
+    const gdcm::Tag roiNameTag(0x3006, 0x0026);
+    const gdcm::Tag roiContourSeq(0x3006, 0x0039);
+    const gdcm::Tag contourSeq(0x3006, 0x0040);
+    const gdcm::Tag contourDataTag(0x3006, 0x0050);
+
+    size_t roiCount = 0;
+    std::vector<std::string> roiNames;
+
+    if (ds.FindDataElement(ssRoiSeq)) {
+        const gdcm::DataElement& elem = ds.GetDataElement(ssRoiSeq);
+        auto seq = elem.GetValueAsSQ();
+        if (seq) {
+            roiCount = seq->GetNumberOfItems();
+            for (auto it = seq->Begin(); it != seq->End(); ++it) {
+                const gdcm::DataSet& itemDs = it->GetNestedDataSet();
+                if (itemDs.FindDataElement(roiNameTag)) {
+                    gdcm::Attribute<0x3006, 0x0026> nameAttr;
+                    nameAttr.SetFromDataElement(itemDs.GetDataElement(roiNameTag));
+                    roiNames.emplace_back(nameAttr.GetValue());
+                }
+            }
+        }
+    }
+
+    size_t contourFrames = 0;
+    if (ds.FindDataElement(roiContourSeq)) {
+        const gdcm::DataElement& elem = ds.GetDataElement(roiContourSeq);
+        auto seq = elem.GetValueAsSQ();
+        if (seq) {
+            for (auto it = seq->Begin(); it != seq->End(); ++it) {
+                const gdcm::DataSet& roiItem = it->GetNestedDataSet();
+                if (roiItem.FindDataElement(contourSeq)) {
+                    auto contourItems = roiItem.GetDataElement(contourSeq).GetValueAsSQ();
+                    if (contourItems) {
+                        for (auto cit = contourItems->Begin(); cit != contourItems->End(); ++cit) {
+                            const gdcm::DataSet& contourDS = cit->GetNestedDataSet();
+                            if (contourDS.FindDataElement(contourDataTag)) {
+                                contourFrames++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    const std::string outPath = JoinPath(outputDir, "gdcm_rtstruct.txt");
+    std::ofstream out(outPath, std::ios::out | std::ios::trunc);
+    out << "Modality=" << modality << "\n";
+    out << "ROIs=" << roiCount << "\n";
+    size_t toList = std::min<size_t>(roiNames.size(), 5);
+    for (size_t i = 0; i < toList; ++i) {
+        out << "- ROI[" << i + 1 << "]=" << roiNames[i] << "\n";
+    }
+    out << "ContourFrames=" << contourFrames << "\n";
+    out.close();
+
+    std::cout << "Wrote RTSTRUCT summary to '" << outPath << "'" << std::endl;
+}
+
+void GDCMTests::TestJPEG2000Lossy(const std::string& filename, const std::string& outputDir) {
+    // Transcode to JPEG2000 Lossy to exercise lossy codec path
+    std::cout << "--- [GDCM] JPEG2000 Lossy Transcode ---" << std::endl;
+
+    gdcm::ImageReader reader;
+    reader.SetFileName(filename.c_str());
+    if (!reader.Read()) {
+        std::cerr << "Could not read file for JPEG2000 Lossy transcode." << std::endl;
+        return;
+    }
+
+    gdcm::ImageChangeTransferSyntax change;
+    change.SetTransferSyntax(gdcm::TransferSyntax::JPEG2000);
+    change.SetInput(reader.GetImage());
+
+    if (!change.Change()) {
+        std::cerr << "Transfer syntax change to JPEG2000 (lossy) failed." << std::endl;
+        return;
+    }
+
+    gdcm::ImageWriter writer;
+    std::string outFilename = JoinPath(outputDir, "gdcm_jpeg2000_lossy.dcm");
+    writer.SetFileName(outFilename.c_str());
+    writer.SetFile(reader.GetFile());
+    writer.SetImage(change.GetOutput());
+
+    if (writer.Write()) {
+        std::cout << "Wrote JPEG2000 lossy file to: " << outFilename << std::endl;
+    } else {
+        std::cerr << "Failed to write JPEG2000 lossy file." << std::endl;
+    }
+}
+
+void GDCMTests::TestRLEPlanarConfiguration(const std::string& filename, const std::string& outputDir) {
+    // Convert to RLE while forcing planar configuration for RGB data
+    std::cout << "--- [GDCM] RLE Planar Configuration ---" << std::endl;
+
+    gdcm::Reader reader;
+    reader.SetFileName(filename.c_str());
+    if (!reader.Read()) {
+        std::cerr << "Could not read file for RLE planar test." << std::endl;
+        return;
+    }
+
+    gdcm::File& file = reader.GetFile();
+    gdcm::DataSet& ds = file.GetDataSet();
+    const gdcm::Tag planarTag(0x0028, 0x0006);
+
+    if (ds.FindDataElement(planarTag)) {
+        gdcm::Attribute<0x0028, 0x0006> planar;
+        planar.SetFromDataElement(ds.GetDataElement(planarTag));
+        planar.SetValue(1); // planar
+        ds.Replace(planar.GetAsDataElement());
+    }
+
+    gdcm::ImageReader imgReader;
+    imgReader.SetFile(file);
+    if (!imgReader.Read()) {
+        std::cerr << "Failed to read image for planar RLE." << std::endl;
+        return;
+    }
+
+    gdcm::ImageChangeTransferSyntax change;
+    change.SetTransferSyntax(gdcm::TransferSyntax::RLELossless);
+    change.SetInput(imgReader.GetImage());
+    if (!change.Change()) {
+        std::cerr << "RLE change failed." << std::endl;
+        return;
+    }
+
+    gdcm::ImageWriter writer;
+    std::string outFilename = JoinPath(outputDir, "gdcm_rle_planar.dcm");
+    writer.SetFileName(outFilename.c_str());
+    writer.SetFile(file);
+    writer.SetImage(change.GetOutput());
+
+    if (writer.Write()) {
+        std::cout << "Wrote RLE planar file to: " << outFilename << std::endl;
+    } else {
+        std::cerr << "Failed to write RLE planar file." << std::endl;
+    }
+}
+
 #else
 namespace GDCMTests {
 void TestTagInspection(const std::string&, const std::string&) { std::cout << "GDCM not enabled." << std::endl; }
@@ -574,5 +955,11 @@ void TestPixelStatistics(const std::string&, const std::string&) {}
 void TestJPEGLSTranscode(const std::string&, const std::string&) {}
 void TestDirectoryScan(const std::string&, const std::string&) {}
 void TestPreviewExport(const std::string&, const std::string&) {}
+void TestSequenceEditing(const std::string&, const std::string&) {}
+void TestDicomdirRead(const std::string&, const std::string&) {}
+void TestStringFilterCharsets(const std::string&, const std::string&) {}
+void TestRTStructRead(const std::string&, const std::string&) {}
+void TestJPEG2000Lossy(const std::string&, const std::string&) {}
+void TestRLEPlanarConfiguration(const std::string&, const std::string&) {}
 } // namespace GDCMTests
 #endif

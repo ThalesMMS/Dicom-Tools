@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using FellowOakDicom;
@@ -104,9 +105,50 @@ public class DicomNetworkTests
 
 internal static class DicomTestData
 {
-    internal static DicomDataset CreateMonochromeImage(int rows = 2, int columns = 2)
+    internal static DicomDataset CreateMonochromeImage(int rows = 2, int columns = 2) =>
+        CreateMonochromeImageWithFrames(rows, columns, new[] { BuildRampValues(rows * columns, 1000, 30) });
+
+    internal static DicomDataset CreateMonochromeImageWithFrames(int rows, int columns, IReadOnlyList<IReadOnlyList<ushort>> frames)
     {
-        var dataset = new DicomDataset(DicomTransferSyntax.ExplicitVRLittleEndian)
+        if (frames.Count == 0)
+        {
+            throw new ArgumentException("At least one frame is required.", nameof(frames));
+        }
+
+        var dataset = CreateBaseDataset(rows, columns);
+        var pixelData = DicomPixelData.Create(dataset, true);
+        dataset.AddOrUpdate(DicomTag.NumberOfFrames, frames.Count.ToString(CultureInfo.InvariantCulture));
+
+        foreach (var frame in frames)
+        {
+            pixelData.AddFrame(new MemoryByteBuffer(CreatePixelBuffer(frame, rows, columns)));
+        }
+
+        return dataset;
+    }
+
+    internal static DicomDataset CreateMultiFrameRamp(int rows, int columns, int frameCount)
+    {
+        var frames = BuildRampFrames(rows, columns, frameCount)
+            .Select(frame => (IReadOnlyList<ushort>)frame)
+            .ToArray();
+        return CreateMonochromeImageWithFrames(rows, columns, frames);
+    }
+
+    internal static IReadOnlyList<ushort[]> BuildRampFrames(int rows, int columns, int frameCount)
+    {
+        var frames = new List<ushort[]>();
+        for (var i = 0; i < frameCount; i++)
+        {
+            frames.Add(BuildRampValues(rows * columns, (ushort)(500 + (i * 400)), (ushort)(10 + (i * 5))));
+        }
+
+        return frames;
+    }
+
+    private static DicomDataset CreateBaseDataset(int rows, int columns)
+    {
+        return new DicomDataset(DicomTransferSyntax.ExplicitVRLittleEndian)
         {
             { DicomTag.PatientName, "Test^Person" },
             { DicomTag.PatientID, "TEST-123" },
@@ -124,21 +166,31 @@ internal static class DicomTestData
             { DicomTag.HighBit, (ushort)11 },
             { DicomTag.PixelRepresentation, (ushort)0 }
         };
-
-        var pixelData = DicomPixelData.Create(dataset, true);
-        pixelData.AddFrame(new MemoryByteBuffer(CreatePixelBuffer(rows, columns)));
-
-        return dataset;
     }
 
-    private static byte[] CreatePixelBuffer(int rows, int columns)
+    private static ushort[] BuildRampValues(int count, ushort start, ushort step)
     {
-        var pixelCount = rows * columns;
-        var buffer = new byte[pixelCount * 2];
-        for (var i = 0; i < pixelCount; i++)
+        var buffer = new ushort[count];
+        for (var i = 0; i < count; i++)
         {
-            var value = (ushort)(1000 + i * 30);
-            var bytes = BitConverter.GetBytes(value);
+            buffer[i] = (ushort)(start + (i * step));
+        }
+
+        return buffer;
+    }
+
+    private static byte[] CreatePixelBuffer(IReadOnlyList<ushort> values, int rows, int columns)
+    {
+        var expected = rows * columns;
+        if (values.Count != expected)
+        {
+            throw new ArgumentException($"Expected {expected} values for frame but received {values.Count}.", nameof(values));
+        }
+
+        var buffer = new byte[values.Count * 2];
+        for (var i = 0; i < values.Count; i++)
+        {
+            var bytes = BitConverter.GetBytes(values[i]);
             Buffer.BlockCopy(bytes, 0, buffer, i * 2, 2);
         }
 

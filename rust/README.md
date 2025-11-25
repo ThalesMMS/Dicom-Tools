@@ -8,14 +8,21 @@ This project provides a suite of tools to:
 - **Inspect:** Extract and view DICOM metadata tags in detail.
 - **Anonymize:** Smart redaction of Patient Information (PII) based on Value Representations (VR). Automatically masks Names (`PN`), Dates (`DA`), and Times (`TM`) while hashing `PatientID`.
 - **Convert:** Transform DICOM pixel data into standard image formats (PNG/JPG). Fully supports **multi-frame** images (videos/volumes) by extracting all frames.
-- **Window/Level:** Override or normalize VOI LUTs, force 8-bit/16-bit output, and target a specific frame when exporting images.
+- **Window/Level:** Override or normalize VOI LUTs, force 8-bit/16-bit output, and target a specific frame when exporting images. Per-frame VOI from functional groups is preserved so multi-frame series render correctly.
 - **JSON:** Bi-directional conversion between DICOM files and DICOM JSON representations for interoperability.
+- **Structured Data:** Navigate nested sequences (SR-like) via path segments to read deep content safely.
 - **Validate:** Deep inspection of DICOM files, checking for critical attributes (SOP Class, Patient Info, Pixel Data) and standard compliance.
 - **Transcode:** Re-encode to uncompressed syntaxes (Explicit/Implicit VR Little Endian) while keeping pixel data intact.
 - **Histogram & Pixel Format:** Generate intensity histograms and summarize pixel layout (bits, samples per pixel, photometric interpretation, rescale/window info).
-- **Network (Experimental):** Basic DICOM SCU capabilities (`echo`, `push`) to interact with PACS (currently in early development).
+- **Networking (Experimental):** Basic DICOM SCU capabilities (`echo`, `push`, simple `find`) with pending/final C-FIND response handling for quick PACS checks.
 - **Serve:** A lightweight web server (`Axum`) for demonstrating these capabilities via a browser.
 - **Dataset Dump:** Print every element with dictionary names, sequence items, and encapsulated pixel data summaries.
+
+### Newer capabilities
+- Per-frame functional group parsing (positions, orientations, pixel spacing) with affine reconstruction.
+- Lazy frame reads to avoid loading entire multi-frame pixel data into memory.
+- Deep SR/structured navigation helper for sequence-heavy datasets.
+- In-memory fake C-FIND workflow covered by integration tests.
 
 ### Key Technologies
 - **Language:** Rust (Edition 2021)

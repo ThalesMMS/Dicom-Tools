@@ -25,4 +25,9 @@ namespace ITKTests {
     void TestAnisotropicDenoise(const std::string& filename, const std::string& outputDir);
     void TestMaximumIntensityProjection(const std::string& filename, const std::string& outputDir);
     void TestNiftiExport(const std::string& filename, const std::string& outputDir);
+    void TestDistanceMapAndMorphology(const std::string& filename, const std::string& outputDir);
+    void TestLabelStatistics(const std::string& filename, const std::string& outputDir);
+    void TestRegistration(const std::string& filename, const std::string& outputDir);
+    void TestVectorVolumeExport(const std::string& filename, const std::string& outputDir);
+    void TestDicomSeriesWrite(const std::string& filename, const std::string& outputDir);
 }

@@ -9,11 +9,11 @@ A comprehensive Python repository serving two main purposes:
 To use the CLI tools or run the tests, install the package and its dependencies:
 
 ```bash
-# Clone the repository
-git clone https://github.com/ThalesMMS/Dicom-Tools-py.git
-cd Dicom-Tools-py
+# Clone the repository and enter the Python package
+git clone https://github.com/ThalesMMS/Dicom-Tools.git
+cd Dicom-Tools/python
 
-# Install in editable mode (reccomended for development)
+# Install in editable mode (recommended for development)
 pip install -e .
 
 # Or install dependencies directly
@@ -68,24 +68,23 @@ pip install "dicom-tools[extra]"
 
 ## 🧪 Library Testing Grounds
 
-The `tests/` directory contains isolated scripts to verify specific library features. To run them, place test DICOM files in `input/` and run:
+The `tests/` directory exercises key features of each library:
+
+- **pydicom:** sequences/nested datasets, Basic Text SR, character sets with UTF-8 names, multi-frame functional groups, secondary capture creation, SEG generation.
+- **pynetdicom:** in-process C-ECHO, C-FIND (StudyRoot), C-MOVE with internal C-STORE, C-GET (skips if storage contexts aren’t accepted), timeout/failure handling, optional TLS echo.
+- **GDCM:** transfer syntax transcoding (e.g., RLE), writer round-trip with tag edits, DICOMDIR generation (skips if the generator is unavailable).
+- **SimpleITK:** series IO, basic registration, masking/label stats, NIfTI roundtrip back to DICOM (skips if DICOM writer not supported).
+- **dicom-numpy:** slice ordering edge cases, duplicates, multi-echo stacking, affine comparison against SimpleITK.
+
+Run the full suite (uses synthetic fixtures by default):
 
 ```bash
-# Test pydicom (Read/Write/Modify)
-python3 tests/test_pydicom.py
-
-# Test pynetdicom (C-ECHO SCU/SCP)
-python3 tests/test_pynetdicom.py
-
-# Test GDCM (Decompression)
-python3 tests/test_gdcm.py
-
-# Test SimpleITK (Filtering)
-python3 tests/test_simpleitk.py
-
-# Test dicom-numpy (Volume construction)
-python3 tests/test_dicom_numpy.py
+pytest -q
 ```
+
+Notes:
+- Some tests skip gracefully if optional libs or DICOM series writing aren’t available.
+- Network tests run entirely in-process and do not require external PACS.
 
 ## Structure
 

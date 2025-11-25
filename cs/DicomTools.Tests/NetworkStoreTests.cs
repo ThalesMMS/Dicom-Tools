@@ -7,6 +7,7 @@ using FellowOakDicom.Network.Client;
 
 namespace DicomTools.Tests;
 
+[Collection("Network")]
 public class DicomNetworkStoreTests
 {
     [Fact]

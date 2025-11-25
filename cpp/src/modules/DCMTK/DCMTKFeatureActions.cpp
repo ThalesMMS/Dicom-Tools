@@ -14,6 +14,8 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <chrono>
+#include <thread>
 #include <sstream>
 #include <vector>
 
@@ -27,17 +29,28 @@
 #include "dcmtk/dcmdata/dcrledrg.h"
 #include "dcmtk/dcmdata/dcrleerg.h"
 #include "dcmtk/dcmdata/dcxfer.h"
+#include "dcmtk/dcmrt/drtstrct.h"
+#include "dcmtk/dcmnet/scp.h"
+#include "dcmtk/dcmnet/scu.h"
 #include "dcmtk/dcmjpeg/djdecode.h"
 #include "dcmtk/dcmjpeg/djencode.h"
 #include "dcmtk/dcmfg/fgbase.h"
 #include "dcmtk/dcmfg/fgpixmsr.h"
 #include "dcmtk/dcmfg/fgplanpo.h"
 #include "dcmtk/dcmfg/fgplanor.h"
+#include "dcmtk/dcmfg/fginterface.h"
 #include "dcmtk/dcmiod/iodmacro.h"
 #include "dcmtk/dcmiod/modequipment.h"
 #include "dcmtk/dcmseg/segment.h"
 #include "dcmtk/dcmseg/segdoc.h"
 #include "dcmtk/dcmseg/segtypes.h"
+#include "dcmtk/dcmsr/dsrdoc.h"
+#include "dcmtk/dcmsr/dsrdocst.h"
+#include "dcmtk/dcmsr/dsrcodvl.h"
+#include "dcmtk/dcmsr/dsrnumtn.h"
+#include "dcmtk/dcmsr/dsrtextn.h"
+#include "dcmtk/ofstd/oflist.h"
+#include "dcmtk/ofstd/ofdatime.h"
 
 namespace fs = std::filesystem;
 
@@ -64,6 +77,25 @@ std::string EscapeJson(const std::string& value) {
 }
 
 #ifdef USE_DCMTK
+OFList<OFString> DefaultTransferSyntaxes() {
+    OFList<OFString> syntaxes;
+    syntaxes.push_back(UID_LittleEndianExplicitTransferSyntax);
+    syntaxes.push_back(UID_BigEndianExplicitTransferSyntax);
+    syntaxes.push_back(UID_LittleEndianImplicitTransferSyntax);
+    return syntaxes;
+}
+
+std::string TrimSpaces(const OFString& value) {
+    std::string result = value.c_str();
+    while (!result.empty() && std::isspace(static_cast<unsigned char>(result.back()))) {
+        result.pop_back();
+    }
+    while (!result.empty() && std::isspace(static_cast<unsigned char>(result.front()))) {
+        result.erase(result.begin());
+    }
+    return result;
+}
+
 struct ValidationResult {
     bool ok{true};
     std::vector<std::string> errors;
@@ -565,6 +597,577 @@ void DCMTKTests::TestRawDump(const std::string& filename, const std::string& out
     }
 }
 
+void DCMTKTests::TestNetworkEchoAndStore(const std::string& filename, const std::string& outputDir) {
+    // Spin up a tiny in-process SCP and exercise C-ECHO + C-STORE locally
+    std::cout << "--- [DCMTK] C-ECHO / C-STORE Loopback ---" << std::endl;
+#ifdef USE_DCMTK
+    DcmFileFormat input;
+    OFCondition loadStatus = input.loadFile(filename.c_str());
+    if (loadStatus.bad()) {
+        std::cerr << "Unable to load input for network test: " << loadStatus.text() << std::endl;
+        return;
+    }
+
+    DcmDataset* inputDataset = input.getDataset();
+    OFString sopClass;
+    OFString sopInstance;
+    if (inputDataset->findAndGetOFString(DCM_SOPClassUID, sopClass).bad() || sopClass.empty()) {
+        sopClass = UID_CTImageStorage;
+    }
+    inputDataset->findAndGetOFString(DCM_SOPInstanceUID, sopInstance);
+
+    OFList<OFString> syntaxes = DefaultTransferSyntaxes();
+
+    class CapturingSCP : public DcmSCP {
+    public:
+        explicit CapturingSCP(const std::string& out) : outputDir(out) {}
+
+        void requestStop() { stopRequested = OFTrue; }
+
+        std::string storedPath() const { return capturedPath; }
+
+    protected:
+        OFBool stopAfterCurrentAssociation() override { return stopRequested; }
+        OFBool stopAfterConnectionTimeout() override { return stopRequested; }
+
+        OFCondition handleSTORERequest(T_DIMSE_C_StoreRQ& reqMessage,
+                                       const T_ASC_PresentationContextID presID,
+                                       DcmDataset*& reqDataset) override {
+            OFCondition receiveStatus = receiveSTORERequest(reqMessage, presID, reqDataset);
+            Uint16 rspStatus = checkSTORERequest(reqMessage, reqDataset);
+
+            if (receiveStatus.good() && reqDataset != nullptr) {
+                DcmFileFormat storedCopy(reqDataset, OFTrue); // deep copy so we can safely delete reqDataset
+                const std::string outPath = JoinPath(outputDir, "dcmtk_store_received.dcm");
+                if (storedCopy.saveFile(outPath.c_str()).good()) {
+                    capturedPath = outPath;
+                } else {
+                    rspStatus = STATUS_STORE_Refused_OutOfResources;
+                }
+            } else {
+                rspStatus = STATUS_STORE_Error_CannotUnderstand;
+            }
+
+            sendSTOREResponse(presID, reqMessage, rspStatus);
+            delete reqDataset;
+            reqDataset = nullptr;
+            return receiveStatus;
+        }
+
+    private:
+        std::string outputDir;
+        OFBool stopRequested{OFTrue};
+        std::string capturedPath;
+    };
+
+    CapturingSCP scp(outputDir);
+    scp.setAETitle("DTSCP");
+    scp.setRespondWithCalledAETitle(OFTrue);
+    scp.setPort(0); // let OS pick an available port
+    scp.setConnectionBlockingMode(DUL_BLOCK);
+    scp.setConnectionTimeout(5);
+    scp.setACSETimeout(10);
+    scp.setDIMSETimeout(10);
+    scp.setMaxReceivePDULength(ASC_DEFAULTMAXPDU);
+    scp.setEnableVerification();
+    scp.addPresentationContext(sopClass, syntaxes);
+
+    OFCondition openStatus = scp.openListenPort();
+    if (openStatus.bad()) {
+        std::cerr << "Failed to open SCP port: " << openStatus.text() << std::endl;
+        return;
+    }
+    const Uint16 boundPort = scp.getPort();
+
+    std::thread serverThread([&scp]() {
+        scp.acceptAssociations();
+    });
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+
+    DcmSCU scu;
+    scu.setAETitle("DTSCU");
+    scu.setPeerAETitle("DTSCP");
+    scu.setPeerHostName("127.0.0.1");
+    scu.setPeerPort(boundPort);
+    scu.setACSETimeout(5);
+    scu.setDIMSETimeout(10);
+    scu.setMaxReceivePDULength(ASC_DEFAULTMAXPDU);
+    scu.addPresentationContext(UID_VerificationSOPClass, syntaxes);
+    scu.addPresentationContext(sopClass, syntaxes);
+
+    OFCondition initStatus = scu.initNetwork();
+    OFCondition assocStatus = initStatus.good() ? scu.negotiateAssociation() : initStatus;
+    Uint16 storeStatus = 0;
+    OFCondition echoStatus = EC_IllegalCall;
+    OFCondition storeCond = EC_IllegalCall;
+
+    if (assocStatus.good()) {
+        echoStatus = scu.sendECHORequest(0);
+        storeCond = scu.sendSTORERequest(0, OFFilename(filename.c_str()), nullptr, storeStatus);
+        scu.closeAssociation(DCMSCU_RELEASE_ASSOCIATION);
+    } else {
+        std::cerr << "Association negotiation failed: " << assocStatus.text() << std::endl;
+    }
+
+    scp.requestStop();
+    if (serverThread.joinable()) {
+        serverThread.join();
+    }
+
+    const std::string reportPath = JoinPath(outputDir, "dcmtk_network_report.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+    if (!report.is_open()) {
+        std::cerr << "Failed to open network report at: " << reportPath << std::endl;
+        return;
+    }
+
+    report << "Echo=" << (echoStatus.good() ? "OK" : echoStatus.text()) << "\n";
+    report << "StoreStatusCode=" << storeStatus << "\n";
+    report << "StoreCondition=" << (storeCond.good() ? "OK" : storeCond.text()) << "\n";
+
+    const std::string storedPath = scp.storedPath();
+    if (!storedPath.empty()) {
+        report << "StoredFile=" << storedPath << "\n";
+        DcmFileFormat stored;
+        if (stored.loadFile(storedPath.c_str()).good()) {
+            DcmDataset* storedDS = stored.getDataset();
+            OFString storedSOPInstance;
+            storedDS->findAndGetOFString(DCM_SOPInstanceUID, storedSOPInstance);
+            report << "SOPInstanceMatch=" << (storedSOPInstance == sopInstance ? "yes" : "no") << "\n";
+
+            const Uint8* srcData = nullptr;
+            const Uint8* storedData = nullptr;
+            unsigned long srcLen = 0;
+            unsigned long storedLen = 0;
+            inputDataset->findAndGetUint8Array(DCM_PixelData, srcData, &srcLen);
+            storedDS->findAndGetUint8Array(DCM_PixelData, storedData, &storedLen);
+            report << "PixelLengthSrc=" << srcLen << "\n";
+            report << "PixelLengthStored=" << storedLen << "\n";
+            report << "PixelLengthMatch=" << ((srcLen > 0 && srcLen == storedLen) ? "yes" : "no") << "\n";
+        } else {
+            report << "StoredFileRead=failed\n";
+        }
+    } else {
+        report << "StoredFile=(none)\n";
+    }
+    report.close();
+    std::cout << "Loopback echo/store test completed (report: " << reportPath << ")" << std::endl;
+#else
+    (void)filename;
+    (void)outputDir;
+    std::cout << "DCMTK not enabled." << std::endl;
+#endif
+}
+
+void DCMTKTests::TestCharacterSetRoundTrip(const std::string& outputDir) {
+    // Build a UTF-8 dataset, write it, and confirm values round-trip intact
+    std::cout << "--- [DCMTK] Character Set Round Trip ---" << std::endl;
+#ifdef USE_DCMTK
+    const std::string pnValue = "José da Silva^Têste";
+    const std::string institution = "Clínica São Lucas";
+
+    DcmFileFormat fileformat;
+    DcmDataset* ds = fileformat.getDataset();
+    ds->putAndInsertString(DCM_SpecificCharacterSet, "ISO_IR 192");
+    ds->putAndInsertString(DCM_PatientName, pnValue.c_str());
+    ds->putAndInsertString(DCM_PatientID, "ÇÃÕ123");
+    ds->putAndInsertString(DCM_InstitutionName, institution.c_str());
+    ds->putAndInsertString(DCM_Modality, "OT");
+    ds->putAndInsertUint16(DCM_Rows, 1);
+    ds->putAndInsertUint16(DCM_Columns, 1);
+    ds->putAndInsertUint16(DCM_BitsAllocated, 8);
+    ds->putAndInsertUint16(DCM_BitsStored, 8);
+    ds->putAndInsertUint16(DCM_HighBit, 7);
+    ds->putAndInsertUint16(DCM_SamplesPerPixel, 1);
+    ds->putAndInsertString(DCM_PhotometricInterpretation, "MONOCHROME2");
+    Uint8 pixel = 42;
+    ds->putAndInsertUint8Array(DCM_PixelData, &pixel, 1);
+
+    const std::string outPath = JoinPath(outputDir, "dcmtk_charset_utf8.dcm");
+    if (fileformat.saveFile(outPath.c_str(), EXS_LittleEndianExplicit).bad()) {
+        std::cerr << "Failed to write UTF-8 test dataset to " << outPath << std::endl;
+        return;
+    }
+
+    DcmFileFormat reload;
+    if (reload.loadFile(outPath.c_str()).bad()) {
+        std::cerr << "Could not reload written UTF-8 file." << std::endl;
+        return;
+    }
+
+    OFString roundTripName, roundTripInstitution, roundTripId;
+    reload.getDataset()->findAndGetOFString(DCM_PatientName, roundTripName);
+    reload.getDataset()->findAndGetOFString(DCM_InstitutionName, roundTripInstitution);
+    reload.getDataset()->findAndGetOFString(DCM_PatientID, roundTripId);
+
+    const bool nameOk = pnValue == roundTripName.c_str();
+    const bool institutionOk = institution == roundTripInstitution.c_str();
+    const bool idOk = TrimSpaces(roundTripId) == "ÇÃÕ123";
+
+    const std::string reportPath = JoinPath(outputDir, "dcmtk_charset_roundtrip.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+    report << "ExpectedPN=" << pnValue << "\n";
+    report << "RoundTripPN=" << roundTripName.c_str() << "\n";
+    report << "ExpectedInstitution=" << institution << "\n";
+    report << "RoundTripInstitution=" << roundTripInstitution.c_str() << "\n";
+    report << "ExpectedPatientID=ÇÃÕ123\n";
+    report << "RoundTripPatientID=" << roundTripId.c_str() << "\n";
+    report << "MatchPN=" << (nameOk ? "yes" : "no") << "\n";
+    report << "MatchInstitution=" << (institutionOk ? "yes" : "no") << "\n";
+    report << "MatchPatientID=" << (idOk ? "yes" : "no") << "\n";
+    report.close();
+
+    std::cout << "Character set round-trip " << ((nameOk && institutionOk && idOk) ? "passed" : "failed")
+              << " (artifacts at '" << outPath << "')" << std::endl;
+#else
+    (void)outputDir;
+    std::cout << "DCMTK not enabled." << std::endl;
+#endif
+}
+
+void DCMTKTests::TestSecondaryCapture(const std::string& sourceForMetadata, const std::string& outputDir) {
+    // Create a brand new Secondary Capture instance with synthetic pixels
+    std::cout << "--- [DCMTK] Secondary Capture Creation ---" << std::endl;
+#ifdef USE_DCMTK
+    DcmFileFormat source;
+    std::string patientName = "SC^Demo^Patient";
+    std::string patientId = "SC-001";
+    std::string studyUID;
+    std::string seriesUID;
+
+    if (source.loadFile(sourceForMetadata.c_str()).good()) {
+        OFString val;
+        if (source.getDataset()->findAndGetOFString(DCM_PatientName, val).good()) {
+            patientName = val.c_str();
+        }
+        if (source.getDataset()->findAndGetOFString(DCM_PatientID, val).good()) {
+            patientId = val.c_str();
+        }
+        if (source.getDataset()->findAndGetOFString(DCM_StudyInstanceUID, val).good()) {
+            studyUID = val.c_str();
+        }
+        if (source.getDataset()->findAndGetOFString(DCM_SeriesInstanceUID, val).good()) {
+            seriesUID = val.c_str();
+        }
+    }
+
+    char studyUidBuf[100];
+    char seriesUidBuf[100];
+    char sopUidBuf[100];
+    if (studyUID.empty()) {
+        dcmGenerateUniqueIdentifier(studyUidBuf, SITE_STUDY_UID_ROOT);
+        studyUID = studyUidBuf;
+    }
+    if (seriesUID.empty()) {
+        dcmGenerateUniqueIdentifier(seriesUidBuf, SITE_SERIES_UID_ROOT);
+        seriesUID = seriesUidBuf;
+    }
+    dcmGenerateUniqueIdentifier(sopUidBuf, SITE_INSTANCE_UID_ROOT);
+
+    DcmFileFormat scFile;
+    DcmDataset* ds = scFile.getDataset();
+    ds->putAndInsertString(DCM_SpecificCharacterSet, "ISO_IR 100");
+    ds->putAndInsertString(DCM_SOPClassUID, UID_SecondaryCaptureImageStorage);
+    ds->putAndInsertString(DCM_SOPInstanceUID, sopUidBuf);
+    ds->putAndInsertString(DCM_StudyInstanceUID, studyUID.c_str());
+    ds->putAndInsertString(DCM_SeriesInstanceUID, seriesUID.c_str());
+    ds->putAndInsertString(DCM_PatientName, patientName.c_str());
+    ds->putAndInsertString(DCM_PatientID, patientId.c_str());
+    ds->putAndInsertString(DCM_Modality, "OT");
+    ds->putAndInsertUint16(DCM_InstanceNumber, 1);
+
+    const Uint16 rows = 128;
+    const Uint16 cols = 128;
+    ds->putAndInsertUint16(DCM_Rows, rows);
+    ds->putAndInsertUint16(DCM_Columns, cols);
+    ds->putAndInsertUint16(DCM_BitsAllocated, 8);
+    ds->putAndInsertUint16(DCM_BitsStored, 8);
+    ds->putAndInsertUint16(DCM_HighBit, 7);
+    ds->putAndInsertUint16(DCM_SamplesPerPixel, 1);
+    ds->putAndInsertUint16(DCM_PixelRepresentation, 0);
+    ds->putAndInsertString(DCM_PhotometricInterpretation, "MONOCHROME2");
+
+    std::vector<Uint8> pixels(static_cast<size_t>(rows) * static_cast<size_t>(cols), 0);
+    for (Uint16 y = 0; y < rows; ++y) {
+        for (Uint16 x = 0; x < cols; ++x) {
+            const double normX = static_cast<double>(x) / static_cast<double>(cols);
+            const double normY = static_cast<double>(y) / static_cast<double>(rows);
+            pixels[y * cols + x] = static_cast<Uint8>(255.0 * (0.5 * normX + 0.5 * normY));
+        }
+    }
+    ds->putAndInsertUint8Array(DCM_PixelData, pixels.data(), static_cast<unsigned long>(pixels.size()));
+
+    const std::string outPath = JoinPath(outputDir, "dcmtk_secondary_capture.dcm");
+    if (scFile.saveFile(outPath.c_str(), EXS_LittleEndianExplicit).bad()) {
+        std::cerr << "Failed to write secondary capture file." << std::endl;
+        return;
+    }
+
+    DcmFileFormat verify;
+    if (verify.loadFile(outPath.c_str()).bad()) {
+        std::cerr << "Could not reload secondary capture for validation." << std::endl;
+        return;
+    }
+
+    Uint16 outRows = 0, outCols = 0;
+    verify.getDataset()->findAndGetUint16(DCM_Rows, outRows);
+    verify.getDataset()->findAndGetUint16(DCM_Columns, outCols);
+    const Uint8* outPixels = nullptr;
+    unsigned long outLen = 0;
+    verify.getDataset()->findAndGetUint8Array(DCM_PixelData, outPixels, &outLen);
+
+    const std::string reportPath = JoinPath(outputDir, "dcmtk_secondary_capture.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+    report << "Rows=" << outRows << "\n";
+    report << "Columns=" << outCols << "\n";
+    report << "PixelBytes=" << outLen << "\n";
+    report << "PatientName=" << patientName << "\n";
+    report << "PatientID=" << patientId << "\n";
+    report.close();
+
+    std::cout << "Wrote secondary capture to '" << outPath << "' (" << outRows << "x" << outCols << ")"
+              << std::endl;
+#else
+    (void)sourceForMetadata;
+    (void)outputDir;
+    std::cout << "DCMTK not enabled." << std::endl;
+#endif
+}
+
+void DCMTKTests::TestStructuredReport(const std::string& sourceFile, const std::string& outputDir) {
+    // Create a simple SR with a numeric measurement and free-text observation, then read it back
+    std::cout << "--- [DCMTK] Structured Report ---" << std::endl;
+#ifdef USE_DCMTK
+    DSRDocument sr(DSRTypes::DT_EnhancedSR);
+    sr.createNewDocument(DSRTypes::DT_EnhancedSR);
+
+    // Seed patient/study from source if available
+    DcmFileFormat src;
+    if (src.loadFile(sourceFile.c_str()).good()) {
+        sr.readPatientData(*src.getDataset());
+        sr.readStudyData(*src.getDataset());
+    } else {
+        sr.setPatientName("SR^Demo");
+        sr.setPatientID("SR001");
+        sr.createNewStudy();
+    }
+    OFString studyUID;
+    sr.getStudyInstanceUID(studyUID);
+    if (studyUID.empty()) {
+        sr.createNewStudy();
+        sr.getStudyInstanceUID(studyUID);
+    }
+    sr.createNewSeriesInStudy(studyUID);
+    sr.createNewSOPInstance();
+
+    DSRDocumentTree& tree = sr.getTree();
+    tree.clear();
+
+    DSRCodedEntryValue reportTitle("126000", "DCM", "Imaging Measurement Report");
+    const size_t rootId = tree.addContentItem(DSRTypes::RT_isRoot, DSRTypes::VT_Container);
+    if (rootId > 0) {
+        tree.getCurrentContentItem().setConceptName(reportTitle, OFTrue);
+        OFDateTime now = OFDateTime::getCurrentDateTime();
+        OFString nowStr;
+        now.getISOFormattedDateTime(nowStr, false, true, true, ".");
+        tree.getCurrentContentItem().setObservationDateTime(nowStr);
+
+        DSRCodedEntryValue measCode("121401", "DCM", "Mean");
+        DSRNumericMeasurementValue numVal("42", DSRCodedEntryValue("HU", "UCUM", "Hounsfield unit"));
+        tree.addChildContentItem(DSRTypes::RT_contains, DSRTypes::VT_Num, measCode);
+        tree.getCurrentContentItem().setNumericValue(numVal);
+
+        DSRCodedEntryValue textCode("121106", "DCM", "Finding");
+        tree.addChildContentItem(DSRTypes::RT_contains, DSRTypes::VT_Text, textCode);
+        tree.getCurrentContentItem().setStringValue("Synthetic ROI measurement for QA.");
+    } else {
+        std::cerr << "Failed to create SR root container." << std::endl;
+        return;
+    }
+
+    DcmFileFormat out;
+    sr.write(*out.getDataset());
+    const std::string path = JoinPath(outputDir, "dcmtk_sr.dcm");
+    if (out.saveFile(path.c_str(), EXS_LittleEndianExplicit).bad()) {
+        std::cerr << "Failed to write SR file." << std::endl;
+        return;
+    }
+
+    // Reload and emit a brief tree summary
+    DSRDocument srRead;
+    const std::string reportTxt = JoinPath(outputDir, "dcmtk_sr_summary.txt");
+    std::ofstream report(reportTxt, std::ios::out | std::ios::trunc);
+    if (srRead.read(*out.getDataset()).good()) {
+        report << "Valid=" << (srRead.isValid() ? "yes" : "no") << "\n";
+        report << "DocType=" << srRead.getDocumentType() << "\n";
+        report << "PatientName=";
+        OFString pn;
+        srRead.getPatientName(pn);
+        report << pn.c_str() << "\n";
+        srRead.getPatientID(pn);
+        report << "PatientID=" << pn.c_str() << "\n";
+        report << "Tree:\n";
+        srRead.getTree().print(report);
+    } else {
+        report << "Failed to read back SR document.\n";
+    }
+    report.close();
+
+    std::cout << "Structured Report saved to '" << path << "' (summary: " << reportTxt << ")" << std::endl;
+#else
+    (void)sourceFile;
+    (void)outputDir;
+    std::cout << "DCMTK not enabled." << std::endl;
+#endif
+}
+
+void DCMTKTests::TestRTStructRead(const std::string& filename, const std::string& outputDir) {
+    // Read RTSTRUCT and count ROIs + contour points
+    std::cout << "--- [DCMTK] RTSTRUCT Read ---" << std::endl;
+#ifdef USE_DCMTK
+    DcmFileFormat file;
+    std::ofstream out;
+    const std::string outPath = JoinPath(outputDir, "dcmtk_rtstruct.txt");
+    out.open(outPath, std::ios::out | std::ios::trunc);
+
+    if (file.loadFile(filename.c_str()).bad()) {
+        out << "Error=load_failed\n";
+        std::cerr << "Failed to load RTSTRUCT." << std::endl;
+        std::cout << "RTSTRUCT summary written to '" << outPath << "'" << std::endl;
+        return;
+    }
+
+    DRTStructureSetIOD rt;
+    if (rt.read(*file.getDataset()).bad()) {
+        out << "Error=parse_failed\n";
+        out.close();
+        std::cerr << "Could not parse RTSTRUCT IOD." << std::endl;
+        std::cout << "RTSTRUCT summary written to '" << outPath << "'" << std::endl;
+        return;
+    }
+
+    DRTStructureSetROISequence& roiSeq = rt.getStructureSetROISequence();
+    const size_t roiCount = roiSeq.getNumberOfItems();
+    std::vector<std::string> roiNames;
+
+    OFCondition status;
+    for (size_t i = 1; i <= roiCount; ++i) {
+        DRTStructureSetROISequence::Item& item = roiSeq.getItem(i);
+        OFString name;
+        item.getROIName(name);
+        roiNames.emplace_back(name.empty() ? "(none)" : name.c_str());
+    }
+
+    DRTROIContourSequence& contourSeq = rt.getROIContourSequence();
+    size_t contourFrames = 0;
+    for (size_t i = 1; i <= contourSeq.getNumberOfItems(); ++i) {
+        DRTROIContourSequence::Item& item = contourSeq.getItem(i);
+        DRTContourSequence& cs = item.getContourSequence();
+        contourFrames += cs.getNumberOfItems();
+    }
+
+    out << "ROIs=" << roiCount << "\n";
+    size_t toList = std::min<size_t>(roiNames.size(), 5);
+    for (size_t i = 0; i < toList; ++i) {
+        out << "- ROI[" << i + 1 << "]=" << roiNames[i] << "\n";
+    }
+    out << "ContourFrames=" << contourFrames << "\n";
+    out.close();
+
+    std::cout << "RTSTRUCT summary written to '" << outPath << "'" << std::endl;
+#else
+    (void)filename;
+    (void)outputDir;
+    std::cout << "DCMTK not enabled." << std::endl;
+#endif
+}
+
+void DCMTKTests::TestFunctionalGroupRead(const std::string& filename, const std::string& outputDir) {
+    // Inspect per-frame functional groups from a multi-frame image
+    std::cout << "--- [DCMTK] Functional Groups ---" << std::endl;
+#ifdef USE_DCMTK
+    DcmFileFormat file;
+    const std::string reportPath = JoinPath(outputDir, "dcmtk_functional_groups.txt");
+    std::ofstream report(reportPath, std::ios::out | std::ios::trunc);
+
+    if (file.loadFile(filename.c_str()).bad()) {
+        report << "Error=load_failed\n";
+        std::cerr << "Failed to load multi-frame DICOM." << std::endl;
+        std::cout << "Functional group summary written to '" << reportPath << "'" << std::endl;
+        return;
+    }
+
+    DcmDataset* dataset = file.getDataset();
+    Sint32 frames = 0;
+    dataset->findAndGetSint32(DCM_NumberOfFrames, frames);
+    report << "NumberOfFrames=" << frames << "\n";
+
+    FGInterface fg;
+    if (fg.read(*dataset).bad()) {
+        report << "Error=no_functional_groups\n";
+        report.close();
+        std::cerr << "No functional group data found." << std::endl;
+        return;
+    }
+
+    FGBase* sharedPosBase = fg.get(0, DcmFGTypes::EFG_PLANEPOSPATIENT);
+    if (sharedPosBase) {
+        if (auto* planePos = dynamic_cast<FGPlanePosPatient*>(sharedPosBase)) {
+            Float64 x = 0, y = 0, z = 0;
+            if (planePos->getImagePositionPatient(x, y, z).good()) {
+                report << "SharedPlanePos=" << x << "\\" << y << "\\" << z << "\n";
+            }
+        }
+    }
+
+    const size_t framesToInspect = std::min<Sint32>(frames > 0 ? frames : 1, 3);
+    for (size_t idx = 0; idx < framesToInspect; ++idx) {
+        report << "Frame[" << idx + 1 << "]\n";
+        if (auto* pmBase = fg.get(static_cast<Uint32>(idx), DcmFGTypes::EFG_PIXELMEASURES)) {
+            if (auto* pm = dynamic_cast<FGPixelMeasures*>(pmBase)) {
+                Float64 spacingX = 0, spacingY = 0;
+                pm->getPixelSpacing(spacingX, 0);
+                pm->getPixelSpacing(spacingY, 1);
+                report << "  PixelSpacing=" << spacingX << "\\" << spacingY << "\n";
+            }
+        }
+        if (auto* pfBase = fg.get(static_cast<Uint32>(idx), DcmFGTypes::EFG_PLANEPOSPATIENT)) {
+            if (auto* pf = dynamic_cast<FGPlanePosPatient*>(pfBase)) {
+                Float64 x = 0, y = 0, z = 0;
+                if (pf->getImagePositionPatient(x, y, z).good()) {
+                    report << "  Position=" << x << "\\" << y << "\\" << z << "\n";
+                }
+            }
+        }
+        if (auto* poBase = fg.get(static_cast<Uint32>(idx), DcmFGTypes::EFG_PLANEORIENTPATIENT)) {
+            if (auto* po = dynamic_cast<FGPlaneOrientationPatient*>(poBase)) {
+                Float64 ix = 0, iy = 0, iz = 0, jx = 0, jy = 0, jz = 0;
+                if (po->getImageOrientationPatient(ix, iy, iz, jx, jy, jz).good()) {
+                    report << "  Orientation=" << ix << "\\" << iy << "\\" << iz
+                           << "\\" << jx << "\\" << jy << "\\" << jz << "\n";
+                }
+            }
+        }
+    }
+    report.close();
+
+    // Export first frame preview if multi-frame
+    if (frames > 0) {
+        DicomImage image(filename.c_str());
+        if (image.getStatus() == EIS_Normal) {
+            image.writePPM(JoinPath(outputDir, "dcmtk_multiframe_frame0.ppm").c_str(), 0);
+        }
+    }
+
+    std::cout << "Functional group summary written to '" << reportPath << "'" << std::endl;
+#else
+    (void)filename;
+    (void)outputDir;
+    std::cout << "DCMTK not enabled." << std::endl;
+#endif
+}
+
 int DCMTKTests::ValidateDicomFile(const std::string& filename, const std::string& outputDir, bool jsonOutput) {
     std::cout << "--- [DCMTK] Validate DICOM ---" << std::endl;
 #ifdef USE_DCMTK
@@ -865,6 +1468,12 @@ void TestRLEReencode(const std::string&, const std::string&) {}
 void TestJPEGBaseline(const std::string&, const std::string&) {}
 void TestBMPPreview(const std::string&, const std::string&) {}
 void TestSegmentationExport(const std::string&, const std::string&) {}
+void TestNetworkEchoAndStore(const std::string&, const std::string&) {}
+void TestCharacterSetRoundTrip(const std::string&) {}
+void TestSecondaryCapture(const std::string&, const std::string&) {}
+void TestStructuredReport(const std::string&, const std::string&) {}
+void TestRTStructRead(const std::string&, const std::string&) {}
+void TestFunctionalGroupRead(const std::string&, const std::string&) {}
 int ValidateDicomFile(const std::string&, const std::string&, bool) { std::cout << "DCMTK not enabled." << std::endl; return 1; }
 } // namespace DCMTKTests
 #endif

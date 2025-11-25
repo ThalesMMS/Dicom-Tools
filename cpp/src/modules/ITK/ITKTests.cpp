@@ -33,6 +33,11 @@ void ITKTests::RegisterCommands(CommandRegistry& registry) {
             TestMaximumIntensityProjection(ctx.inputPath, ctx.outputDir);
             TestNRRDExport(ctx.inputPath, ctx.outputDir);
             TestNiftiExport(ctx.inputPath, ctx.outputDir);
+            TestDistanceMapAndMorphology(ctx.inputPath, ctx.outputDir);
+            TestLabelStatistics(ctx.inputPath, ctx.outputDir);
+            TestRegistration(ctx.inputPath, ctx.outputDir);
+            TestVectorVolumeExport(ctx.inputPath, ctx.outputDir);
+            TestDicomSeriesWrite(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });
@@ -163,6 +168,56 @@ void ITKTests::RegisterCommands(CommandRegistry& registry) {
         "Export the volume to NIfTI (.nii.gz)",
         [](const CommandContext& ctx) {
             TestNiftiExport(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "itk:distance-map",
+        "ITK",
+        "Compute a signed distance map and basic morphological closing",
+        [](const CommandContext& ctx) {
+            TestDistanceMapAndMorphology(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "itk:label-stats",
+        "ITK",
+        "Connected components + label statistics report",
+        [](const CommandContext& ctx) {
+            TestLabelStatistics(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "itk:register",
+        "ITK",
+        "Estimate translation via MI registration and resample moving volume",
+        [](const CommandContext& ctx) {
+            TestRegistration(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "itk:vector",
+        "ITK",
+        "Compose a 2-component vector volume and export as NRRD",
+        [](const CommandContext& ctx) {
+            TestVectorVolumeExport(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "itk:dicom-series",
+        "ITK",
+        "Write a new DICOM series with fresh UIDs",
+        [](const CommandContext& ctx) {
+            TestDicomSeriesWrite(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });

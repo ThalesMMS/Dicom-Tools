@@ -9,22 +9,31 @@
 import subprocess
 import os
 import sys
+import shutil
 
 # Configuration
 BUILD_DIR = "build"
 EXECUTABLE = os.path.join(BUILD_DIR, "DicomTools")
-INPUT_FILE = "input/dcm_series/IM-0001-0190.dcm"
+INPUT_FILE = os.path.join("..", "sample_series", "IM-0001-0001.dcm")
+OUTPUT_DIR = "output"
 
 # Ensure we fail early if the binary has not been built
 if not os.path.exists(EXECUTABLE):
     print(f"Error: Executable not found at {EXECUTABLE}")
     sys.exit(1)
 
+if not os.path.exists(INPUT_FILE):
+    print(f"Error: Sample DICOM not found at {INPUT_FILE}")
+    sys.exit(1)
+
+# Reset output directory for a clean run
+if os.path.exists(OUTPUT_DIR):
+    shutil.rmtree(OUTPUT_DIR)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 def run_test(command, description):
     print(f"Testing: {description}...")
-    cmd = [EXECUTABLE, command]
-    # If specific file needed, append it. The tool auto-detects, but consistent to be explicit if we knew the file.
-    # cmd.append(INPUT_FILE) 
+    cmd = [EXECUTABLE, command, "-i", INPUT_FILE, "-o", OUTPUT_DIR]
     
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
@@ -38,7 +47,7 @@ def run_test(command, description):
 # Check outputs
 def check_file(filename):
     # Simple existence check; contents are validated manually when needed
-    filepath = os.path.join("output", filename)
+    filepath = os.path.join(OUTPUT_DIR, filename)
     if os.path.exists(filepath):
         print(f"  [OK] Output file generated: {filepath}")
         return True
@@ -90,6 +99,10 @@ if run_test("test-dcmtk", "DCMTK Features"):
     require_file("dcmtk_preview.bmp")
     require_file("dcmtk_segmentation.dcm")
     require_file("dicomdir_media/DICOMDIR")
+    require_file("dcmtk_sr.dcm")
+    require_file("dcmtk_sr_summary.txt")
+    require_file("dcmtk_rtstruct.txt")
+    require_file("dcmtk_functional_groups.txt")
 else:
     tests_passed = False
 
@@ -108,6 +121,12 @@ if run_test("test-itk", "ITK Features"):
     require_file("itk_volume.nrrd")
     require_file("itk_volume.nii.gz")
     require_file("itk_connected_threshold.dcm")
+    require_file("itk_distance_map.nrrd")
+    require_file("itk_label_stats.txt")
+    require_file("itk_registered.nrrd")
+    require_file("itk_registration.txt")
+    require_file("itk_vector.nrrd")
+    require_file("itk_series.txt")
 else:
     tests_passed = False
 
@@ -124,6 +143,10 @@ if run_test("test-vtk", "VTK Features"):
     require_file("vtk_viewer_slice.png")
     require_file("vtk_metadata.txt")
     require_file("vtk_stats.txt")
+    require_file("vtk_volume_render.png")
+    require_file("vtk_mpr_sagittal.png")
+    require_file("vtk_overlay.png")
+    require_file("vtk_streaming.txt")
 else:
     tests_passed = False
 

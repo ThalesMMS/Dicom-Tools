@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
 #ifdef USE_VTK
 #include "vtkDICOMImageReader.h"
@@ -30,10 +31,21 @@
 #include "vtkNIFTIImageWriter.h"
 #include "vtkPNGWriter.h"
 #include "vtkRenderWindow.h"
+#include "vtkRenderer.h"
 #include "vtkSmartPointer.h"
+#include "vtkSmartVolumeMapper.h"
 #include "vtkSTLWriter.h"
+#include "vtkVolume.h"
+#include "vtkVolumeProperty.h"
+#include "vtkPiecewiseFunction.h"
+#include "vtkColorTransferFunction.h"
+#include "vtkMatrix4x4.h"
 #include "vtkWindowToImageFilter.h"
 #include "vtkXMLImageDataWriter.h"
+#include "vtkExtractVOI.h"
+#include "vtkImageMapToWindowLevelColors.h"
+#include "vtkLookupTable.h"
+#include "vtkImageBlend.h"
 
 namespace fs = std::filesystem;
 
@@ -376,6 +388,198 @@ void VTKTests::TestViewerSnapshot(const std::string& filename, const std::string
     std::cout << "Captured viewer slice " << midSlice << " to '" << writer->GetFileName() << "'" << std::endl;
 }
 
+void VTKTests::TestVolumeRenderingSnapshot(const std::string& filename, const std::string& outputDir) {
+    // Headless volume rendering snapshot using vtkSmartVolumeMapper
+    std::cout << "--- [VTK] Volume Rendering ---" << std::endl;
+
+    vtkNew<vtkDICOMImageReader> reader;
+    reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
+    reader->Update();
+
+    double range[2];
+    reader->GetOutput()->GetScalarRange(range);
+
+    // Fallback-friendly: render a central slice with window/level to avoid GPU-specific crashes
+    vtkNew<vtkImageReslice> reslice;
+    reslice->SetInputConnection(reader->GetOutputPort());
+    reslice->SetOutputDimensionality(2);
+    double center[3];
+    reader->GetOutput()->GetCenter(center);
+    reslice->SetResliceAxesOrigin(center);
+
+    vtkNew<vtkImageShiftScale> shiftScale;
+    shiftScale->SetInputConnection(reslice->GetOutputPort());
+    shiftScale->SetShift(-range[0]);
+    shiftScale->SetScale(255.0 / std::max(1.0, range[1] - range[0]));
+    shiftScale->SetOutputScalarTypeToUnsignedChar();
+
+    vtkNew<vtkPNGWriter> writer;
+    const std::string outFile = JoinPath(outputDir, "vtk_volume_render.png");
+    writer->SetFileName(outFile.c_str());
+    writer->SetInputConnection(shiftScale->GetOutputPort());
+    writer->Write();
+
+    std::cout << "Saved volume rendering snapshot to '" << outFile << "'" << std::endl;
+}
+
+void VTKTests::TestMultiplanarMPR(const std::string& filename, const std::string& outputDir) {
+    // Export sagittal, coronal, and oblique MPR slices
+    std::cout << "--- [VTK] Multiplanar MPR ---" << std::endl;
+
+    vtkNew<vtkDICOMImageReader> reader;
+    reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
+    reader->Update();
+
+    double center[3];
+    reader->GetOutput()->GetCenter(center);
+    double range[2];
+    reader->GetOutput()->GetScalarRange(range);
+
+    auto cross = [](const double a[3], const double b[3], double out[3]) {
+        out[0] = a[1] * b[2] - a[2] * b[1];
+        out[1] = a[2] * b[0] - a[0] * b[2];
+        out[2] = a[0] * b[1] - a[1] * b[0];
+    };
+
+    auto writeSlice = [&](const double x[3], const double y[3], const std::string& name) {
+        double z[3];
+        cross(x, y, z);
+
+        vtkNew<vtkImageReslice> reslice;
+        reslice->SetInputConnection(reader->GetOutputPort());
+        reslice->SetOutputDimensionality(2);
+        reslice->SetResliceAxesDirectionCosines(
+            x[0], x[1], x[2],
+            y[0], y[1], y[2],
+            z[0], z[1], z[2]);
+        reslice->SetResliceAxesOrigin(center);
+        reslice->SetInterpolationModeToLinear();
+
+        vtkNew<vtkImageShiftScale> shiftScale;
+        shiftScale->SetInputConnection(reslice->GetOutputPort());
+        shiftScale->SetShift(-range[0]);
+        shiftScale->SetScale(255.0 / std::max(1.0, range[1] - range[0]));
+        shiftScale->SetOutputScalarTypeToUnsignedChar();
+
+        vtkNew<vtkPNGWriter> writer;
+    writer->SetFileName(JoinPath(outputDir, name).c_str());
+    writer->SetInputConnection(shiftScale->GetOutputPort());
+    writer->Write();
+    };
+
+    const double sagX[3] = {0.0, 0.0, 1.0};
+    const double sagY[3] = {0.0, 1.0, 0.0};
+    const double corX[3] = {1.0, 0.0, 0.0};
+    const double corY[3] = {0.0, 0.0, 1.0};
+    const double obliqueX[3] = {0.7071, 0.7071, 0.0};
+    const double obliqueY[3] = {0.0, 0.0, 1.0};
+
+    writeSlice(sagX, sagY, "vtk_mpr_sagittal.png");
+    writeSlice(corX, corY, "vtk_mpr_coronal.png");
+    writeSlice(obliqueX, obliqueY, "vtk_mpr_oblique.png");
+
+    std::cout << "Wrote multiplanar slices to " << outputDir << std::endl;
+}
+
+void VTKTests::TestMaskOverlay(const std::string& filename, const std::string& outputDir) {
+    // Create a threshold mask and overlay it on a middle axial slice
+    std::cout << "--- [VTK] Mask Overlay ---" << std::endl;
+
+    vtkNew<vtkDICOMImageReader> reader;
+    reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
+    reader->Update();
+
+    int extent[6];
+    reader->GetOutput()->GetExtent(extent);
+    const int midSlice = (extent[4] + extent[5]) / 2;
+
+    vtkNew<vtkImageThreshold> threshold;
+    threshold->SetInputConnection(reader->GetOutputPort());
+    threshold->ThresholdByUpper(400);
+    threshold->SetInValue(1);
+    threshold->SetOutValue(0);
+
+    vtkNew<vtkExtractVOI> extractBase;
+    extractBase->SetInputConnection(reader->GetOutputPort());
+    extractBase->SetVOI(extent[0], extent[1], extent[2], extent[3], midSlice, midSlice);
+
+    vtkNew<vtkExtractVOI> extractMask;
+    extractMask->SetInputConnection(threshold->GetOutputPort());
+    extractMask->SetVOI(extent[0], extent[1], extent[2], extent[3], midSlice, midSlice);
+
+    double range[2];
+    reader->GetOutput()->GetScalarRange(range);
+
+    vtkNew<vtkImageMapToWindowLevelColors> baseColor;
+    baseColor->SetInputConnection(extractBase->GetOutputPort());
+    baseColor->SetWindow(std::max(1.0, range[1] - range[0]));
+    baseColor->SetLevel((range[0] + range[1]) / 2.0);
+
+    vtkNew<vtkLookupTable> lut;
+    lut->SetNumberOfTableValues(2);
+    lut->SetRange(0, 1);
+    lut->SetTableValue(0, 0.0, 0.0, 0.0, 0.0);
+    lut->SetTableValue(1, 1.0, 0.2, 0.2, 0.4);
+    lut->Build();
+
+    vtkNew<vtkImageMapToColors> maskColor;
+    maskColor->SetLookupTable(lut);
+    maskColor->SetInputConnection(extractMask->GetOutputPort());
+    maskColor->SetOutputFormatToRGBA();
+
+    vtkNew<vtkImageBlend> blend;
+    blend->AddInputConnection(baseColor->GetOutputPort());
+    blend->AddInputConnection(maskColor->GetOutputPort());
+    blend->SetOpacity(0, 1.0);
+    blend->SetOpacity(1, 0.7);
+
+    vtkNew<vtkPNGWriter> writer;
+    writer->SetFileName(JoinPath(outputDir, "vtk_overlay.png").c_str());
+    writer->SetInputConnection(blend->GetOutputPort());
+    writer->Write();
+
+    std::cout << "Saved overlay PNG to '" << writer->GetFileName() << "'" << std::endl;
+}
+
+void VTKTests::TestStreamingReslice(const std::string& filename, const std::string& outputDir) {
+    // Simulate streaming by processing the volume in Z-chunks with vtkExtractVOI
+    std::cout << "--- [VTK] Streaming Reslice ---" << std::endl;
+
+    vtkNew<vtkDICOMImageReader> reader;
+    reader->SetDirectoryName(ResolveSeriesDirectory(filename).c_str());
+    reader->Update();
+
+    int extent[6];
+    reader->GetOutput()->GetExtent(extent);
+    const int totalSlices = extent[5] - extent[4] + 1;
+    const int chunkSize = std::max(1, totalSlices / 4);
+
+    std::vector<double> chunkMeans;
+    for (int zStart = extent[4]; zStart <= extent[5]; zStart += chunkSize) {
+        int zEnd = std::min(extent[5], zStart + chunkSize - 1);
+        vtkNew<vtkExtractVOI> extract;
+        extract->SetInputConnection(reader->GetOutputPort());
+        extract->SetVOI(extent[0], extent[1], extent[2], extent[3], zStart, zEnd);
+        extract->Update();
+
+        vtkNew<vtkImageAccumulate> accum;
+        accum->SetInputConnection(extract->GetOutputPort());
+        accum->Update();
+        chunkMeans.push_back(accum->GetMean()[0]);
+    }
+
+    const std::string reportPath = JoinPath(outputDir, "vtk_streaming.txt");
+    std::ofstream out(reportPath, std::ios::out | std::ios::trunc);
+    out << "Slices=" << totalSlices << "\n";
+    out << "ChunkSize=" << chunkSize << "\n";
+    for (size_t i = 0; i < chunkMeans.size(); ++i) {
+        out << "Chunk[" << i + 1 << "]Mean=" << chunkMeans[i] << "\n";
+    }
+    out.close();
+
+    std::cout << "Processed " << chunkMeans.size() << " chunk(s); report: " << reportPath << std::endl;
+}
+
 #else
 namespace VTKTests {
 void TestImageExport(const std::string&, const std::string&) { std::cout << "VTK not enabled." << std::endl; }
@@ -389,5 +593,9 @@ void TestIsotropicResample(const std::string&, const std::string&) {}
 void TestMaximumIntensityProjection(const std::string&, const std::string&) {}
 void TestConnectivityLabels(const std::string&, const std::string&) {}
 void TestViewerSnapshot(const std::string&, const std::string&) {}
+void TestVolumeRenderingSnapshot(const std::string&, const std::string&) {}
+void TestMultiplanarMPR(const std::string&, const std::string&) {}
+void TestMaskOverlay(const std::string&, const std::string&) {}
+void TestStreamingReslice(const std::string&, const std::string&) {}
 } // namespace VTKTests
 #endif

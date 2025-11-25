@@ -50,6 +50,12 @@ void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
             TestBMPPreview(ctx.inputPath, ctx.outputDir);
             TestDICOMDIRGeneration(ctx.inputPath, ctx.outputDir);
             TestSegmentationExport(ctx.inputPath, ctx.outputDir);
+            TestNetworkEchoAndStore(ctx.inputPath, ctx.outputDir);
+            TestCharacterSetRoundTrip(ctx.outputDir);
+            TestSecondaryCapture(ctx.inputPath, ctx.outputDir);
+            TestStructuredReport(ctx.inputPath, ctx.outputDir);
+            TestRTStructRead(ctx.inputPath, ctx.outputDir);
+            TestFunctionalGroupRead(ctx.inputPath, ctx.outputDir);
             ValidateDicomFile(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
             return 0;
         }
@@ -171,6 +177,67 @@ void DCMTKTests::RegisterCommands(CommandRegistry& registry) {
         "Validate DICOM attributes and write validation report",
         [](const CommandContext& ctx) {
             return ValidateDicomFile(ctx.inputPath, ctx.outputDir, ctx.jsonOutput);
+        }
+    });
+
+    registry.Register({
+        "dcmtk:net",
+        "DCMTK",
+        "Run a local C-ECHO and C-STORE loopback against an in-process SCP",
+        [](const CommandContext& ctx) {
+            TestNetworkEchoAndStore(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "dcmtk:charset",
+        "DCMTK",
+        "Create a UTF-8 dataset and verify PN/LO round-trip without corruption",
+        [](const CommandContext& ctx) {
+            (void)ctx.inputPath;
+            TestCharacterSetRoundTrip(ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "dcmtk:secondary",
+        "DCMTK",
+        "Generate a Secondary Capture instance from scratch with synthetic pixels",
+        [](const CommandContext& ctx) {
+            TestSecondaryCapture(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "dcmtk:sr",
+        "DCMTK",
+        "Create and validate a simple Structured Report (NUM + TEXT)",
+        [](const CommandContext& ctx) {
+            TestStructuredReport(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "dcmtk:rt",
+        "DCMTK",
+        "Summarize RTSTRUCT ROIs and contour frames",
+        [](const CommandContext& ctx) {
+            TestRTStructRead(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "dcmtk:fg",
+        "DCMTK",
+        "Inspect multi-frame functional groups and export first frame preview",
+        [](const CommandContext& ctx) {
+            TestFunctionalGroupRead(ctx.inputPath, ctx.outputDir);
+            return 0;
         }
     });
 }

@@ -206,8 +206,11 @@ public final class DicomOperations {
     public static OperationResult echo(String host, int port, int timeoutMs, String callingAet, String calledAet) {
         Device device = new Device("dicomtools-echo");
         ApplicationEntity ae = new ApplicationEntity(callingAet);
+        ae.setAssociationInitiator(true);
+        ae.setAssociationAcceptor(false);
         Connection conn = new Connection();
         conn.setConnectTimeout(timeoutMs);
+        conn.setHostname("127.0.0.1");
         ae.addConnection(conn);
         device.addConnection(conn);
         device.addApplicationEntity(ae);
@@ -236,7 +239,6 @@ public final class DicomOperations {
             rsp.next();
             int status = rsp.getCommand().getInt(Tag.Status, -1);
             as.release();
-            as.waitForSocketClose();
             if (status == 0) {
                 return OperationResult.success("C-ECHO succeeded to " + host + ":" + port);
             }
@@ -249,7 +251,6 @@ public final class DicomOperations {
             if (as != null && as.isReadyForDataTransfer()) {
                 try {
                     as.release();
-                    as.waitForSocketClose();
                 } catch (Exception ignored) {
                 }
             }
@@ -319,7 +320,6 @@ public final class DicomOperations {
             case "big-endian", "be" -> UID.ExplicitVRBigEndian;
             case "deflated" -> UID.DeflatedExplicitVRLittleEndian;
             case "jpeg2000", "j2k" -> UID.JPEG2000Lossless;
-            case "jpegls", "jpeg-ls" -> UID.JPEGLSLossless;
             case "rle" -> UID.RLELossless;
             default -> UID.ExplicitVRLittleEndian;
         };

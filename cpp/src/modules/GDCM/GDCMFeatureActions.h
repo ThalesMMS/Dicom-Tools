@@ -23,4 +23,10 @@ namespace GDCMTests {
     void TestJPEGLSTranscode(const std::string& filename, const std::string& outputDir);
     void TestDirectoryScan(const std::string& path, const std::string& outputDir);
     void TestPreviewExport(const std::string& filename, const std::string& outputDir);
+    void TestSequenceEditing(const std::string& filename, const std::string& outputDir);
+    void TestDicomdirRead(const std::string& path, const std::string& outputDir);
+    void TestStringFilterCharsets(const std::string& filename, const std::string& outputDir);
+    void TestRTStructRead(const std::string& filename, const std::string& outputDir);
+    void TestJPEG2000Lossy(const std::string& filename, const std::string& outputDir);
+    void TestRLEPlanarConfiguration(const std::string& filename, const std::string& outputDir);
 }

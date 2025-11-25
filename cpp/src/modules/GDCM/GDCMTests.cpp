@@ -26,11 +26,17 @@ void GDCMTests::RegisterCommands(CommandRegistry& registry) {
             TestUIDRewrite(ctx.inputPath, ctx.outputDir);
             TestDatasetDump(ctx.inputPath, ctx.outputDir);
             TestJPEG2000Transcode(ctx.inputPath, ctx.outputDir);
+            TestJPEG2000Lossy(ctx.inputPath, ctx.outputDir);
             TestRLETranscode(ctx.inputPath, ctx.outputDir);
+            TestRLEPlanarConfiguration(ctx.inputPath, ctx.outputDir);
             TestJPEGLSTranscode(ctx.inputPath, ctx.outputDir);
             TestPixelStatistics(ctx.inputPath, ctx.outputDir);
             TestDirectoryScan(ctx.inputPath, ctx.outputDir);
             TestPreviewExport(ctx.inputPath, ctx.outputDir);
+            TestSequenceEditing(ctx.inputPath, ctx.outputDir);
+            TestDicomdirRead(ctx.inputPath, ctx.outputDir);
+            TestStringFilterCharsets(ctx.inputPath, ctx.outputDir);
+            TestRTStructRead(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });
@@ -61,6 +67,16 @@ void GDCMTests::RegisterCommands(CommandRegistry& registry) {
         "Transcode to JPEG2000 (lossless) to validate codec support",
         [](const CommandContext& ctx) {
             TestJPEG2000Transcode(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "gdcm:transcode-j2k-lossy",
+        "GDCM",
+        "Transcode to JPEG2000 (lossy) to exercise lossy path",
+        [](const CommandContext& ctx) {
+            TestJPEG2000Lossy(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });
@@ -106,6 +122,16 @@ void GDCMTests::RegisterCommands(CommandRegistry& registry) {
     });
 
     registry.Register({
+        "gdcm:transcode-rle-planar",
+        "GDCM",
+        "Transcode to RLE Lossless with planar configuration for RGB data",
+        [](const CommandContext& ctx) {
+            TestRLEPlanarConfiguration(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
         "gdcm:stats",
         "GDCM",
         "Compute min/max/mean pixel stats and write to text",
@@ -131,6 +157,46 @@ void GDCMTests::RegisterCommands(CommandRegistry& registry) {
         "Export an 8-bit PGM preview from the first slice",
         [](const CommandContext& ctx) {
             TestPreviewExport(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "gdcm:sequence",
+        "GDCM",
+        "Create/modify ReferencedSeriesSequence with nested items",
+        [](const CommandContext& ctx) {
+            TestSequenceEditing(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "gdcm:dicomdir",
+        "GDCM",
+        "Read a DICOMDIR and emit a summary of its records",
+        [](const CommandContext& ctx) {
+            TestDicomdirRead(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "gdcm:charset",
+        "GDCM",
+        "Round-trip PN/LO with StringFilter under non-default SpecificCharacterSet",
+        [](const CommandContext& ctx) {
+            TestStringFilterCharsets(ctx.inputPath, ctx.outputDir);
+            return 0;
+        }
+    });
+
+    registry.Register({
+        "gdcm:rt",
+        "GDCM",
+        "Summarize RTSTRUCT/SEG ROI names and contour frames",
+        [](const CommandContext& ctx) {
+            TestRTStructRead(ctx.inputPath, ctx.outputDir);
             return 0;
         }
     });

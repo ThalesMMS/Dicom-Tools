@@ -11,9 +11,9 @@ use std::path::Path;
 use anyhow::{Context, Result};
 use dicom::object::open_file;
 use dicom::pixeldata::PixelDecoder;
-use dicom_pixeldata::{ConvertOptions, DecodedPixelData, ModalityLutOption};
+use dicom_pixeldata::{ConvertOptions, DecodedPixelData, ModalityLutOption, Rescale, WindowLevel};
 
-use crate::models::{PixelFormatSummary, PixelHistogram, PixelStatistics};
+use crate::models::{FrameVoi, PixelFormatSummary, PixelHistogram, PixelStatistics};
 
 /// Calculate and print basic statistics of the pixel data.
 pub fn stats(input: &Path) -> Result<()> {
@@ -157,14 +157,17 @@ pub fn pixel_format_for_file(input: &Path) -> Result<PixelFormatSummary> {
 }
 
 pub fn pixel_format_from_decoded(decoded: &DecodedPixelData) -> Result<PixelFormatSummary> {
-    let rescale = decoded.rescale()?.first().cloned();
-    let window = decoded.window()?.and_then(|w| w.first()).cloned();
+    let rescale_all = decoded.rescale()?.to_vec();
+    let window_all = decoded.window()?.map(|w| w.to_vec());
+    let rescale = rescale_all.first().cloned();
+    let window = window_all.as_ref().and_then(|w| w.first()).cloned();
     let pi = decoded.photometric_interpretation();
     let planar_config = if decoded.samples_per_pixel() > 1 {
         Some(decoded.planar_configuration())
     } else {
         None
     };
+    let per_frame_voi = build_per_frame_voi(decoded, &rescale_all, window_all.as_deref());
 
     Ok(PixelFormatSummary {
         rows: decoded.rows(),
@@ -181,7 +184,49 @@ pub fn pixel_format_from_decoded(decoded: &DecodedPixelData) -> Result<PixelForm
         rescale_intercept: rescale.map(|r| r.intercept),
         window_center: window.map(|w| w.center),
         window_width: window.map(|w| w.width),
+        per_frame_voi,
     })
+}
+
+fn build_per_frame_voi(
+    decoded: &DecodedPixelData,
+    rescales: &[Rescale],
+    windows: Option<&[WindowLevel]>,
+) -> Option<Vec<FrameVoi>> {
+    let frame_count = decoded.number_of_frames() as usize;
+    let has_multiple_frames = frame_count > 1;
+    let varying_rescale = rescales.len() > 1;
+    let varying_window = windows.map(|w| w.len() > 1).unwrap_or(false);
+
+    if !has_multiple_frames && !varying_rescale && !varying_window {
+        return None;
+    }
+
+    let mut per_frame = Vec::with_capacity(frame_count.max(1));
+    for idx in 0..frame_count {
+        let rescale = rescales
+            .get(idx)
+            .or_else(|| rescales.first())
+            .copied()
+            .unwrap_or(Rescale {
+                intercept: 0.0,
+                slope: 1.0,
+            });
+
+        let window = windows
+            .and_then(|w| w.get(idx).or_else(|| w.first()))
+            .copied();
+
+        per_frame.push(FrameVoi {
+            frame_index: idx as u32,
+            window_center: window.map(|w| w.center),
+            window_width: window.map(|w| w.width),
+            rescale_slope: Some(rescale.slope),
+            rescale_intercept: Some(rescale.intercept),
+        });
+    }
+
+    Some(per_frame)
 }
 
 fn pixel_values(decoded: &DecodedPixelData) -> Result<(Vec<f32>, Vec<usize>)> {

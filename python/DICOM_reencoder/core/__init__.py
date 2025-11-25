@@ -13,7 +13,14 @@ can rely on the same implementations.
 """
 
 from .datasets import ensure_pixel_data, load_dataset, save_dataset
-from .factories import build_synthetic_series
+from .factories import (
+    build_basic_text_sr,
+    build_multiframe_dataset,
+    build_nested_sequence_dataset,
+    build_segmentation,
+    build_secondary_capture,
+    build_synthetic_series,
+)
 from .images import calculate_statistics, frame_to_png_bytes, get_frame, window_frame
 from .metadata import summarize_metadata
 from .network import VerificationServer, send_c_echo
@@ -24,6 +31,10 @@ __all__ = [
     "load_dataset",
     "save_dataset",
     "build_synthetic_series",
+    "build_multiframe_dataset",
+    "build_nested_sequence_dataset",
+    "build_secondary_capture",
+    "build_basic_text_sr",
     "calculate_statistics",
     "frame_to_png_bytes",
     "get_frame",

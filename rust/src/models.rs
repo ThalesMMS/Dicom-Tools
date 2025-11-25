@@ -42,6 +42,14 @@ pub struct ValidationSummary {
     pub has_pixel_data: bool,
 }
 
+/// Minimal representation of a C-FIND match.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FindMatch {
+    pub status: u16,
+    pub patient_name: Option<String>,
+    pub study_instance_uid: Option<String>,
+}
+
 /// Aggregate statistics over pixel values.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PixelStatistics {
@@ -62,6 +70,27 @@ pub struct PixelHistogram {
     pub max: f32,
 }
 
+/// Per-frame VOI/LUT information, capturing rescale and window hints.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FrameVoi {
+    pub frame_index: u32,
+    pub window_center: Option<f64>,
+    pub window_width: Option<f64>,
+    pub rescale_slope: Option<f64>,
+    pub rescale_intercept: Option<f64>,
+}
+
+/// Spatial metadata for a single frame reconstructed from functional groups.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct FrameGeometry {
+    pub frame_index: u32,
+    pub image_position_patient: [f64; 3],
+    pub image_orientation_patient: [f64; 6],
+    pub pixel_spacing: [f64; 2],
+    pub slice_vector: [f64; 3],
+    pub affine: [[f64; 4]; 4],
+}
+
 /// Summary of pixel encoding and VOI/LUT hints.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PixelFormatSummary {
@@ -79,6 +108,7 @@ pub struct PixelFormatSummary {
     pub rescale_intercept: Option<f64>,
     pub window_center: Option<f64>,
     pub window_width: Option<f64>,
+    pub per_frame_voi: Option<Vec<FrameVoi>>,
 }
 
 /// Composite structure used by the `info` command when emitting JSON.

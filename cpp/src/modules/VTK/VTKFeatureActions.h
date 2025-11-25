@@ -23,4 +23,8 @@ namespace VTKTests {
     void TestMaximumIntensityProjection(const std::string& filename, const std::string& outputDir);
     void TestConnectivityLabels(const std::string& filename, const std::string& outputDir);
     void TestViewerSnapshot(const std::string& filename, const std::string& outputDir);
+    void TestVolumeRenderingSnapshot(const std::string& filename, const std::string& outputDir);
+    void TestMultiplanarMPR(const std::string& filename, const std::string& outputDir);
+    void TestMaskOverlay(const std::string& filename, const std::string& outputDir);
+    void TestStreamingReslice(const std::string& filename, const std::string& outputDir);
 }

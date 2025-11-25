@@ -36,3 +36,47 @@ echo '{"backend":"rust","op":"dump","input":"file.dcm"}' | python -m interface.c
 
 ## Contrato
 O formato de requisição/resposta e o mapeamento mínimo de operações estão em `CONTRACT.md`.
+
+## Arquitetura reativa da UI
+- Event bus + Command pattern (`interface/input/event_bus.py`) mantêm UI e engine desacoplados.
+- `ToolManager` centraliza ferramentas (scroll/zoom/pan/WL/ROI/overlay/MPR) e gera `frame_requested` para o render loop.
+- `RenderLoop` (`interface/components/render_loop.py`) consome os requests e emite `frame_ready` assim que o core terminar.
+- Viewers (`TwoDViewer`, `MPRViewer`, `VolumeViewer`) só reagem a `frame_ready` e renderizam overlays via `OverlayManager`.
+- Pipeline alvo: `UI Input → Command → Core → Frame → Viewer → UI`.
+
+Para uso headless/testável:
+```python
+from interface.runtime import InterfaceRuntime
+from interface.state.frames import Frame
+
+class DummyEngine:
+    def render(self, request):
+        return Frame(viewer=request.viewer, slice_index=request.slice_index, width=256, height=256)
+
+runtime = InterfaceRuntime.create(DummyEngine())
+runtime.inputs.scroll("2d", 1)
+```
+
+## Eventos/inputs padronizados
+Todos os viewers compartilham os mesmos comandos: `onScroll`, `onZoom`, `onPan`, `onWindowLevel`, `onChangeSeries`, `onToggleOverlay`, `onSelectROI`, `onDrag`, `onRebuildMPR`. Os adapters em `interface/input/adapters.py` cuidam do mapeamento de mouse/teclado/gestos para esses comandos.
+
+## Overlays
+`OverlayManager` (`interface/overlays/manager.py`) concentra WL/WW, índice da imagem, localização, espessura, timestamp, nome da série, ferramenta ativa e marcadores de orientação. A UI só chama `overlay.render(context, state)`.
+
+## Estrutura da pasta
+- `components/`: viewers reativos + render loop.
+- `input/`: event bus, controller unificado, adapters 2D/MPR/Volume, `ToolManager`.
+- `overlays/`: `OverlayManager` e overlays padrão.
+- `state/`: `UIState`, `ViewerState`, `FrameRequest/Frame`.
+- `utils/`: helpers de geometria (pan/zoom/transform).
+
+## Convenções de coordenadas
+- Pan/zoom operam em coordenadas de canvas (origem no canto superior esquerdo).
+- `window_center/window_width` seguem valores numéricos do frame (sem acoplamento a toolkit gráfico).
+- Transformações 2D mantêm matriz 3x3 (translate/scale) em `ViewerState`.
+
+## Testes
+```bash
+python3 -m pytest interface/tests
+```
+Cobertura inclui runner do contrato e interações de UI (scroll, zoom, pan, WL, overlays, troca de viewer, rebuild MPR).
