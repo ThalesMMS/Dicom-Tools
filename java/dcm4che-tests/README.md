@@ -23,5 +23,6 @@ Small CLI/test harness around dcm4che for DICOM operations.
 - Run fast unit slice: `mvn -q -Dtest=DicomOperationsTest,DicomWebOperationsTest test`
 - DIMSE integration checks (local echo/store/find/move/stg cmt): `mvn -q -Dtest=DimseExpandedTest test`
   - `cgetStoresLocally` is currently `@Disabled` due to flaky in-process C-GET handshakes.
+- CLI parsing/integration sanity: `mvn -q -Dtest=DicomToolsCliIntegrationTest test`
 
 Logs are verbose because dcm4che networking uses INFO by default; set `-Dorg.slf4j.simpleLogger.defaultLogLevel=error` to reduce noise when running tests.***
