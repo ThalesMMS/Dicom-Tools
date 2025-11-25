@@ -104,7 +104,8 @@ public class QueryRetrieveTests
         request.OnResponseReceived += (_, response) => responses.Add(response);
 
         await client.AddRequestAsync(request);
-        await client.SendAsync();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await client.SendAsync(cts.Token);
         return responses;
     }
 }

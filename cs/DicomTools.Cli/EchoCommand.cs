@@ -1,6 +1,7 @@
 using FellowOakDicom;
 using FellowOakDicom.Network;
 using FellowOakDicom.Network.Client;
+using System.Threading;
 
 namespace DicomTools.Cli;
 
@@ -18,7 +19,14 @@ internal static class EchoCommand
         request.OnResponseReceived += (_, response) => status = response.Status;
 
         await client.AddRequestAsync(request);
-        await client.SendAsync();
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var sendTask = client.SendAsync(cts.Token);
+        var completed = await Task.WhenAny(sendTask, Task.Delay(TimeSpan.FromSeconds(5), cts.Token));
+        if (completed != sendTask)
+        {
+            return Fail($"echo to {host}:{port} timed out");
+        }
 
         if (status == DicomStatus.Success)
         {
@@ -26,7 +34,12 @@ internal static class EchoCommand
             return 0;
         }
 
-        Console.Error.WriteLine($"echo to {host}:{port} failed ({status?.Description ?? "no response"})");
+        return Fail($"echo to {host}:{port} failed ({status?.Description ?? "no response"})");
+    }
+
+    private static int Fail(string message)
+    {
+        Console.Error.WriteLine(message);
         return 1;
     }
 }

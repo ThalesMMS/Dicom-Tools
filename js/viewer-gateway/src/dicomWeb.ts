@@ -1,4 +1,4 @@
-import { DICOMwebClient } from 'dicomweb-client';
+import { api as dicomwebApi } from 'dicomweb-client';
 
 export type DicomWebConfig = {
   baseUrl: string;
@@ -43,7 +43,8 @@ export function parseQidoInstances(instances: QidoInstance[]): ParsedInstance[] 
 }
 
 export async function fetchDicomWebImageIds(config: DicomWebConfig) {
-  const client = new (DICOMwebClient as any)({ url: normalizeBaseUrl(config.baseUrl) });
+  const ctor = (dicomwebApi as any).DICOMwebClient;
+  const client = new ctor({ url: normalizeBaseUrl(config.baseUrl) });
   const instances = await client.searchForInstances({
     studyInstanceUID: config.studyInstanceUID,
     seriesInstanceUID: config.seriesInstanceUID,

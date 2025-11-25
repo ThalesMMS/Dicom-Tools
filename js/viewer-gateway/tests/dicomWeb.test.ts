@@ -6,11 +6,12 @@ beforeEach(() => {
   searchForInstances.mockReset();
 });
 
-vi.mock('dicomweb-client', () => ({
-  DICOMwebClient: vi.fn().mockImplementation(() => ({
+vi.mock('dicomweb-client', () => {
+  const ctor = vi.fn().mockImplementation(() => ({
     searchForInstances,
-  })),
-}));
+  }));
+  return { api: { DICOMwebClient: ctor } };
+});
 
 import { buildWadorsImageId, fetchDicomWebImageIds, parseQidoInstances } from '../src/dicomWeb';
 

@@ -37,6 +37,8 @@ jobs:
 
   dotnet:
     runs-on: ubuntu-latest
+    env:
+      DOTNET_ROLL_FORWARD: Major
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -45,7 +47,7 @@ jobs:
       - name: Restore & test (net8)
         run: |
           cd cs
-          dotnet test DicomTools.Tests/DicomTools.Tests.csproj -p:TargetFramework=net8.0
+          dotnet test DicomTools.Tests/DicomTools.Tests.csproj -p:TargetFramework=net8.0 --blame-hang-timeout 2m --blame-hang-dump-type none
 
   java:
     runs-on: ubuntu-latest

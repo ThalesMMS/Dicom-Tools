@@ -66,6 +66,8 @@ def test_cli_echo_uses_send(monkeypatch, capsys):
 
 
 def test_cli_volume_builds_files(tmp_path, capsys):
+    pytest.importorskip("dicom_numpy")
+
     series_dir = tmp_path / "series"
     paths = build_synthetic_series(series_dir)
 

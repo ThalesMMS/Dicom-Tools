@@ -28,7 +28,8 @@ public class DicomNetworkStoreTests
         request.OnResponseReceived += (_, response) => status = response.Status;
 
         await client.AddRequestAsync(request);
-        await client.SendAsync();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await client.SendAsync(cts.Token);
 
         Assert.Equal(DicomStatus.Success, status);
         Assert.NotEmpty(InMemoryStoreScp.StoredFiles);
@@ -64,7 +65,8 @@ public class DicomNetworkStoreTests
             await client.AddRequestAsync(new DicomCStoreRequest(file));
         }
 
-        await client.SendAsync();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await client.SendAsync(cts.Token);
 
         var storedUids = InMemoryStoreScp.StoredFiles
             .Select(f => f.Dataset.GetSingleValue<string>(DicomTag.SOPInstanceUID))

@@ -41,7 +41,8 @@ public class WorklistTests
 
         var client = DicomClientFactory.Create("127.0.0.1", port, useTls: false, callingAe: "SCU", calledAe: "MWL");
         await client.AddRequestAsync(request);
-        await client.SendAsync();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        await client.SendAsync(cts.Token);
 
         Assert.Contains(responses, r => r.Status == DicomStatus.Pending);
         Assert.Contains(responses, r => r.Status == DicomStatus.Success);

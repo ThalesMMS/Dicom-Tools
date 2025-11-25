@@ -51,7 +51,8 @@ public class DicomWebIntegrationTests
 
         var client = DicomClientFactory.Create("127.0.0.1", movePort, useTls: false, callingAe: "SCU", calledAe: "QR");
         await client.AddRequestAsync(moveRequest);
-        await client.SendAsync();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        await client.SendAsync(cts.Token);
 
         if (moveResponses.Any(r => r.Status == DicomStatus.ProcessingFailure))
         {

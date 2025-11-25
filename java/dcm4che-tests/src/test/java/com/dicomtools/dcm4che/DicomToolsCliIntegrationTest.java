@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @Timeout(30)
+@org.junit.jupiter.api.Tag("integration")
 class DicomToolsCliIntegrationTest {
     private static final Path SAMPLE_DICOM = Paths.get("..", "..", "sample_series", "IM-0001-0001.dcm")
             .toAbsolutePath().normalize();
