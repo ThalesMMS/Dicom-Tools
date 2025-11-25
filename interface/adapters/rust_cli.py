@@ -13,6 +13,8 @@ class RustCliAdapter:
         self.cwd = self.root / "rust"
         default_bin = os.environ.get("RUST_DICOM_TOOLS_BIN", str(self.cwd / "target" / "release" / "dicom-tools"))
         bin_path = Path(default_bin)
+        if not bin_path.is_absolute():
+            bin_path = (self.root / bin_path).resolve()
         if bin_path.exists():
             self.base_cmd: List[str] = [str(bin_path)]
         else:

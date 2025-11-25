@@ -11,7 +11,10 @@ class CppCliAdapter:
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
         default_bin = os.environ.get("CPP_DICOM_TOOLS_BIN", str(self.root / "cpp" / "build" / "DicomTools"))
-        self.base_cmd: List[str] = [default_bin]
+        bin_path = Path(default_bin)
+        if not bin_path.is_absolute():
+            bin_path = (self.root / bin_path).resolve()
+        self.base_cmd: List[str] = [str(bin_path)]
 
     def handle(self, request: Dict[str, Any]) -> RunResult:
         op = request.get("op")

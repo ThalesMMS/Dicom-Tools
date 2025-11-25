@@ -95,7 +95,8 @@ def _js_cli_exists():
 @pytest.mark.skipif(not _has_node() or not _js_cli_exists(), reason="JS CLI not available")
 def test_js_info_json():
     cmd = RUNNER + ["--backend", "js", "--op", "info", "--input", str(SAMPLE)]
-    env = dict(**os.environ, JS_DICOM_TOOLS_CMD="node js/contract-cli/index.js")
+    env = os.environ.copy()
+    env["JS_DICOM_TOOLS_CMD"] = "node js/contract-cli/index.js"
     result = subprocess.run(cmd, cwd=ROOT, env=env, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
     payload = json.loads(result.stdout)

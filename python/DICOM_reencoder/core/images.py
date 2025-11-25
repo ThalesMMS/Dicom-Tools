@@ -79,7 +79,7 @@ def _derive_window(dataset: Dataset, frame: np.ndarray) -> tuple[int, int]:
 def window_frame(dataset: Dataset, frame_index: int = 0, *, window_center: Optional[int] = None,
                  window_width: Optional[int] = None) -> np.ndarray:
     """Apply windowing and return an 8-bit image suitable for PNG export."""
-    frame = get_frame(dataset, frame_index)
+    frame = get_frame(dataset, frame_index).astype(np.int32, copy=False)
     center, width = window_center, window_width
     if center is None or width is None:
         # If no manual window is supplied, derive one from tags or pixel statistics

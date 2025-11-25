@@ -29,7 +29,7 @@ DEFAULTS = {
         "info": {"input": DEFAULT_FILE, "options": {"json": True}},
         "anonymize": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_python_anon.dcm"},
         "to_image": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_python.png", "options": {"format": "png", "frame": 0}},
-        "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_python_j2k.dcm", "options": {"syntax": "1.2.840.10008.1.2.4.90"}},
+        "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_python_explicit.dcm", "options": {"syntax": "explicit"}},
         "validate": {"input": DEFAULT_FILE},
         "stats": {"input": DEFAULT_FILE, "options": {"bins": 16}},
         "dump": {"input": DEFAULT_FILE, "options": {"max_value_len": 64}},
@@ -163,13 +163,22 @@ class TkApp:
         frm.rowconfigure(6, weight=1)
 
     def _browse_input(self) -> None:
-        path = filedialog.askopenfilename()
+        op = self.operation.get()
+        if op in {"volume", "nifti"}:
+            path = filedialog.askdirectory()
+        else:
+            path = filedialog.askopenfilename()
         if path:
             self.input_entry.delete(0, tk.END)
             self.input_entry.insert(0, path)
 
     def _browse_output(self) -> None:
-        path = filedialog.asksaveasfilename()
+        op = self.operation.get()
+        if op in {"volume", "nifti"}:
+            path = filedialog.asksaveasfilename()
+        else:
+            # Allow choosing a directory; we'll infer filenames if only a folder is provided.
+            path = filedialog.asksaveasfilename()
         if path:
             self.output_entry.delete(0, tk.END)
             self.output_entry.insert(0, path)
@@ -184,6 +193,26 @@ class TkApp:
     def _require_input(self, op: str) -> bool:
         # echo não precisa de input; os demais sim (arquivo ou diretório)
         return op not in {"echo"}
+
+    def _normalize_output(self, op: str, input_path: str, output_path: str | None) -> str | None:
+        """If the user selected a directory, infer a file name based on op and input."""
+        if not output_path:
+            return None
+        out = Path(output_path)
+        if out.is_dir():
+            stem = Path(input_path).stem or "output"
+            if op == "to_image":
+                return str(out / f"{stem}.png")
+            if op == "anonymize":
+                return str(out / f"{stem}_anon.dcm")
+            if op == "transcode":
+                return str(out / f"{stem}_transcoded.dcm")
+            if op == "volume":
+                return str(out / f"{stem}_volume.npy")
+            if op == "nifti":
+                return str(out / f"{stem}_volume.nii.gz")
+            return str(out / stem)
+        return str(out)
 
     def _parse_options(self) -> dict:
         text = self.options_text.get("1.0", tk.END).strip()
@@ -220,7 +249,7 @@ class TkApp:
             "backend": backend,
             "op": op,
             "input": input_path,
-            "output": output_path,
+            "output": self._normalize_output(op, input_path, output_path),
             "options": options,
         }
 
@@ -286,7 +315,7 @@ class TkApp:
                 "backend": backend,
                 "op": op,
                 "input": input_path,
-                "output": str(output_path) if output_path else None,
+                "output": self._normalize_output(op, input_path, str(output_path) if output_path else None),
                 "options": options,
             }
 

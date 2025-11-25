@@ -64,7 +64,7 @@ class PythonCliAdapter:
 
         if op == "validate":
             # Usa script dedicado, pois não existe subcomando em cli.py
-            return ["python", "-m", "DICOM_reencoder.validate_dicom", input_path]
+            return [sys.executable, "-m", "DICOM_reencoder.validate_dicom", input_path]
 
         if op == "echo":
             host = options.get("host", "127.0.0.1")
@@ -108,6 +108,9 @@ class PythonCliAdapter:
 
         if op == "stats":
             return [*self.base_cmd, "stats", input_path]
+
+        if op == "dump":
+            return [*self.base_cmd, "dump", input_path]
 
         return None
 
