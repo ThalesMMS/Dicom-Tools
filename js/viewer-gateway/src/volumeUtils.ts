@@ -92,6 +92,152 @@ export function computeMIP(volume: VolumeData): Slice2D {
   return { width: cols, height: rows, data };
 }
 
+export function computeMinIP(volume: VolumeData): Slice2D {
+  const { rows, cols, slices, voxelData } = volume;
+  const data = new Float32Array(rows * cols);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let min = Infinity;
+      for (let s = 0; s < slices; s++) {
+        const value = voxelData[s * rows * cols + r * cols + c];
+        if (value < min) min = value;
+      }
+      data[r * cols + c] = min;
+    }
+  }
+  return { width: cols, height: rows, data };
+}
+
+export function computeAIP(volume: VolumeData): Slice2D {
+  const { rows, cols, slices, voxelData } = volume;
+  const data = new Float32Array(rows * cols);
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      let sum = 0;
+      for (let s = 0; s < slices; s++) {
+        sum += voxelData[s * rows * cols + r * cols + c];
+      }
+      data[r * cols + c] = sum / slices;
+    }
+  }
+  return { width: cols, height: rows, data };
+}
+
+export type HistogramResult = {
+  bins: Float32Array;
+  binEdges: Float32Array;
+  min: number;
+  max: number;
+  binWidth: number;
+};
+
+export function computeHistogram(volume: VolumeData, numBins = 256): HistogramResult {
+  const { voxelData } = volume;
+  let min = Infinity;
+  let max = -Infinity;
+
+  for (let i = 0; i < voxelData.length; i++) {
+    const v = voxelData[i];
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+
+  const range = max - min || 1;
+  const binWidth = range / numBins;
+  const bins = new Float32Array(numBins);
+  const binEdges = new Float32Array(numBins + 1);
+
+  for (let i = 0; i <= numBins; i++) {
+    binEdges[i] = min + i * binWidth;
+  }
+
+  for (let i = 0; i < voxelData.length; i++) {
+    const idx = Math.min(Math.floor((voxelData[i] - min) / binWidth), numBins - 1);
+    bins[idx]++;
+  }
+
+  return { bins, binEdges, min, max, binWidth };
+}
+
+export function applyWindowLevel(value: number, center: number, width: number): number {
+  const lower = center - width / 2;
+  const upper = center + width / 2;
+  if (value <= lower) return 0;
+  if (value >= upper) return 255;
+  return Math.round(((value - lower) / width) * 255);
+}
+
+export function windowLevelSlice(slice: Slice2D, center: number, width: number): Slice2D<Uint8Array> {
+  const output = new Uint8Array(slice.data.length);
+  for (let i = 0; i < slice.data.length; i++) {
+    output[i] = applyWindowLevel(slice.data[i], center, width);
+  }
+  return { width: slice.width, height: slice.height, data: output };
+}
+
+export type CameraState = {
+  zoom: number;
+  panX: number;
+  panY: number;
+  rotation: number; // degrees
+};
+
+export function computeZoomedCrop(
+  slice: Slice2D,
+  camera: CameraState,
+): { startRow: number; startCol: number; viewWidth: number; viewHeight: number } {
+  const viewWidth = Math.round(slice.width / camera.zoom);
+  const viewHeight = Math.round(slice.height / camera.zoom);
+  const centerCol = slice.width / 2 + camera.panX;
+  const centerRow = slice.height / 2 + camera.panY;
+  const startCol = Math.max(0, Math.round(centerCol - viewWidth / 2));
+  const startRow = Math.max(0, Math.round(centerRow - viewHeight / 2));
+  return { startRow, startCol, viewWidth, viewHeight };
+}
+
+export function resampleSlice(
+  slice: Slice2D,
+  targetWidth: number,
+  targetHeight: number,
+  interpolation: 'nearest' | 'bilinear' = 'nearest',
+): Slice2D {
+  const data = new Float32Array(targetWidth * targetHeight);
+  const scaleX = slice.width / targetWidth;
+  const scaleY = slice.height / targetHeight;
+
+  for (let y = 0; y < targetHeight; y++) {
+    for (let x = 0; x < targetWidth; x++) {
+      const srcX = x * scaleX;
+      const srcY = y * scaleY;
+
+      if (interpolation === 'nearest') {
+        const sx = Math.min(Math.round(srcX), slice.width - 1);
+        const sy = Math.min(Math.round(srcY), slice.height - 1);
+        data[y * targetWidth + x] = slice.data[sy * slice.width + sx];
+      } else {
+        // Bilinear interpolation
+        const x0 = Math.floor(srcX);
+        const y0 = Math.floor(srcY);
+        const x1 = Math.min(x0 + 1, slice.width - 1);
+        const y1 = Math.min(y0 + 1, slice.height - 1);
+        const xFrac = srcX - x0;
+        const yFrac = srcY - y0;
+
+        const v00 = slice.data[y0 * slice.width + x0];
+        const v10 = slice.data[y0 * slice.width + x1];
+        const v01 = slice.data[y1 * slice.width + x0];
+        const v11 = slice.data[y1 * slice.width + x1];
+
+        const top = v00 * (1 - xFrac) + v10 * xFrac;
+        const bottom = v01 * (1 - xFrac) + v11 * xFrac;
+        data[y * targetWidth + x] = top * (1 - yFrac) + bottom * yFrac;
+      }
+    }
+  }
+
+  return { width: targetWidth, height: targetHeight, data };
+}
+
 function crossProduct(a: PhysicalPoint, b: PhysicalPoint): PhysicalPoint {
   return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
 }

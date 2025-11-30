@@ -1,0 +1,19 @@
+{
+  "name": "contract-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.6",
+    "@vitest/coverage-v8": "^1.6.1",
+    "typescript": "^5.6.3",
+    "vitest": "^1.2.2"
+  }
+}
+
