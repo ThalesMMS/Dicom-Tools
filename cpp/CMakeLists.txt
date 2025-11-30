@@ -160,4 +160,62 @@ if(BUILD_TESTING)
     else()
         message(WARNING "Python3 not found; skipping cpp_run_all ctest")
     endif()
+
+    # --- C++ Unit Tests ---
+    
+    # GDCM Tests
+    add_executable(test_gdcm tests/test_gdcm.cpp)
+    target_include_directories(test_gdcm PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    if(GDCM_FOUND)
+        target_compile_definitions(test_gdcm PRIVATE USE_GDCM)
+        if(GDCM_INCLUDE_DIRS)
+            target_include_directories(test_gdcm PRIVATE ${GDCM_INCLUDE_DIRS})
+        else()
+            include(${GDCM_USE_FILE})
+        endif()
+        target_link_libraries(test_gdcm PRIVATE ${GDCM_LIBRARIES})
+    endif()
+    add_test(NAME GDCM_Tests COMMAND test_gdcm WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # DCMTK Tests
+    add_executable(test_dcmtk tests/test_dcmtk.cpp)
+    target_include_directories(test_dcmtk PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    if(DCMTK_FOUND)
+        target_compile_definitions(test_dcmtk PRIVATE USE_DCMTK)
+        target_include_directories(test_dcmtk PRIVATE ${DCMTK_INCLUDE_DIRS})
+        if(APPLE AND EXISTS "/opt/homebrew/lib")
+            target_link_directories(test_dcmtk PRIVATE "/opt/homebrew/lib")
+        endif()
+        target_link_libraries(test_dcmtk PRIVATE ${DCMTK_LIBRARIES})
+    endif()
+    add_test(NAME DCMTK_Tests COMMAND test_dcmtk WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # ITK Tests
+    add_executable(test_itk tests/test_itk.cpp)
+    target_include_directories(test_itk PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    if(ITK_FOUND)
+        target_compile_definitions(test_itk PRIVATE USE_ITK)
+        target_link_libraries(test_itk PRIVATE ${ITK_LIBRARIES})
+    endif()
+    add_test(NAME ITK_Tests COMMAND test_itk WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # VTK Tests
+    add_executable(test_vtk tests/test_vtk.cpp)
+    target_include_directories(test_vtk PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    if(VTK_FOUND)
+        target_compile_definitions(test_vtk PRIVATE USE_VTK)
+        target_link_libraries(test_vtk PRIVATE ${VTK_LIBRARIES})
+    endif()
+    add_test(NAME VTK_Tests COMMAND test_vtk WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # Combined test runner
+    add_custom_target(run_cpp_tests
+        COMMAND $<TARGET_FILE:test_gdcm>
+        COMMAND $<TARGET_FILE:test_dcmtk>
+        COMMAND $<TARGET_FILE:test_itk>
+        COMMAND $<TARGET_FILE:test_vtk>
+        DEPENDS test_gdcm test_dcmtk test_itk test_vtk
+        COMMENT "Running all C++ library tests"
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    )
 endif()
