@@ -15,7 +15,25 @@ OUTPUT_DIR = ROOT_DIR / "output"
 
 # Supported ops per backend (canonical set from the contract)
 BACKEND_OPS = {
-    "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo"],
+    "python": [
+        "info",
+        "anonymize",
+        "to_image",
+        "transcode",
+        "validate",
+        "stats",
+        "dump",
+        "volume",
+        "nifti",
+        "echo",
+        # New Python utilities
+        "split_multiframe",
+        "batch_list",
+        "batch_decompress",
+        "batch_anonymize",
+        "batch_convert",
+        "batch_validate",
+    ],
     "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "histogram", "echo", "to_json", "from_json"],
     "cpp": [
         "info",
@@ -137,6 +155,8 @@ BACKEND_LIBRARIES = {
         "simpleitk": ["volume", "nifti"],
         "dicom-numpy": ["volume"],
         "pynetdicom": ["echo"],
+        "pydicom": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "split_multiframe"],
+        "batch": ["batch_list", "batch_decompress", "batch_anonymize", "batch_convert", "batch_validate"],
     },
     "rust": {"Todos": BACKEND_OPS["rust"], "dicom-rs": BACKEND_OPS["rust"]},
     "cpp": {
@@ -319,6 +339,12 @@ DEFAULTS = {
         "volume": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR / "ui_python_volume.npy", "options": {"preview": False}},
         "nifti": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR / "ui_python_volume.nii.gz"},
         "echo": {"input": "", "options": {"host": "127.0.0.1", "port": 11112}},
+        "split_multiframe": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_python_split"},
+        "batch_list": {"input": DEFAULT_SERIES, "options": {"recursive": False}},
+        "batch_decompress": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR / "ui_python_decompressed"},
+        "batch_anonymize": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR / "ui_python_anonymized"},
+        "batch_convert": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR / "ui_python_converted", "options": {"format": "png"}},
+        "batch_validate": {"input": DEFAULT_SERIES, "options": {"recursive": False}},
     },
     "rust": {
         "info": {"input": DEFAULT_FILE, "options": {"json": True}},
@@ -441,7 +467,23 @@ DEFAULTS = {
 
 # Suites skip network-dependent echo by default to remain self-contained
 SUITE_OPS = {
-    "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti"],
+    "python": [
+        "info",
+        "anonymize",
+        "to_image",
+        "transcode",
+        "validate",
+        "stats",
+        "dump",
+        "volume",
+        "nifti",
+        "split_multiframe",
+        "batch_list",
+        "batch_decompress",
+        "batch_anonymize",
+        "batch_convert",
+        "batch_validate",
+    ],
     "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "histogram", "to_json", "from_json"],
     "cpp": [
         "info",

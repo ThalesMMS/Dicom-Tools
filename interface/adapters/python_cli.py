@@ -115,6 +115,44 @@ class PythonCliAdapter:
         if op == "dump":
             return [*self.base_cmd, "dump", input_path]
 
+        if op == "split_multiframe":
+            output_dir = output or str((self.root / "output" / "python_split").resolve())
+            cmd = [sys.executable, "-m", "DICOM_reencoder.split_multiframe", input_path, "--output-dir", output_dir]
+            if options.get("prefix"):
+                cmd.extend(["--prefix", str(options["prefix"])])
+            frames = options.get("frames")
+            if frames:
+                cmd.extend(["--frames", *[str(f) for f in frames]])
+            if options.get("info"):
+                cmd.append("--info")
+            return cmd
+
+        if op in {
+            "batch_list",
+            "batch_decompress",
+            "batch_anonymize",
+            "batch_convert",
+            "batch_validate",
+        }:
+            directory = input_path or "."
+            op_map = {
+                "batch_list": "list",
+                "batch_decompress": "decompress",
+                "batch_anonymize": "anonymize",
+                "batch_convert": "convert",
+                "batch_validate": "validate",
+            }
+            sub_op = op_map[op]
+            cmd = [sys.executable, "-m", "DICOM_reencoder.batch_process", "-d", directory, "-o", sub_op]
+            if options.get("recursive"):
+                cmd.append("-r")
+            if op in {"batch_decompress", "batch_anonymize", "batch_convert"}:
+                output_dir = output or options.get("output_dir") or str((self.root / "output" / f"python_{sub_op}").resolve())
+                cmd.extend(["--output-dir", str(output_dir)])
+            if op == "batch_convert" and options.get("format"):
+                cmd.extend(["--format", str(options["format"])])
+            return cmd
+
         if op == "custom":
             custom_cmd = options.get("custom_cmd")
             if not custom_cmd:

@@ -6,7 +6,7 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 ```json
 {
   "backend": "python | cpp | rust | java | csharp",
-  "op": "info | anonymize | to_image | transcode | validate | echo | stats | dump | volume | nifti | to_json | from_json | test_gdcm | test_dcmtk | test_itk | test_vtk_unit | test_utils | test_integration | test_edge_cases | test_validation | run_cpp_tests | test_uid | test_datetime | test_charset | test_workflow | test_validation_java | run_java_tests | test_anonymize_cs | test_uid_cs | test_datetime_cs | test_charset_cs | test_dictionary_cs | test_file_operations_cs | test_sequence_cs | test_value_representation_cs | test_option_parser_cs | test_stats_helpers_cs | run_cs_tests",
+  "op": "info | anonymize | to_image | transcode | validate | echo | stats | dump | volume | nifti | split_multiframe | batch_list | batch_decompress | batch_anonymize | batch_convert | batch_validate | to_json | from_json | test_gdcm | test_dcmtk | test_itk | test_vtk_unit | test_utils | test_integration | test_edge_cases | test_validation | run_cpp_tests | test_uid | test_datetime | test_charset | test_workflow | test_validation_java | run_java_tests | test_anonymize_cs | test_uid_cs | test_datetime_cs | test_charset_cs | test_dictionary_cs | test_file_operations_cs | test_sequence_cs | test_value_representation_cs | test_option_parser_cs | test_stats_helpers_cs | run_cs_tests",
   "input": "/caminho/para/arquivo_ou_diretorio",
   "output": "/caminho/para/saida_opcional",
   "options": { "chave": "valor" }
@@ -38,6 +38,12 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 | dump | Dump completo do dataset | `input`, `options.depth?`, `options.max_value_len?`, `options.json?` | `stdout` textual ou JSON |
 | volume | Construir volume 3D | `input` (diretório), `output?`, `options.preview?` | `.npy` e metadados |
 | nifti | Exportar série para NIfTI | `input` (diretório), `output?`, `options.series_uid?` | `.nii/.nii.gz` + meta |
+| split_multiframe | Divide arquivo multi-frame em frames individuais | `input` (arquivo), `output?` (diretório), `options.prefix?`, `options.frames?`, `options.info?` | vários arquivos `.dcm` ou info textual |
+| batch_list | Lista DICOMs em diretório | `input` (diretório), `options.recursive?` | `stdout` |
+| batch_decompress | Descomprime série de DICOMs | `input` (diretório), `output?` (diretório), `options.recursive?` | arquivos descomprimidos |
+| batch_anonymize | Anonimiza série de DICOMs | `input` (diretório), `output?` (diretório), `options.recursive?` | arquivos anonimizados |
+| batch_convert | Converte série para imagens | `input` (diretório), `output?` (diretório), `options.format? (png/jpeg)`, `options.recursive?` | imagens |
+| batch_validate | Valida série de DICOMs | `input` (diretório), `options.recursive?` | `stdout` com status |
 | to_json | Exportar para DICOM JSON | `input`, `output?` | JSON em arquivo/`stdout` |
 | from_json | Converter de DICOM JSON para DICOM | `input` (JSON), `output` (DICOM) | arquivo DICOM |
 | test_gdcm | Executa binário de teste unitário GDCM (C++) | `input?` (ignorado) | `stdout` com resultado |
@@ -68,7 +74,7 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 | run_cs_tests | Executa todos os testes C# fo-dicom | `input?` (ignorado) | `stdout` |
 
 ## Mapeamento (mínimo viável atual)
-- **Python** (`python -m DICOM_reencoder.cli`): `info -> summary --json`, `anonymize -> anonymize`, `to_image -> png`, `transcode -> transcode`, `validate -> python -m DICOM_reencoder.validate_dicom`, `echo -> dicom_echo`, `volume -> volume`, `nifti -> nifti`.  
+- **Python** (`python -m DICOM_reencoder.cli`): `info -> summary --json`, `anonymize -> anonymize`, `to_image -> png`, `transcode -> transcode`, `validate -> python -m DICOM_reencoder.validate_dicom`, `echo -> dicom_echo`, `volume -> volume`, `nifti -> nifti`, `split_multiframe -> python -m DICOM_reencoder.split_multiframe`, batch helpers via `python -m DICOM_reencoder.batch_process -o {list|decompress|anonymize|convert|validate}`.  
 - **Rust** (`rust/target/release/dicom-tools` ou `cargo run --release -- ...`): `info [--json]`, `anonymize`, `to_image` (`to-image`), `transcode`, `validate` (`validate`), `echo` (`echo`), `dump [--json]` (`dump`), `stats` (`stats`/`histogram`), `to_json` (`to-json`), `from_json` (`from-json`).  
 - **C++** (`cpp/build/DicomTools`): `info/dump -> gdcm:dump`, `anonymize -> gdcm:anonymize`, `to_image -> gdcm:preview`, `stats -> gdcm:stats`, `transcode -> gdcm:transcode-j2k|gdcm:transcode-rle|gdcm:jpegls` (mapeado por `options.syntax`), `validate -> gdcm:dump` (proxy mínima), VTK demos (`vtk_*`), unit/integration tests (`test_gdcm`, `test_dcmtk`, `test_itk`, `test_vtk_unit`, `test_utils`, `test_integration`, `test_edge_cases`, `test_validation`, `run_cpp_tests`).  
 - **Java (dcm4chee)**: CLI em `java/dcm4che-tests/target/dcm4che-tests.jar` (`java -jar ...`): `info --json`, `anonymize --output`, `to-image --output [--format] [--frame]`, `transcode --output --syntax`, `validate`, `dump [--max-width]`, `stats --bins [--json|--pretty]`, `echo host:port [--timeout --calling --called]`.  
