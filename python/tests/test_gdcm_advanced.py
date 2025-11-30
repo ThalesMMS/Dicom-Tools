@@ -36,9 +36,11 @@ class TestCodecSupport:
     """Test GDCM codec availability and detection."""
 
     def test_jpeg_codec_availability(self):
-        codec_factory = gdcm.ImageCodec.GetCodecFactory()
-        # Just verify we can access codec factory
-        assert codec_factory is not None
+        # Verify JPEG baseline codec is available for decoding
+        codec = gdcm.JPEGCodec()
+        ts = gdcm.TransferSyntax(gdcm.TransferSyntax.JPEGBaselineProcess1)
+
+        assert codec.CanDecode(ts) or codec.CanCode(ts)
 
     def test_transfer_syntax_detection(self, synthetic_dicom_path):
         reader = gdcm.Reader()
@@ -309,7 +311,9 @@ class TestPixelDataAccess:
         dims = image.GetDimensions()
 
         buffer = image.GetBuffer()
-        
+        if isinstance(buffer, str):
+            buffer = buffer.encode("latin1", "surrogateescape")
+
         # Determine numpy dtype
         if pf.GetBitsAllocated() == 8:
             dtype = np.uint8

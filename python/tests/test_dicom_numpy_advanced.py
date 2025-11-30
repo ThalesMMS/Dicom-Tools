@@ -7,6 +7,7 @@
 #
 # Thales Matheus Mendonça Santos - November 2025
 
+import copy
 import numpy as np
 import pytest
 from pydicom import Dataset
@@ -88,7 +89,7 @@ class TestOrientationHandling:
         oblique = []
         angle = np.pi / 6  # 30 degrees
         for idx, ds in enumerate(synthetic_datasets):
-            cp = ds.copy()
+            cp = copy.deepcopy(ds)
             cp.ImageOrientationPatient = [
                 np.cos(angle), np.sin(angle), 0,
                 -np.sin(angle), np.cos(angle), 0,
@@ -107,7 +108,7 @@ class TestOrientationHandling:
         # Coronal: rows=SI, cols=LR
         coronal = []
         for idx, ds in enumerate(synthetic_datasets):
-            cp = ds.copy()
+            cp = copy.deepcopy(ds)
             cp.ImageOrientationPatient = [1, 0, 0, 0, 0, 1]
             cp.ImagePositionPatient = [0.0, float(idx), 0.0]
             cp.SOPInstanceUID = generate_uid()
@@ -120,7 +121,7 @@ class TestOrientationHandling:
         # Sagittal: rows=SI, cols=AP
         sagittal = []
         for idx, ds in enumerate(synthetic_datasets):
-            cp = ds.copy()
+            cp = copy.deepcopy(ds)
             cp.ImageOrientationPatient = [0, 1, 0, 0, 0, 1]
             cp.ImagePositionPatient = [float(idx), 0.0, 0.0]
             cp.SOPInstanceUID = generate_uid()
@@ -225,12 +226,12 @@ class TestMultipleAcquisitions:
         time2 = []
 
         for idx, ds in enumerate(synthetic_datasets):
-            ds1 = ds.copy()
+            ds1 = copy.deepcopy(ds)
             ds1.AcquisitionTime = "100000.000000"
             ds1.TemporalPositionIdentifier = 1
             ds1.SOPInstanceUID = generate_uid()
 
-            ds2 = ds.copy()
+            ds2 = copy.deepcopy(ds)
             ds2.AcquisitionTime = "100500.000000"
             ds2.TemporalPositionIdentifier = 2
             ds2.SOPInstanceUID = generate_uid()
@@ -250,11 +251,11 @@ class TestMultipleAcquisitions:
         b1000 = []
 
         for idx, ds in enumerate(synthetic_datasets):
-            ds0 = ds.copy()
+            ds0 = copy.deepcopy(ds)
             ds0.DiffusionBValue = 0
             ds0.SOPInstanceUID = generate_uid()
 
-            ds1 = ds.copy()
+            ds1 = copy.deepcopy(ds)
             ds1.DiffusionBValue = 1000
             ds1.SOPInstanceUID = generate_uid()
 
@@ -391,7 +392,7 @@ class TestMemoryEfficiency:
         extended = []
         for repeat in range(3):
             for idx, ds in enumerate(synthetic_datasets):
-                cp = ds.copy()
+                cp = copy.deepcopy(ds)
                 cp.InstanceNumber = repeat * len(synthetic_datasets) + idx + 1
                 cp.ImagePositionPatient = [0.0, 0.0, float(cp.InstanceNumber)]
                 cp.SOPInstanceUID = generate_uid()
@@ -415,7 +416,7 @@ class TestSpacingValidation:
         # Create gap in slice positions
         gapped = []
         for idx, ds in enumerate(synthetic_datasets):
-            cp = ds.copy()
+            cp = copy.deepcopy(ds)
             if idx == len(synthetic_datasets) // 2:
                 # Insert gap
                 cp.ImagePositionPatient = [0.0, 0.0, float(idx) + 5.0]
@@ -432,7 +433,7 @@ class TestSpacingValidation:
         # Same gapped dataset
         gapped = []
         for idx, ds in enumerate(synthetic_datasets):
-            cp = ds.copy()
+            cp = copy.deepcopy(ds)
             if idx == len(synthetic_datasets) // 2:
                 cp.ImagePositionPatient = [0.0, 0.0, float(idx) + 5.0]
             else:

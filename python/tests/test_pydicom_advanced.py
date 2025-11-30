@@ -7,6 +7,7 @@
 #
 # Thales Matheus Mendonça Santos - November 2025
 
+import copy
 import io
 from datetime import datetime
 from pathlib import Path
@@ -42,7 +43,7 @@ class TestUIDHandling:
         assert len(uids) == 100
 
     def test_generate_uid_with_prefix(self):
-        prefix = "1.2.826.0.1.3680043.8"
+        prefix = "1.2.826.0.1.3680043.8."
         uid = generate_uid(prefix=prefix)
         assert uid.startswith(prefix)
         assert UID(uid).is_valid
@@ -161,8 +162,8 @@ class TestSequenceManipulation:
         ds.OtherPatientIDsSequence = Sequence([Dataset()])
         ds.OtherPatientIDsSequence[0].PatientID = "ORIGINAL"
 
-        copy = ds.copy()
-        copy.OtherPatientIDsSequence[0].PatientID = "MODIFIED"
+        copy_ds = copy.deepcopy(ds)
+        copy_ds.OtherPatientIDsSequence[0].PatientID = "MODIFIED"
 
         assert ds.OtherPatientIDsSequence[0].PatientID == "ORIGINAL"
 
@@ -187,8 +188,12 @@ class TestPixelDataHandling:
         ds.WindowWidth = 400
 
         result = apply_voi_lut(ds.pixel_array, ds)
+        max_value = (1 << int(ds.BitsStored)) - 1
+
+        assert result.shape == ds.pixel_array.shape
         assert result.min() >= 0
-        assert result.max() <= 255
+        assert result.max() <= max_value
+        assert not np.array_equal(result, ds.pixel_array)
 
     def test_photometric_interpretation_grayscale(self, synthetic_datasets):
         for ds in synthetic_datasets:
@@ -237,15 +242,15 @@ class TestDatasetComparison:
     """Test dataset comparison and diff utilities."""
 
     def test_dataset_equality_check(self, synthetic_datasets):
-        ds1 = synthetic_datasets[0].copy()
-        ds2 = synthetic_datasets[0].copy()
+        ds1 = copy.deepcopy(synthetic_datasets[0])
+        ds2 = copy.deepcopy(synthetic_datasets[0])
 
         # Same content should be equal
         assert list(ds1.keys()) == list(ds2.keys())
 
     def test_dataset_diff_detection(self, synthetic_datasets):
-        ds1 = synthetic_datasets[0].copy()
-        ds2 = synthetic_datasets[0].copy()
+        ds1 = copy.deepcopy(synthetic_datasets[0])
+        ds2 = copy.deepcopy(synthetic_datasets[0])
         ds2.PatientName = "Different^Name"
 
         differences = []

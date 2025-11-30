@@ -107,7 +107,10 @@ class TestAssociationNegotiation:
         called_ae = []
         
         def handle_assoc_rq(event):
-            called_ae.append(event.assoc.requestor.ae_title)
+            ae_title = event.assoc.requestor.ae_title
+            if isinstance(ae_title, (bytes, bytearray)):
+                ae_title = ae_title.decode(errors="ignore")
+            called_ae.append(str(ae_title).strip())
 
         server = ae_scp.start_server(
             ("127.0.0.1", port),
@@ -125,7 +128,7 @@ class TestAssociationNegotiation:
             ae_scu.shutdown()
 
             time.sleep(0.1)
-            assert "CUSTOM_SCU" in [ae.strip() for ae in called_ae]
+            assert "CUSTOM_SCU" in called_ae
         finally:
             server.shutdown()
             ae_scp.shutdown()

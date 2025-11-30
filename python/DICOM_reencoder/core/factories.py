@@ -53,6 +53,8 @@ def build_slice(rows: int, cols: int, position: Tuple[float, float, float], *,
     ds.InstanceNumber = instance
     ds.PatientName = "Test^Patient"
     ds.PatientID = "TEST-123"
+    ds.PatientBirthDate = "19700101"
+    ds.PatientSex = "O"
     now = datetime.now(timezone.utc)
     ds.StudyDate = now.strftime("%Y%m%d")
     ds.StudyTime = now.strftime("%H%M%S")
