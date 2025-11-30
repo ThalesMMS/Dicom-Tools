@@ -30,7 +30,20 @@ class CppCliAdapter:
         if cmd is None:
             return RunResult(False, 1, "", f"operação não suportada pelo backend C++: {op}", [], None)
 
-        result = run_process(cmd)
+        test_ops = {
+            "test_gdcm",
+            "test_dcmtk",
+            "test_itk",
+            "test_vtk_unit",
+            "test_utils",
+            "test_integration",
+            "test_edge_cases",
+            "test_validation",
+            "run_cpp_tests",
+        }
+        cwd = self.root / "cpp" / "build" if op in test_ops else None
+
+        result = run_process(cmd, cwd=cwd)
         meta = parse_json_maybe(result.stdout)
         if meta is not None:
             result.metadata = meta
@@ -108,5 +121,24 @@ class CppCliAdapter:
             parts = [str(input_path) if p == "{input}" else str(output_dir) if p == "{output}" else p for p in parts]
             cmd = [*self.base_cmd, *parts]
             return cmd, []
+
+        # C++ unit/integration tests (executables in cpp/build)
+        test_map = {
+            "test_gdcm": "test_gdcm",
+            "test_dcmtk": "test_dcmtk",
+            "test_itk": "test_itk",
+            "test_vtk_unit": "test_vtk",
+            "test_utils": "test_utils",
+            "test_integration": "test_integration",
+            "test_edge_cases": "test_edge_cases",
+            "test_validation": "test_validation",
+        }
+        if op in test_map:
+            exe = self.root / "cpp" / "build" / test_map[op]
+            return [str(exe)], []
+
+        if op == "run_cpp_tests":
+            # Invoke custom target via CMake; fallback to ctest
+            return ["cmake", "--build", ".", "--target", "run_cpp_tests"], []
 
         return None, []

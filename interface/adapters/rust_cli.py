@@ -54,6 +54,8 @@ class RustCliAdapter:
             cmd = [*self.base_cmd, "info", input_path]
             if options.get("verbose"):
                 cmd.append("--verbose")
+            if options.get("json"):
+                cmd.append("--json")
             return cmd
 
         if op == "anonymize":
@@ -110,6 +112,8 @@ class RustCliAdapter:
                 cmd.extend(["--max-depth", str(options["max_depth"])])
             if options.get("max_value_len") is not None:
                 cmd.extend(["--max-value-len", str(options["max_value_len"])])
+            if options.get("json"):
+                cmd.append("--json")
             return cmd
 
         if op == "stats":
@@ -120,6 +124,14 @@ class RustCliAdapter:
             if options.get("bins") is not None:
                 cmd.extend(["--bins", str(options["bins"])])
             return cmd
+
+        if op == "to_json":
+            inferred_output = output or self._infer_output(input_path, suffix=".json")
+            return [*self.base_cmd, "to-json", input_path, "--output", inferred_output]
+
+        if op == "from_json":
+            inferred_output = output or self._infer_output(str(input_path), suffix=".dcm")
+            return [*self.base_cmd, "from-json", input_path, "--output", inferred_output]
 
         if op == "custom":
             custom_cmd = options.get("custom_cmd")

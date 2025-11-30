@@ -5,3 +5,34 @@
   font-family: system-ui, -apple-system, sans-serif;
   color: #222;
 }
+
+section {
+  border: 1px solid #e0e4ec;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f9fbff;
+}
+
+.viewport-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controls,
+.analysis {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-canvas,
+.histogram-canvas {
+  border: 1px solid #d3d7e0;
+  background: #fff;
+}
+
+.preview-canvas {
+  max-width: 100%;
+  image-rendering: pixelated;
+}
