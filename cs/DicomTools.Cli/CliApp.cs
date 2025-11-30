@@ -35,6 +35,13 @@ public static class CliApp
                 "dump" => DumpCommand.Execute(parser),
                 "stats" => StatsCommand.ExecuteStats(parser, JsonOptions),
                 "histogram" => StatsCommand.ExecuteHistogram(parser, JsonOptions),
+                "store-scu" => await NetworkCommand.ExecuteStoreScuAsync(parser, JsonOptions),
+                "worklist" or "mwl" => await NetworkCommand.ExecuteWorklistAsync(parser, JsonOptions),
+                "qido" => await NetworkCommand.ExecuteQidoAsync(parser, JsonOptions),
+                "stow" => await NetworkCommand.ExecuteStowAsync(parser, JsonOptions),
+                "wado" => await NetworkCommand.ExecuteWadoAsync(parser, JsonOptions),
+                "sr-summary" or "sr" => StructuredReportCommand.Execute(parser, JsonOptions),
+                "rt-check" => RtCheckCommand.Execute(parser, JsonOptions),
                 _ => Unknown(command)
             };
         }
@@ -58,6 +65,13 @@ public static class CliApp
           dump <input> [--depth N] [--max-value-length N]
           stats <input> [--frame N] [--json]
           histogram <input> [--bins N] [--frame N] [--json]
+          store-scu <input> --host <host> --port <port> [--calling <AET>] [--called <AET>] [--timeout ms]
+          worklist --host <host> --port <port> [--patient <name>] [--calling <AET>] [--called <AET>]
+          qido --url <dicomweb-url>
+          stow --url <dicomweb-url> <input>
+          wado --url <dicomweb-url> --output <file>
+          sr-summary <input>
+          rt-check --plan <plan.dcm> [--dose <dose.dcm>] [--struct <struct.dcm>]
         """;
         Console.WriteLine(usage);
     }

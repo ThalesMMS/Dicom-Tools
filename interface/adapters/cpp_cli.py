@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .runner import RunResult, ensure_dir, run_process, split_cmd
+from .runner import RunResult, ensure_dir, parse_json_maybe, run_process, split_cmd
 
 
 class CppCliAdapter:
@@ -31,6 +31,9 @@ class CppCliAdapter:
             return RunResult(False, 1, "", f"operação não suportada pelo backend C++: {op}", [], None)
 
         result = run_process(cmd)
+        meta = parse_json_maybe(result.stdout)
+        if meta is not None:
+            result.metadata = meta
         result.backend = "cpp"
         result.operation = op
         result.output_files.extend(output_files)

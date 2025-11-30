@@ -97,6 +97,48 @@ class CSharpCliAdapter:
             if options.get("frame") is not None:
                 cmd.extend(["--frame", str(options["frame"])])
             return cmd
+        if op == "store_scu":
+            host = options.get("host", "127.0.0.1")
+            port = options.get("port", 11112)
+            calling = options.get("calling_aet", "STORE-SCU")
+            called = options.get("called_aet", "STORE-SCP")
+            timeout = options.get("timeout", 5000)
+            cmd = [*self.base_cmd, "store-scu", input_path, "--host", str(host), "--port", str(port), "--calling", calling, "--called", called]
+            if timeout:
+                cmd.extend(["--timeout", str(timeout)])
+            return cmd
+        if op == "worklist":
+            host = options.get("host", "127.0.0.1")
+            port = options.get("port", 11112)
+            calling = options.get("calling_aet", "MWL-SCU")
+            called = options.get("called_aet", "MWL-SCP")
+            patient = options.get("patient")
+            cmd = [*self.base_cmd, "worklist", "--host", str(host), "--port", str(port), "--calling", calling, "--called", called]
+            if patient:
+                cmd.extend(["--patient", str(patient)])
+            return cmd
+        if op == "qido":
+            url = options.get("url") or "http://localhost:8080/dicomweb"
+            return [*self.base_cmd, "qido", "--url", url]
+        if op == "stow":
+            url = options.get("url") or "http://localhost:8080/dicomweb"
+            return [*self.base_cmd, "stow", "--url", url, input_path]
+        if op == "wado":
+            url = options.get("url") or "http://localhost:8080/dicomweb/wado"
+            inferred_output = inferred_output or str(Path(input_path or "wado").with_suffix(".dcm"))
+            return [*self.base_cmd, "wado", "--url", url, "--output", inferred_output]
+        if op == "sr_summary":
+            return [*self.base_cmd, "sr-summary", input_path]
+        if op == "rt_check":
+            plan = options.get("plan") or input_path
+            cmd = [*self.base_cmd, "rt-check"]
+            if plan:
+                cmd.extend(["--plan", str(plan)])
+            if options.get("dose"):
+                cmd.extend(["--dose", str(options["dose"])])
+            if options.get("struct"):
+                cmd.extend(["--struct", str(options["struct"])])
+            return cmd
         if op == "custom":
             custom_cmd = options.get("custom_cmd")
             if not custom_cmd:

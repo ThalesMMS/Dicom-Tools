@@ -101,8 +101,18 @@ def test_require_and_directory_detection(monkeypatch):
     inst = make_dummy_app(monkeypatch)
     assert inst._require_input("info") is True
     assert inst._require_input("echo") is False
+    assert inst._require_input("histogram") is True
+    assert inst._require_input("store_scu") is True
+    assert inst._require_input("stow") is True
+    assert inst._require_input("worklist") is False
+    assert inst._require_input("qido") is False
+    assert inst._require_input("wado") is False
+    assert inst._require_input("sr_summary") is True
+    assert inst._require_input("rt_check") is True
     assert inst._op_uses_directory_input("volume") is True
     assert inst._op_uses_directory_input("info") is False
+    inst.backend.value = "cpp"
+    assert inst._op_uses_directory_input("vtk_export") is True
 
 
 def test_run_handles_missing_input(monkeypatch, tmp_path):

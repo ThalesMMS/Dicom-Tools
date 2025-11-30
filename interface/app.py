@@ -13,11 +13,12 @@ DEFAULT_FILE = ROOT_DIR / "sample_series" / "IM-0001-0001.dcm"
 DEFAULT_SERIES = ROOT_DIR / "sample_series"
 OUTPUT_DIR = ROOT_DIR / "output"
 
-# Supported ops per backend (only what each CLI advertises today)
+# Supported ops per backend (canonical set from the contract)
 BACKEND_OPS = {
-    "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo", "custom"],
-    "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo", "custom"],
-    "cpp": [
+    "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo"],
+    "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "histogram", "echo"],
+    "cpp": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
+    "java": [
         "info",
         "anonymize",
         "to_image",
@@ -25,63 +26,77 @@ BACKEND_OPS = {
         "validate",
         "stats",
         "dump",
-        "custom",
-        "vtk_export",
-        "vtk_nifti",
-        "vtk_isosurface",
-        "vtk_resample",
-        "vtk_mask",
-        "vtk_connectivity",
-        "vtk_mip",
-        "vtk_metadata",
-        "vtk_stats",
-        "vtk_viewer",
-        "vtk_volume_render",
-        "vtk_mpr_multi",
-        "vtk_overlay",
-        "vtk_stream",
-        "test_vtk",
+        "echo",
+        "histogram",
+        "store_scu",
+        "worklist",
+        "qido",
+        "stow",
+        "wado",
+        "sr_summary",
+        "rt_check",
     ],
-    "java": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo"],
-    "csharp": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo"],
+    "csharp": [
+        "info",
+        "anonymize",
+        "to_image",
+        "transcode",
+        "validate",
+        "stats",
+        "dump",
+        "echo",
+        "histogram",
+        "store_scu",
+        "worklist",
+        "qido",
+        "stow",
+        "wado",
+        "sr_summary",
+        "rt_check",
+    ],
     "js": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti", "echo"],
 }
 
+VTK_OPS = [
+    "vtk_export",
+    "vtk_nifti",
+    "vtk_isosurface",
+    "vtk_resample",
+    "vtk_mask",
+    "vtk_connectivity",
+    "vtk_mip",
+    "vtk_metadata",
+    "vtk_stats",
+    "vtk_viewer",
+    "vtk_volume_render",
+    "vtk_mpr_multi",
+    "vtk_overlay",
+    "vtk_stream",
+    "test_vtk",
+]
+
 BACKEND_LIBRARIES = {
     "python": {
+        "Todos": BACKEND_OPS["python"],
         "dicom_reencoder": BACKEND_OPS["python"],
-        "pydicom": ["info", "anonymize", "to_image", "transcode", "validate", "dump", "stats"],
+        "pydicom": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
+        "python-gdcm": ["info", "to_image"],
+        "simpleitk": ["volume", "nifti"],
+        "dicom-numpy": ["volume"],
         "pynetdicom": ["echo"],
-        "python-gdcm": ["to_image", "transcode", "validate"],
-        "simpleitk": ["volume", "nifti", "to_image"],
-        "dicom-numpy": ["volume", "nifti", "stats"],
     },
-    "rust": {"dicom-rs": BACKEND_OPS["rust"]},
+    "rust": {"Todos": BACKEND_OPS["rust"], "dicom-rs": BACKEND_OPS["rust"]},
     "cpp": {
-        "gdcm": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
-        "dcmtk": ["info", "anonymize", "to_image", "transcode", "validate", "dump"],
-        "itk": ["to_image", "validate", "stats"],
-        "vtk": [
-            "vtk_export",
-            "vtk_nifti",
-            "vtk_isosurface",
-            "vtk_resample",
-            "vtk_mask",
-            "vtk_connectivity",
-            "vtk_mip",
-            "vtk_metadata",
-            "vtk_stats",
-            "vtk_viewer",
-            "vtk_volume_render",
-            "vtk_mpr_multi",
-            "vtk_overlay",
-            "vtk_stream",
-            "test_vtk",
-        ],
+        "Todos": BACKEND_OPS["cpp"],
+        "GDCM": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
+        "DCMTK": ["info", "anonymize", "to_image", "transcode", "validate", "dump"],
+        "ITK": ["to_image", "validate", "stats"],
+        "VTK": VTK_OPS,
     },
-    "java": {"dcm4che": BACKEND_OPS["java"]},
-    "csharp": {"fo-dicom": BACKEND_OPS["csharp"]},
+    "java": {"Todos": BACKEND_OPS["java"], "dcm4che": BACKEND_OPS["java"]},
+    "csharp": {"Todos": BACKEND_OPS["csharp"], "fo-dicom": BACKEND_OPS["csharp"]},
     "js": {
+        "Todos": BACKEND_OPS["js"],
         "js-shim": BACKEND_OPS["js"],
         "cornerstone3d": ["info", "to_image", "volume", "nifti"],
     },
@@ -107,18 +122,19 @@ DEFAULTS = {
         "to_image": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_rust.png", "options": {"format": "png"}},
         "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_rust_j2k.dcm", "options": {"syntax": "1.2.840.10008.1.2.4.90"}},
         "validate": {"input": DEFAULT_FILE},
-        "stats": {"input": DEFAULT_FILE, "options": {"bins": 16}},
+        "stats": {"input": DEFAULT_FILE},
         "dump": {"input": DEFAULT_FILE, "options": {"max_value_len": 64}},
         "echo": {"input": "", "options": {"host": "127.0.0.1", "port": 11112}},
+        "histogram": {"input": DEFAULT_FILE, "options": {"bins": 16}},
     },
     "cpp": {
-        "info": {"input": DEFAULT_FILE},
-        "anonymize": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_cpp_anon.dcm"},
-        "to_image": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_cpp_preview.pgm"},
-        "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_cpp_j2k.dcm", "options": {"syntax": "j2k"}},
-        "validate": {"input": DEFAULT_FILE},
-        "stats": {"input": DEFAULT_FILE},
-        "dump": {"input": DEFAULT_FILE},
+        "info": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "cpp_info"},
+        "anonymize": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "cpp_anonymize"},
+        "to_image": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "cpp_to_image"},
+        "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "cpp_transcode", "options": {"syntax": "j2k"}},
+        "validate": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "cpp_validate"},
+        "stats": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "cpp_stats"},
+        "dump": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "cpp_dump"},
         "vtk_export": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
         "vtk_nifti": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
         "vtk_isosurface": {"input": DEFAULT_SERIES, "output": OUTPUT_DIR},
@@ -144,6 +160,17 @@ DEFAULTS = {
         "stats": {"input": DEFAULT_FILE, "options": {"bins": 16}},
         "dump": {"input": DEFAULT_FILE, "options": {"max_width": 120}},
         "echo": {"input": "", "options": {"host": "127.0.0.1", "port": 11112}},
+        "histogram": {"input": DEFAULT_FILE, "options": {"bins": 16}},
+        "store_scu": {
+            "input": DEFAULT_FILE,
+            "options": {"host": "127.0.0.1", "port": 11112, "calling_aet": "STORE-SCU", "called_aet": "STORE-SCP", "timeout": 2000},
+        },
+        "worklist": {"input": "", "options": {"host": "127.0.0.1", "port": 11112, "patient": "DOE^JOHN", "calling_aet": "MWL-SCU", "called_aet": "MWL-SCP"}},
+        "qido": {"input": "", "options": {"url": "http://localhost:8080/dicomweb"}},
+        "stow": {"input": DEFAULT_FILE, "options": {"url": "http://localhost:8080/dicomweb"}},
+        "wado": {"input": "", "output": OUTPUT_DIR / "ui_java_wado.dcm", "options": {"url": "http://localhost:8080/dicomweb/wado"}},
+        "sr_summary": {"input": DEFAULT_FILE},
+        "rt_check": {"input": DEFAULT_FILE, "options": {"dose": "", "struct": ""}},
     },
     "csharp": {
         "info": {"input": DEFAULT_FILE, "options": {"json": True}},
@@ -151,9 +178,20 @@ DEFAULTS = {
         "to_image": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_csharp.png", "options": {"format": "png", "frame": 0}},
         "transcode": {"input": DEFAULT_FILE, "output": OUTPUT_DIR / "ui_csharp_j2k.dcm", "options": {"syntax": "1.2.840.10008.1.2.4.90"}},
         "validate": {"input": DEFAULT_FILE},
-        "stats": {"input": DEFAULT_FILE, "options": {"bins": 16}},
+        "stats": {"input": DEFAULT_FILE, "options": {"frame": 0}},
         "dump": {"input": DEFAULT_FILE, "options": {"depth": 6, "max_value_len": 64}},
         "echo": {"input": "", "options": {"host": "127.0.0.1", "port": 11112}},
+        "histogram": {"input": DEFAULT_FILE, "options": {"bins": 16}},
+        "store_scu": {
+            "input": DEFAULT_FILE,
+            "options": {"host": "127.0.0.1", "port": 11112, "calling_aet": "STORE-SCU", "called_aet": "STORE-SCP", "timeout": 5000},
+        },
+        "worklist": {"input": "", "options": {"host": "127.0.0.1", "port": 11112, "patient": "DOE^JOHN", "calling_aet": "MWL-SCU", "called_aet": "MWL-SCP"}},
+        "qido": {"input": "", "options": {"url": "http://localhost:8080/dicomweb"}},
+        "stow": {"input": DEFAULT_FILE, "options": {"url": "http://localhost:8080/dicomweb"}},
+        "wado": {"input": "", "output": OUTPUT_DIR / "ui_csharp_wado.dcm", "options": {"url": "http://localhost:8080/dicomweb/wado"}},
+        "sr_summary": {"input": DEFAULT_FILE},
+        "rt_check": {"input": DEFAULT_FILE, "options": {"dose": "", "struct": ""}},
     },
     "js": {
         "info": {"input": DEFAULT_FILE, "options": {"json": True}},
@@ -172,11 +210,11 @@ DEFAULTS = {
 # Suites skip network-dependent echo by default to remain self-contained
 SUITE_OPS = {
     "python": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti"],
-    "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
+    "rust": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "histogram"],
     "cpp": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
-    "java": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
-    "csharp": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump"],
-    "js": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "volume", "nifti"],
+    "java": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo", "histogram"],
+    "csharp": ["info", "anonymize", "to_image", "transcode", "validate", "stats", "dump", "echo", "histogram"],
+    "js": ["info", "to_image", "volume", "nifti"],
 }
 
 CANONICAL_OP_SPECS = {
@@ -229,11 +267,68 @@ CANONICAL_OP_SPECS = {
         "option_keys": ["bins", "frame", "json", "pretty"],
         "has_options": True,
     },
+    "histogram": {
+        "input": "file",
+        "output": "display",
+        "description": "Histogram of pixel intensities.",
+        "option_keys": ["bins", "frame"],
+        "has_options": True,
+    },
     "dump": {
         "input": "file",
         "output": "display",
         "description": "Textual dump of the dataset.",
         "option_keys": ["depth", "max_value_len", "max_width"],
+        "has_options": True,
+    },
+    "store_scu": {
+        "input": "file",
+        "output": "display",
+        "description": "Send a DICOM file via C-STORE SCU.",
+        "option_keys": ["host", "port", "calling_aet", "called_aet", "timeout"],
+        "has_options": True,
+    },
+    "worklist": {
+        "input": "none",
+        "output": "display",
+        "description": "Query a Modality Worklist (C-FIND).",
+        "option_keys": ["host", "port", "calling_aet", "called_aet", "patient"],
+        "has_options": True,
+    },
+    "qido": {
+        "input": "none",
+        "output": "display",
+        "description": "DICOMweb QIDO-RS query.",
+        "option_keys": ["url", "patient", "study_uid"],
+        "has_options": True,
+    },
+    "stow": {
+        "input": "file",
+        "output": "display",
+        "description": "DICOMweb STOW-RS store.",
+        "option_keys": ["url"],
+        "has_options": True,
+    },
+    "wado": {
+        "input": "none",
+        "output": "file",
+        "description": "DICOMweb WADO-RS retrieve object.",
+        "option_keys": ["url", "study_uid", "series_uid", "object_uid"],
+        "has_options": True,
+        "output_required": True,
+    },
+    "sr_summary": {
+        "input": "file",
+        "output": "display",
+        "description": "Summarize Structured Report content.",
+        "option_keys": [],
+        "has_options": False,
+    },
+    "rt_check": {
+        "input": "file",
+        "output": "display",
+        "description": "Check RT plan/dose/struct consistency.",
+        "option_keys": ["plan", "dose", "struct"],
         "has_options": True,
     },
     "volume": {
@@ -282,9 +377,10 @@ BACKEND_SPEC_OVERRIDES = {
             ],
             "description": "Exports an image with window and LUT adjustments.",
         },
-        "stats": {"option_keys": [], "has_options": False},
+        "stats": {"option_keys": [], "has_options": False, "description": "Pixel stats without extra options."},
         "dump": {"option_keys": ["max_depth", "max_value_len"]},
         "echo": {"option_keys": ["host", "port"]},
+        "histogram": {"option_keys": ["bins"], "description": "Histogram via dicom-rs."},
     },
     "cpp": {
         "info": {"output": "directory", "has_options": False, "option_keys": [], "description": "Generates dump.txt in the folder."},
@@ -300,12 +396,27 @@ BACKEND_SPEC_OVERRIDES = {
         "stats": {"option_keys": ["bins", "json", "pretty"]},
         "dump": {"option_keys": ["max_width"]},
         "echo": {"option_keys": ["host", "port", "calling_aet", "called_aet", "timeout"]},
+        "histogram": {"option_keys": ["bins", "pretty"], "description": "Histogram (JSON) via dcm4che."},
+        "store_scu": {"option_keys": ["host", "port", "calling_aet", "called_aet", "timeout"], "description": "C-STORE SCU to remote host:port."},
+        "worklist": {"option_keys": ["host", "port", "calling_aet", "called_aet", "patient"], "description": "MWL query (C-FIND)."},
+        "qido": {"option_keys": ["url", "patient", "study_uid"], "description": "DICOMweb QIDO-RS query."},
+        "stow": {"option_keys": ["url"], "description": "DICOMweb STOW-RS upload."},
+        "wado": {"option_keys": ["url", "study_uid", "series_uid", "object_uid"], "description": "DICOMweb WADO-RS retrieve.", "output_required": True},
+        "sr_summary": {"description": "Summarize SR content."},
+        "rt_check": {"option_keys": ["plan", "dose", "struct"], "description": "RT plan/dose/struct consistency check."},
     },
     "csharp": {
         "transcode": {"option_keys": ["syntax"], "description": "Sets the output transfer syntax."},
         "dump": {"option_keys": ["max_depth", "max_value_len"]},
         "stats": {"option_keys": ["frame"], "description": "Frame statistics (JSON)."},
         "histogram": {"option_keys": ["bins", "frame"], "description": "Histogram per frame (JSON)."},
+        "store_scu": {"option_keys": ["host", "port", "calling_aet", "called_aet", "timeout"], "description": "C-STORE SCU to remote host:port."},
+        "worklist": {"option_keys": ["host", "port", "calling_aet", "called_aet", "patient"], "description": "MWL query (C-FIND).", "input": "none"},
+        "qido": {"option_keys": ["url", "patient", "study_uid"], "description": "DICOMweb QIDO-RS query.", "input": "none"},
+        "stow": {"option_keys": ["url"], "description": "DICOMweb STOW-RS upload."},
+        "wado": {"option_keys": ["url", "study_uid", "series_uid", "object_uid"], "description": "DICOMweb WADO-RS retrieve.", "output_required": True, "input": "none"},
+        "sr_summary": {"description": "Summarize SR content."},
+        "rt_check": {"option_keys": ["plan", "dose", "struct"], "description": "RT plan/dose/struct consistency check."},
     },
     "js": {
         "volume": {"description": "JS shim → Python; produces an optional .npy file."},
@@ -313,31 +424,14 @@ BACKEND_SPEC_OVERRIDES = {
     },
 }
 
-VTK_OPS = [
-    "vtk_export",
-    "vtk_nifti",
-    "vtk_isosurface",
-    "vtk_resample",
-    "vtk_mask",
-    "vtk_connectivity",
-    "vtk_mip",
-    "vtk_metadata",
-    "vtk_stats",
-    "vtk_viewer",
-    "vtk_volume_render",
-    "vtk_mpr_multi",
-    "vtk_overlay",
-    "vtk_stream",
-    "test_vtk",
-]
 for _vtk_op in VTK_OPS:
-        BACKEND_SPEC_OVERRIDES.setdefault("cpp", {})[_vtk_op] = {
-            "input": "directory",
-            "output": "directory",
-            "description": "VTK demo: series folder → artifacts in the output.",
-            "option_keys": [],
-            "has_options": False,
-        }
+    BACKEND_SPEC_OVERRIDES.setdefault("cpp", {})[_vtk_op] = {
+        "input": "directory",
+        "output": "directory",
+        "description": "VTK demo: series folder → artifacts in the output.",
+        "option_keys": [],
+        "has_options": False,
+    }
 
 
 def get_operation_spec(backend: str, op: str) -> dict:
@@ -474,12 +568,11 @@ class TkApp:
 
     def _update_library_options(self, backend: str) -> None:
         libs = BACKEND_LIBRARIES.get(backend, {})
-        if len(libs) > 1:
-            values = ["All"] + list(libs.keys())
-            default = "All"
-        elif libs:
+        if libs:
             values = list(libs.keys())
-            default = values[0]
+            if len(values) > 1 and "Todos" not in values:
+                values = ["Todos"] + values
+            default = "Todos" if "Todos" in values else values[0]
         else:
             values = ["Default"]
             default = "Default"
@@ -493,7 +586,9 @@ class TkApp:
 
     def _ops_for_backend(self, backend: str, library: str | None) -> list[str]:
         libs = BACKEND_LIBRARIES.get(backend, {})
-        if library and library not in {"All", "Default"}:
+        if library and library in libs:
+            return libs.get(library, [])
+        if library and library not in {"Todos", "All", "Default"}:
             return libs.get(library, [])
         if libs:
             ops: list[str] = []
@@ -572,10 +667,9 @@ class TkApp:
             self.output_entry.configure(state="normal")
             self.output_browse_btn.state(["!disabled"])
         else:
-            label = "Output (file"
+            label = "Output (file)"
             if not spec.get("output_required"):
-                label += " optional"
-            label += ")"
+                label = "Output (file optional)"
             self.output_entry.configure(state="normal")
             self.output_browse_btn.state(["!disabled"])
         self.output_label.configure(text=label)
@@ -703,6 +797,9 @@ class TkApp:
         options = self._parse_options()
         spec = self._current_spec()
 
+        if spec.get("output_required") and not output_path:
+            messagebox.showerror("Error", "Provide the output path for this operation.")
+            return
         if self._requires_input(spec, op) and not input_path:
             messagebox.showerror("Error", "Provide the input path")
             return

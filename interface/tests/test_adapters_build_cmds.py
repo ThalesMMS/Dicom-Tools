@@ -56,6 +56,13 @@ def test_java_cli_builds_commands(tmp_path):
     assert any(part == "to-image" for part in adapter._build_cmd("to_image", input_path, None, {"frame": 0}))
     assert any(part == "transcode" for part in adapter._build_cmd("transcode", input_path, None, {"syntax": "s"}))
     assert any(part == "echo" for part in adapter._build_cmd("echo", input_path, None, {"host": "h", "port": 1}))
+    assert any(part == "store-scu" for part in adapter._build_cmd("store_scu", input_path, None, {"host": "h", "port": 1}))
+    assert any(part == "mwl" for part in adapter._build_cmd("worklist", input_path, None, {"host": "h", "port": 1}))
+    assert any(part == "qido" for part in adapter._build_cmd("qido", input_path, None, {"url": "http://x"}))
+    assert any(part == "stow" for part in adapter._build_cmd("stow", input_path, None, {"url": "http://x"}))
+    assert any(part == "wado" for part in adapter._build_cmd("wado", "", str(tmp_path / "out.dcm"), {"url": "http://x"}))
+    assert any(part == "sr-summary" for part in adapter._build_cmd("sr_summary", input_path, None, {}))
+    assert any(part == "rt-check" for part in adapter._build_cmd("rt_check", input_path, None, {}))
 
 
 def test_csharp_cli_builds_commands(tmp_path):
@@ -67,6 +74,13 @@ def test_csharp_cli_builds_commands(tmp_path):
     assert any(part == "to-image" for part in adapter._build_cmd("to_image", input_path, None, {"frame": 0}))
     assert any(part == "transcode" for part in adapter._build_cmd("transcode", input_path, None, {"syntax": "s"}))
     assert any(part == "echo" for part in adapter._build_cmd("echo", input_path, None, {"host": "h", "port": 1}))
+    assert any(part == "store-scu" for part in adapter._build_cmd("store_scu", input_path, None, {"host": "h", "port": 1})[1:])
+    assert any(part == "worklist" for part in adapter._build_cmd("worklist", input_path, None, {"host": "h", "port": 1})[1:])
+    assert any(part == "qido" for part in adapter._build_cmd("qido", input_path, None, {"url": "http://x"})[1:])
+    assert any(part == "stow" for part in adapter._build_cmd("stow", input_path, None, {"url": "http://x"})[1:])
+    assert any(part == "wado" for part in adapter._build_cmd("wado", input_path, str(tmp_path / "out.dcm"), {"url": "http://x"})[1:])
+    assert any(part == "sr-summary" for part in adapter._build_cmd("sr_summary", input_path, None, {})[1:])
+    assert any(part == "rt-check" for part in adapter._build_cmd("rt_check", input_path, None, {})[1:])
 
 
 def test_get_adapter_invalid():

@@ -22,7 +22,8 @@ class JavaCliAdapter:
         input_path = request.get("input")
         output = request.get("output")
 
-        requires_input = op not in {"echo", "custom"}
+        no_input_ops = {"echo", "custom", "worklist", "qido", "wado"}
+        requires_input = op not in no_input_ops
         if not op or (requires_input and not input_path):
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
@@ -32,11 +33,15 @@ class JavaCliAdapter:
 
         result = run_process(cmd, cwd=self.root / "java")
         meta = parse_json_maybe(result.stdout)
-        result.metadata = meta
+        if meta is not None:
+            result.metadata = meta
         result.backend = "java"
         result.operation = op
         if output:
             result.output_files.append(str(Path(output)))
+        elif op == "wado":
+            inferred_output = Path(input_path or "wado").with_suffix(".dcm")
+            result.output_files.append(str(inferred_output))
         return result
 
     def _build_cmd(self, op: str, input_path: str, output: str | None, options: Dict[str, Any]) -> List[str] | None:
@@ -94,6 +99,50 @@ class JavaCliAdapter:
             cmd = [*self.base_cmd, "stats", input_path, "--bins", str(bins), "--json"]
             if options.get("pretty"):
                 cmd.append("--pretty")
+            return cmd
+        if op == "store_scu":
+            host = options.get("host", "127.0.0.1")
+            port = options.get("port", 11112)
+            calling = options.get("calling_aet", "STORE-SCU")
+            called = options.get("called_aet", "STORE-SCP")
+            timeout = options.get("timeout", 2000)
+            target = f"{host}:{port}"
+            cmd = [*self.base_cmd, "store-scu", input_path, "--target", target, "--calling", calling, "--called", called]
+            if timeout:
+                cmd.extend(["--timeout", str(timeout)])
+            return cmd
+        if op == "worklist":
+            host = options.get("host", "127.0.0.1")
+            port = options.get("port", 11112)
+            calling = options.get("calling_aet", "MWL-SCU")
+            called = options.get("called_aet", "MWL-SCP")
+            patient = options.get("patient")
+            target = f"{host}:{port}"
+            cmd = [*self.base_cmd, "mwl", target, "--calling", calling, "--called", called]
+            if patient:
+                cmd.extend(["--patient", str(patient)])
+            return cmd
+        if op == "qido":
+            url = options.get("url") or "http://localhost:8080/dicomweb"
+            return [*self.base_cmd, "qido", url]
+        if op == "stow":
+            url = options.get("url") or "http://localhost:8080/dicomweb"
+            return [*self.base_cmd, "stow", url, input_path]
+        if op == "wado":
+            url = options.get("url") or "http://localhost:8080/dicomweb/wado"
+            inferred_output = output or str(Path(input_path or "wado").with_suffix(".dcm"))
+            return [*self.base_cmd, "wado", url, "--output", inferred_output]
+        if op == "sr_summary":
+            return [*self.base_cmd, "sr-summary", input_path]
+        if op == "rt_check":
+            plan = options.get("plan") or input_path
+            if not plan:
+                return None
+            cmd = [*self.base_cmd, "rt-check", "--plan", str(plan)]
+            if options.get("dose"):
+                cmd.extend(["--dose", str(options["dose"])])
+            if options.get("struct"):
+                cmd.extend(["--struct", str(options["struct"])])
             return cmd
         if op == "custom":
             custom_cmd = options.get("custom_cmd")

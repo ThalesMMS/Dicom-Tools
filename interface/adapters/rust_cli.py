@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
-from .runner import RunResult, run_process, split_cmd
+from .runner import RunResult, parse_json_maybe, run_process, split_cmd
 
 
 class RustCliAdapter:
@@ -40,6 +40,9 @@ class RustCliAdapter:
             return RunResult(False, 1, "", f"operação não suportada pelo backend Rust: {op}", [], None)
 
         result = run_process(cmd, cwd=self.cwd)
+        meta = parse_json_maybe(result.stdout)
+        if meta is not None:
+            result.metadata = meta
         result.backend = "rust"
         result.operation = op
         if output:
