@@ -34,7 +34,22 @@ class CSharpCliAdapter:
         input_path = request.get("input")
         output = request.get("output")
 
-        requires_input = op not in {"echo", "custom"}
+        no_input_ops = {
+            "echo",
+            "custom",
+            "test_anonymize_cs",
+            "test_uid_cs",
+            "test_datetime_cs",
+            "test_charset_cs",
+            "test_dictionary_cs",
+            "test_file_operations_cs",
+            "test_sequence_cs",
+            "test_value_representation_cs",
+            "test_option_parser_cs",
+            "test_stats_helpers_cs",
+            "run_cs_tests",
+        }
+        requires_input = op not in no_input_ops
         if not op or (requires_input and not input_path):
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
@@ -139,6 +154,23 @@ class CSharpCliAdapter:
             if options.get("struct"):
                 cmd.extend(["--struct", str(options["struct"])])
             return cmd
+        test_map = {
+            "test_anonymize_cs": "DicomTools.Tests.AnonymizeCommandTests",
+            "test_uid_cs": "DicomTools.Tests.DicomUidTests",
+            "test_datetime_cs": "DicomTools.Tests.DicomDateTimeTests",
+            "test_charset_cs": "DicomTools.Tests.DicomCharsetTests",
+            "test_dictionary_cs": "DicomTools.Tests.DicomDictionaryTests",
+            "test_file_operations_cs": "DicomTools.Tests.DicomFileOperationsTests",
+            "test_sequence_cs": "DicomTools.Tests.DicomSequenceTests",
+            "test_value_representation_cs": "DicomTools.Tests.DicomValueRepresentationTests",
+            "test_option_parser_cs": "DicomTools.Tests.OptionParserTests",
+            "test_stats_helpers_cs": "DicomTools.Tests.StatsHelpersTests",
+        }
+        if op in test_map:
+            class_filter = test_map[op]
+            return ["dotnet", "test", "DicomTools.Tests/DicomTools.Tests.csproj", "--filter", f"ClassName={class_filter}"]
+        if op == "run_cs_tests":
+            return ["dotnet", "test", "DicomTools.Tests/DicomTools.Tests.csproj"]
         if op == "custom":
             custom_cmd = options.get("custom_cmd")
             if not custom_cmd:

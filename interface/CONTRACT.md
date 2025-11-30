@@ -6,7 +6,7 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 ```json
 {
   "backend": "python | cpp | rust | java | csharp",
-  "op": "info | anonymize | to_image | transcode | validate | echo | stats | dump | volume | nifti | to_json | from_json | test_gdcm | test_dcmtk | test_itk | test_vtk_unit | test_utils | test_integration | test_edge_cases | test_validation | run_cpp_tests",
+  "op": "info | anonymize | to_image | transcode | validate | echo | stats | dump | volume | nifti | to_json | from_json | test_gdcm | test_dcmtk | test_itk | test_vtk_unit | test_utils | test_integration | test_edge_cases | test_validation | run_cpp_tests | test_uid | test_datetime | test_charset | test_workflow | test_validation_java | run_java_tests | test_anonymize_cs | test_uid_cs | test_datetime_cs | test_charset_cs | test_dictionary_cs | test_file_operations_cs | test_sequence_cs | test_value_representation_cs | test_option_parser_cs | test_stats_helpers_cs | run_cs_tests",
   "input": "/caminho/para/arquivo_ou_diretorio",
   "output": "/caminho/para/saida_opcional",
   "options": { "chave": "valor" }
@@ -49,13 +49,30 @@ Meta: ter uma interface única (Tkinter) chamando cada backend via executáveis 
 | test_edge_cases | Executa testes de edge cases C++ | `input?` (ignorado) | `stdout` |
 | test_validation | Executa testes de validação C++ | `input?` (ignorado) | `stdout` |
 | run_cpp_tests | Executa todos os testes C++ (target run_cpp_tests) | `input?` (ignorado) | `stdout` |
+| test_uid | Executa testes de UID dcm4che (Java) | `input?` (ignorado) | `stdout` |
+| test_datetime | Executa testes de data/hora dcm4che (Java) | `input?` (ignorado) | `stdout` |
+| test_charset | Executa testes de charset dcm4che (Java) | `input?` (ignorado) | `stdout` |
+| test_workflow | Executa testes de workflow/end-to-end dcm4che (Java) | `input?` (ignorado) | `stdout` |
+| test_validation_java | Executa testes de validação dcm4che (Java) | `input?` (ignorado) | `stdout` |
+| run_java_tests | Executa todos os testes Java dcm4che | `input?` (ignorado) | `stdout` |
+| test_anonymize_cs | Executa testes de anonimização fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_uid_cs | Executa testes de UID fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_datetime_cs | Executa testes de data/hora fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_charset_cs | Executa testes de charset fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_dictionary_cs | Executa testes de dicionário fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_file_operations_cs | Executa testes de operações de arquivo fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_sequence_cs | Executa testes de sequência fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_value_representation_cs | Executa testes de VR fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_option_parser_cs | Executa testes de parsing de opções fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| test_stats_helpers_cs | Executa testes de helpers de estatística fo-dicom (C#) | `input?` (ignorado) | `stdout` |
+| run_cs_tests | Executa todos os testes C# fo-dicom | `input?` (ignorado) | `stdout` |
 
 ## Mapeamento (mínimo viável atual)
 - **Python** (`python -m DICOM_reencoder.cli`): `info -> summary --json`, `anonymize -> anonymize`, `to_image -> png`, `transcode -> transcode`, `validate -> python -m DICOM_reencoder.validate_dicom`, `echo -> dicom_echo`, `volume -> volume`, `nifti -> nifti`.  
 - **Rust** (`rust/target/release/dicom-tools` ou `cargo run --release -- ...`): `info [--json]`, `anonymize`, `to_image` (`to-image`), `transcode`, `validate` (`validate`), `echo` (`echo`), `dump [--json]` (`dump`), `stats` (`stats`/`histogram`), `to_json` (`to-json`), `from_json` (`from-json`).  
 - **C++** (`cpp/build/DicomTools`): `info/dump -> gdcm:dump`, `anonymize -> gdcm:anonymize`, `to_image -> gdcm:preview`, `stats -> gdcm:stats`, `transcode -> gdcm:transcode-j2k|gdcm:transcode-rle|gdcm:jpegls` (mapeado por `options.syntax`), `validate -> gdcm:dump` (proxy mínima), VTK demos (`vtk_*`), unit/integration tests (`test_gdcm`, `test_dcmtk`, `test_itk`, `test_vtk_unit`, `test_utils`, `test_integration`, `test_edge_cases`, `test_validation`, `run_cpp_tests`).  
 - **Java (dcm4chee)**: CLI em `java/dcm4che-tests/target/dcm4che-tests.jar` (`java -jar ...`): `info --json`, `anonymize --output`, `to-image --output [--format] [--frame]`, `transcode --output --syntax`, `validate`, `dump [--max-width]`, `stats --bins [--json|--pretty]`, `echo host:port [--timeout --calling --called]`.  
-- **C# (fo-dicom)**: CLI em `cs/bin/(Release|Debug)/net8.0/DicomTools.Cli`: `info --json`, `anonymize --output`, `to-image --output [--frame] [--format]`, `transcode --output --transfer-syntax`, `validate`, `echo host:port`, `dump [--depth --max-value-length]`, `stats --json [--frame]`, `histogram --json [--bins] [--frame]`.
+- **C# (fo-dicom)**: CLI em `cs/bin/(Release|Debug)/net8.0/DicomTools.Cli`: `info --json`, `anonymize --output`, `to-image --output [--frame] [--format]`, `transcode --output --transfer-syntax`, `validate`, `echo host:port`, `dump [--depth --max-value-length]`, `stats --json [--frame]`, `histogram --json [--bins] [--frame]`, testes via `dotnet test DicomTools.Tests` (`test_anonymize_cs`, `test_uid_cs`, `test_datetime_cs`, `test_charset_cs`, `test_dictionary_cs`, `test_file_operations_cs`, `test_sequence_cs`, `test_value_representation_cs`, `test_option_parser_cs`, `test_stats_helpers_cs`, `run_cs_tests`).  
 - **JavaScript (shim)**: CLI em `js/contract-cli/index.js` (env `JS_DICOM_TOOLS_CMD` para sobrescrever). Implementa o contrato delegando ao backend Python: `info/anonymize/to_image/transcode/validate/stats/dump/volume/nifti/echo`.
 
 ## Binaries e variáveis de ambiente

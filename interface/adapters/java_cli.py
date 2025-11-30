@@ -144,6 +144,19 @@ class JavaCliAdapter:
             if options.get("struct"):
                 cmd.extend(["--struct", str(options["struct"])])
             return cmd
+        if op in {"test_uid", "test_datetime", "test_charset", "test_workflow", "test_validation_java"}:
+            test_map = {
+                "test_uid": "DicomUidTest",
+                "test_datetime": "DicomDateTimeTest",
+                "test_charset": "DicomCharsetTests",
+                "test_workflow": "DicomWorkflowTest",
+                "test_validation_java": "DicomValidationTest",
+            }
+            test_name = test_map.get(op)
+            # Run maven tests for the specified class in dcm4che-tests module
+            return ["mvn", "-q", "-pl", "dcm4che-tests", "-am", "test", f"-Dtest={test_name}"]
+        if op == "run_java_tests":
+            return ["mvn", "-q", "-pl", "dcm4che-tests", "-am", "test"]
         if op == "custom":
             custom_cmd = options.get("custom_cmd")
             if not custom_cmd:
