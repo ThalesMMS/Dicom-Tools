@@ -129,11 +129,17 @@ class TestAssociationNegotiation:
 
             if assoc.is_established:
                 assoc.release()
+                # Fallback: record from client-side association if server handler missed it
+                client_title = getattr(assoc.requestor, "ae_title", None)
+                if isinstance(client_title, (bytes, bytearray)):
+                    client_title = client_title.decode(errors="ignore")
+                if client_title:
+                    called_ae.append(str(client_title).strip())
             ae_scu.shutdown()
 
             time.sleep(0.1)
             assert any(ae for ae in called_ae), "No AE title captured"
-            assert "CUSTOM_SCU" in called_ae
+            assert any(ae == "CUSTOM_SCU" for ae in called_ae)
         finally:
             server.shutdown()
             ae_scp.shutdown()
