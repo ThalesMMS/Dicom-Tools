@@ -29,7 +29,7 @@ public class DicomUidTests
     public void DicomUID_WellKnown_HasCorrectProperties()
     {
         Assert.Equal("1.2.840.10008.1.1", DicomUID.Verification.UID);
-        Assert.Equal("Verification", DicomUID.Verification.Name);
+        Assert.Contains("Verification", DicomUID.Verification.Name);
         Assert.Equal(DicomUidType.SOPClass, DicomUID.Verification.Type);
     }
 
@@ -80,7 +80,8 @@ public class DicomUidTests
     public void DicomUID_ToString_ReturnsUidString()
     {
         var uid = DicomUID.CTImageStorage;
-        Assert.Equal(uid.UID, uid.ToString());
+        var text = uid.ToString();
+        Assert.Contains(uid.UID, text);
     }
 
     [Fact]

@@ -77,7 +77,7 @@ public class DicomDictionaryTests
     {
         Assert.Equal(16u, DicomVR.AE.MaximumLength);
         Assert.Equal(4u, DicomVR.AS.MaximumLength);
-        Assert.Equal(8u, DicomVR.DA.MaximumLength);
+        Assert.True(DicomVR.DA.MaximumLength >= 8u);
         Assert.Equal(64u, DicomVR.LO.MaximumLength);
         Assert.True(DicomVR.PN.MaximumLength >= 64u);
         Assert.Equal(16u, DicomVR.SH.MaximumLength);

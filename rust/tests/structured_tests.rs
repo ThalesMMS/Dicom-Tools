@@ -47,6 +47,7 @@ fn test_value_at_path_nested_content_sequence() {
     let path = vec![
         PathSegment::element(tags::CONTENT_SEQUENCE),
         PathSegment::element(tags::CONTENT_SEQUENCE),
+        PathSegment::element(tags::CONTENT_SEQUENCE),
         PathSegment::element(tags::TEXT_VALUE),
     ];
     let value = value_at_path(&obj, &path);
@@ -97,4 +98,3 @@ fn test_path_segment_item() {
     assert_eq!(segment.tag, tags::CONTENT_SEQUENCE);
     assert_eq!(segment.item_index, Some(0));
 }
-

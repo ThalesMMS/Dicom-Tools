@@ -138,7 +138,7 @@ function createAnalysisSection(root: HTMLElement) {
   section.className = 'analysis';
   const heading = document.createElement('h3');
   heading.textContent = 'TS Volume Utils (MIP/MinIP/AIP, Histogram, VOI)';
-  const info = document.createElement('p');
+  const info = document.createElement('div');
 
   const projectionRow = document.createElement('div');
   const mipBtn = document.createElement('button');
@@ -187,7 +187,7 @@ function createAnalysisSection(root: HTMLElement) {
   histogramCanvas.width = 480;
   histogramCanvas.height = 160;
   histogramCanvas.className = 'histogram-canvas';
-  const histogramInfo = document.createElement('p');
+  const histogramInfo = document.createElement('div');
 
   section.append(heading, info, projectionRow, resampleRow, previewCanvas, histogramRow, histogramCanvas, histogramInfo);
   root.appendChild(section);

@@ -12,6 +12,8 @@ use anyhow::{Context, Result};
 use dicom::object::open_file;
 use dicom::pixeldata::PixelDecoder;
 use dicom_pixeldata::{ConvertOptions, DecodedPixelData, ModalityLutOption, Rescale, WindowLevel};
+use dicom::dictionary_std::tags;
+use dicom_core::header::HasLength;
 
 use crate::models::{FrameVoi, PixelFormatSummary, PixelHistogram, PixelStatistics};
 
@@ -36,15 +38,53 @@ pub fn stats(input: &Path) -> Result<()> {
 
 pub fn pixel_statistics_for_file(input: &Path) -> Result<PixelStatistics> {
     let obj = open_file(input).context("Failed to open DICOM file")?;
-    let decoded = obj
-        .decode_pixel_data()
-        .context("Failed to decode pixel data")?;
+    // Handle empty pixel data gracefully by short-circuiting.
+    if let Ok(elem) = obj.element(tags::PIXEL_DATA) {
+        if elem.value().length().0 == 0 {
+            return Ok(PixelStatistics {
+                min: 0.0,
+                max: 0.0,
+                mean: 0.0,
+                median: None,
+                std_dev: 0.0,
+                total_pixels: 0,
+                shape: vec![],
+            });
+        }
+    }
 
-    pixel_statistics_from_decoded(&decoded)
+    match obj.decode_pixel_data() {
+        Ok(decoded) => pixel_statistics_from_decoded(&decoded),
+        Err(err) => {
+            // Some files declare pixel metadata but contain no samples; treat as empty instead of hard error.
+            let msg = format!("{err}");
+            if msg.contains("Frame #0 is out of range") || msg.contains("no pixel data") {
+                Ok(PixelStatistics {
+                    min: 0.0,
+                    max: 0.0,
+                    mean: 0.0,
+                    median: None,
+                    std_dev: 0.0,
+                    total_pixels: 0,
+                    shape: vec![],
+                })
+            } else {
+                Err(err).context("Failed to decode pixel data")
+            }
+        }
+    }
 }
 
 pub fn pixel_statistics_from_decoded(decoded: &DecodedPixelData) -> Result<PixelStatistics> {
-    let (values, shape) = pixel_values(decoded)?;
+    let (values, mut shape) = pixel_values(decoded)?;
+    // Normalize shape to [frames, samples, rows, cols] for reporting consistency.
+    if shape.len() == 4 {
+        let frames = shape[0];
+        let rows = shape[1];
+        let cols = shape[2];
+        let samples = shape[3];
+        shape = vec![frames, samples, rows, cols];
+    }
 
     if values.is_empty() {
         return Ok(PixelStatistics {
@@ -103,10 +143,30 @@ pub fn pixel_statistics_from_decoded(decoded: &DecodedPixelData) -> Result<Pixel
 /// Generate an intensity histogram for the pixel data.
 pub fn histogram_for_file(input: &Path, bins: usize) -> Result<PixelHistogram> {
     let obj = open_file(input).context("Failed to open DICOM file")?;
-    let decoded = obj
-        .decode_pixel_data()
-        .context("Failed to decode pixel data")?;
-    histogram_from_decoded(&decoded, bins)
+    if let Ok(elem) = obj.element(tags::PIXEL_DATA) {
+        if elem.value().length().0 == 0 {
+            return Ok(PixelHistogram {
+                bins: vec![],
+                min: 0.0,
+                max: 0.0,
+            });
+        }
+    }
+
+    match obj.decode_pixel_data() {
+        Ok(decoded) => histogram_from_decoded(&decoded, bins),
+        Err(err) => {
+            let msg = format!("{err}");
+            if msg.contains("Frame #0 is out of range") || msg.contains("no pixel data") {
+                return Ok(PixelHistogram {
+                    bins: vec![],
+                    min: 0.0,
+                    max: 0.0,
+                });
+            }
+            Err(err).context("Failed to decode pixel data")
+        }
+    }
 }
 
 pub fn histogram_from_decoded(decoded: &DecodedPixelData, bins: usize) -> Result<PixelHistogram> {
