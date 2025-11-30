@@ -55,16 +55,8 @@ class DicomValidationTest {
         Attributes incomplete = new Attributes();
         incomplete.setString(Tag.SOPClassUID, VR.UI, UID.CTImageStorage);
         // Falta SOPInstanceUID e outras tags obrigatórias
-
         Path output = tempDir.resolve("incomplete.dcm");
-        writeDicom(incomplete, output);
-
-        assertThrows(Exception.class, () -> {
-            try (DicomInputStream dis = new DicomInputStream(output.toFile())) {
-                dis.readFileMetaInformation();
-                dis.readDataset(-1, -1);
-            }
-        });
+        assertThrows(IllegalArgumentException.class, () -> writeDicom(incomplete, output));
     }
 
     @Test

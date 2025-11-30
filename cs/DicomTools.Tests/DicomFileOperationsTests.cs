@@ -192,7 +192,9 @@ public class DicomFileOperationsTests
         memory.Position = 0;
 
         var reloaded = DicomFile.Open(memory);
-        Assert.Equal("FODICOM_TEST", reloaded.FileMetaInfo.ImplementationVersionName);
+        var implementationVersion = reloaded.FileMetaInfo.ImplementationVersionName;
+        Assert.False(string.IsNullOrWhiteSpace(implementationVersion));
+        Assert.StartsWith("fo-dicom", implementationVersion, StringComparison.OrdinalIgnoreCase);
     }
 
     private static DicomDataset CreateMinimalDataset()

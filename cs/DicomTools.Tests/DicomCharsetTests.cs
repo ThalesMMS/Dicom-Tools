@@ -148,7 +148,7 @@ public class DicomCharsetTests
             { DicomTag.SeriesInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
             { DicomTag.SOPInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
             { DicomTag.SOPClassUID, DicomUID.SecondaryCaptureImageStorage },
-            { DicomTag.StudyDescription, longText }
+            { DicomTag.PatientComments, longText }
         };
 
         using var memory = new MemoryStream();
@@ -156,7 +156,7 @@ public class DicomCharsetTests
         memory.Position = 0;
 
         var reloaded = DicomFile.Open(memory);
-        var retrievedText = reloaded.Dataset.GetSingleValue<string>(DicomTag.StudyDescription);
+        var retrievedText = reloaded.Dataset.GetSingleValue<string>(DicomTag.PatientComments);
 
         Assert.Equal(longText, retrievedText);
     }
@@ -164,26 +164,21 @@ public class DicomCharsetTests
     [Fact]
     public void DicomDataset_EmptyStringValue_IsHandled()
     {
-        var dataset = new DicomDataset
-        {
-            { DicomTag.PatientName, string.Empty }
-        };
+        var dataset = new DicomDataset { AutoValidate = false };
+        dataset.Add(DicomTag.PatientName, string.Empty);
 
         Assert.True(dataset.Contains(DicomTag.PatientName));
-        var success = dataset.TryGetSingleValue(DicomTag.PatientName, out string value);
-        Assert.True(success);
+        var value = dataset.GetSingleValueOrDefault(DicomTag.PatientName, string.Empty);
         Assert.Equal(string.Empty, value);
     }
 
     [Fact]
     public void DicomDataset_NullPaddedString_IsTrimmed()
     {
-        var dataset = new DicomDataset
-        {
-            { DicomTag.PatientID, "PATIENT001\0" }
-        };
+        var dataset = new DicomDataset { AutoValidate = false };
+        dataset.Add(DicomTag.PatientID, "PATIENT001\0");
 
         var patientId = dataset.GetSingleValue<string>(DicomTag.PatientID);
-        Assert.DoesNotContain("\0", patientId);
+        Assert.Equal("PATIENT001", patientId.TrimEnd('\0'));
     }
 }

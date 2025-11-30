@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FellowOakDicom;
 
 namespace DicomTools.Tests;
@@ -27,10 +28,13 @@ public class RtCheckCommandTests
 
             var result = CliRunner.Run("rt-check", "--plan", planPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"ok\":true", result.Stdout);
-            Assert.Contains(planUid.UID, result.Stdout);
-            Assert.Contains("\"hasDose\":false", result.Stdout);
-            Assert.Contains("\"hasStructureSet\":false", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var root = json.RootElement;
+            var metadata = root.GetProperty("metadata");
+            Assert.True(root.GetProperty("ok").GetBoolean());
+            Assert.Equal(planUid.UID, metadata.GetProperty("plan").GetString());
+            Assert.False(metadata.GetProperty("hasDose").GetBoolean());
+            Assert.False(metadata.GetProperty("hasStructureSet").GetBoolean());
         }
         finally
         {
@@ -75,8 +79,10 @@ public class RtCheckCommandTests
 
             var result = CliRunner.Run("rt-check", "--plan", planPath, "--dose", dosePath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"hasDose\":true", result.Stdout);
-            Assert.Contains(doseUid.UID, result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.True(metadata.GetProperty("hasDose").GetBoolean());
+            Assert.Equal(doseUid.UID, metadata.GetProperty("dose").GetString());
         }
         finally
         {
@@ -121,8 +127,10 @@ public class RtCheckCommandTests
 
             var result = CliRunner.Run("rt-check", "--plan", planPath, "--struct", structPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"hasStructureSet\":true", result.Stdout);
-            Assert.Contains(structUid.UID, result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.True(metadata.GetProperty("hasStructureSet").GetBoolean());
+            Assert.Equal(structUid.UID, metadata.GetProperty("structureSet").GetString());
         }
         finally
         {
@@ -178,8 +186,10 @@ public class RtCheckCommandTests
 
             var result = CliRunner.Run("rt-check", "--plan", planPath, "--dose", dosePath, "--struct", structPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"hasDose\":true", result.Stdout);
-            Assert.Contains("\"hasStructureSet\":true", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.True(metadata.GetProperty("hasDose").GetBoolean());
+            Assert.True(metadata.GetProperty("hasStructureSet").GetBoolean());
         }
         finally
         {
@@ -209,7 +219,8 @@ public class RtCheckCommandTests
 
             var result = CliRunner.Run("rt-check", planPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"ok\":true", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            Assert.True(json.RootElement.GetProperty("ok").GetBoolean());
         }
         finally
         {
@@ -239,7 +250,9 @@ public class RtCheckCommandTests
 
             var result = CliRunner.Run("rt-check", "--plan", planPath, "--dose", "/nonexistent/dose.dcm");
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"hasDose\":false", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.False(metadata.GetProperty("hasDose").GetBoolean());
         }
         finally
         {

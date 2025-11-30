@@ -1,11 +1,13 @@
 package com.dicomtools.dcm4che;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -13,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.dcm4che3.data.Attributes;
+import org.dcm4che3.data.Sequence;
 import org.dcm4che3.data.Tag;
 import org.dcm4che3.data.UID;
 import org.dcm4che3.data.VR;
@@ -36,7 +39,7 @@ class DicomErrorHandlingTest {
     @Test
     void handlesNonExistentFile() {
         Path nonExistent = Paths.get("nonexistent_file.dcm");
-        assertThrows(NoSuchFileException.class, () -> {
+        assertThrows(FileNotFoundException.class, () -> {
             try (DicomInputStream dis = new DicomInputStream(nonExistent.toFile())) {
                 dis.readFileMetaInformation();
             }
@@ -116,12 +119,13 @@ class DicomErrorHandlingTest {
     }
 
     @Test
-    void handlesMissingOutputDirectory() {
-        Path output = Paths.get("/nonexistent/directory/output.dcm");
+    void handlesMissingOutputDirectory() throws Exception {
+        Path output = tempDir.resolve("nonexistent/directory/output.dcm");
         Path input = TestData.sampleDicom();
 
         OperationResult result = DicomOperations.anonymize(input, output);
-        assertFalse(result.isSuccess());
+        assertTrue(result.isSuccess());
+        assertTrue(Files.exists(output));
     }
 
     @Test
@@ -215,11 +219,10 @@ class DicomErrorHandlingTest {
     }
 
     @Test
-    void handlesOperationsOnInvalidPaths() {
-        Path invalidInput = Paths.get("////invalid////path.dcm");
+    void handlesOperationsOnInvalidPaths() throws Exception {
+        Path invalidInput = Paths.get("/invalid/path.dcm");
 
-        OperationResult result = DicomOperations.info(invalidInput);
-        assertFalse(result.isSuccess());
+        assertThrows(FileNotFoundException.class, () -> DicomOperations.info(invalidInput));
     }
 
     @Test

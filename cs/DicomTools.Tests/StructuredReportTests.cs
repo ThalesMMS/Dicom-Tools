@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FellowOakDicom;
 
 namespace DicomTools.Tests;
@@ -35,8 +36,10 @@ public class StructuredReportTests
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("ok", result.Stdout);
-            Assert.Contains("SR", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.Equal("SR", metadata.GetProperty("modality").GetString());
+            Assert.Equal(1, metadata.GetProperty("contentItems").GetInt32());
         }
         finally
         {
@@ -62,11 +65,14 @@ public class StructuredReportTests
                 { DicomTag.Modality, "SR" },
                 { DicomTag.PatientID, "SR-EMPTY" }
             };
+            dataset.Add(new DicomSequence(DicomTag.ContentSequence));
             new DicomFile(dataset).Save(dicomPath);
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("contentItems", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.Equal(0, metadata.GetProperty("contentItems").GetInt32());
         }
         finally
         {
@@ -102,7 +108,9 @@ public class StructuredReportTests
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("3", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.Equal(3, metadata.GetProperty("contentItems").GetInt32());
         }
         finally
         {

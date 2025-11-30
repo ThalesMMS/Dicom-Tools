@@ -1,4 +1,6 @@
 using FellowOakDicom;
+using FellowOakDicom.IO;
+using FellowOakDicom.IO.Writer;
 
 namespace DicomTools.Tests;
 
@@ -50,7 +52,7 @@ public class ValidateCommandTests
                 { DicomTag.SeriesInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
                 { DicomTag.PatientID, "MISSING-SOP" }
             };
-            new DicomFile(dataset).Save(dicomPath);
+            SaveDataset(dicomPath, dataset);
 
             var result = CliRunner.Run("validate", dicomPath);
             Assert.NotEqual(0, result.ExitCode);
@@ -78,7 +80,7 @@ public class ValidateCommandTests
                 { DicomTag.SeriesInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
                 { DicomTag.PatientID, "MISSING-STUDY" }
             };
-            new DicomFile(dataset).Save(dicomPath);
+            SaveDataset(dicomPath, dataset);
 
             var result = CliRunner.Run("validate", dicomPath);
             Assert.NotEqual(0, result.ExitCode);
@@ -104,7 +106,7 @@ public class ValidateCommandTests
                 { DicomTag.SOPClassUID, DicomUID.SecondaryCaptureImageStorage },
                 { DicomTag.PatientID, "MISSING-ALL" }
             };
-            new DicomFile(dataset).Save(dicomPath);
+            SaveDataset(dicomPath, dataset);
 
             var result = CliRunner.Run("validate", dicomPath);
             Assert.NotEqual(0, result.ExitCode);
@@ -125,5 +127,21 @@ public class ValidateCommandTests
         var result = CliRunner.Run("validate", input);
         Assert.Equal(0, result.ExitCode);
         Assert.Contains("validation ok", result.Stdout, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static void SaveDataset(string path, DicomDataset dataset)
+    {
+        var meta = new DicomFileMetaInformation
+        {
+            MediaStorageSOPClassUID = dataset.GetSingleValueOrDefault(DicomTag.SOPClassUID, DicomUID.SecondaryCaptureImageStorage),
+            MediaStorageSOPInstanceUID = dataset.GetSingleValueOrDefault(DicomTag.SOPInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID()),
+            TransferSyntax = DicomTransferSyntax.ExplicitVRLittleEndian,
+            ImplementationClassUID = DicomImplementation.ClassUID,
+            ImplementationVersionName = DicomImplementation.Version
+        };
+
+        using var target = new FileByteTarget(new FileReference(path));
+        var writer = new DicomFileWriter(DicomWriteOptions.Default);
+        writer.Write(target, meta, dataset);
     }
 }

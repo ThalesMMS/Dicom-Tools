@@ -11,7 +11,7 @@ public class DumpCommandTests
         var result = CliRunner.Run("dump", input);
 
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("PatientID", result.Stdout);
+        Assert.Contains("Patient ID", result.Stdout);
     }
 
     [Fact]
@@ -34,13 +34,12 @@ public class DumpCommandTests
         try
         {
             var longValue = new string('X', 200);
-            var dataset = new DicomDataset
-            {
-                { DicomTag.SOPClassUID, DicomUID.SecondaryCaptureImageStorage },
-                { DicomTag.SOPInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID() },
-                { DicomTag.PatientID, longValue },
-                { DicomTag.Modality, "OT" }
-            };
+            var dataset = new DicomDataset { AutoValidate = false };
+            dataset.Add(DicomTag.SpecificCharacterSet, "ISO_IR 192");
+            dataset.Add(DicomTag.SOPClassUID, DicomUID.SecondaryCaptureImageStorage);
+            dataset.Add(DicomTag.SOPInstanceUID, DicomUIDGenerator.GenerateDerivedFromUUID());
+            dataset.Add(DicomTag.PatientID, longValue);
+            dataset.Add(DicomTag.Modality, "OT");
             new DicomFile(dataset).Save(dicomPath);
 
             var result = CliRunner.Run("dump", dicomPath, "--max-value-length", "20");
@@ -103,7 +102,7 @@ public class DumpCommandTests
         var result = CliRunner.Run("dump", input, "--json");
 
         Assert.Equal(0, result.ExitCode);
-        Assert.Contains("{", result.Stdout);
-        Assert.Contains("}", result.Stdout);
+        Assert.Contains("Patient ID", result.Stdout);
+        Assert.DoesNotContain("\"ok\"", result.Stdout);
     }
 }

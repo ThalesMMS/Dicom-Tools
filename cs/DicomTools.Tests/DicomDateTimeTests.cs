@@ -169,9 +169,9 @@ public class DicomDateTimeTests
     public void DicomDataset_MultipleTimeValues_CanBeRetrieved()
     {
         var dataset = new DicomDataset();
-        dataset.Add(new DicomTime(DicomTag.FrameAcquisitionDateTime, "120000", "130000", "140000"));
+        dataset.Add(new DicomTime(DicomTag.TimeOfLastCalibration, "120000", "130000", "140000"));
 
-        var values = dataset.GetValues<DateTime>(DicomTag.FrameAcquisitionDateTime);
+        var values = dataset.GetValues<DateTime>(DicomTag.TimeOfLastCalibration);
 
         Assert.Equal(3, values.Length);
         Assert.Equal(12, values[0].Hour);

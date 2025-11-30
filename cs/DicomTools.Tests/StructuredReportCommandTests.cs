@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FellowOakDicom;
 
 namespace DicomTools.Tests;
@@ -35,9 +36,13 @@ public class StructuredReportCommandTests
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"ok\":true", result.Stdout);
-            Assert.Contains("\"modality\":\"SR\"", result.Stdout);
-            Assert.Contains("\"contentItems\":1", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var root = json.RootElement;
+            var metadata = root.GetProperty("metadata");
+
+            Assert.True(root.GetProperty("ok").GetBoolean());
+            Assert.Equal("SR", metadata.GetProperty("modality").GetString());
+            Assert.Equal(1, metadata.GetProperty("contentItems").GetInt32());
         }
         finally
         {
@@ -63,11 +68,14 @@ public class StructuredReportCommandTests
                 { DicomTag.Modality, "SR" },
                 { DicomTag.PatientID, "SR-EMPTY" }
             };
+            dataset.Add(new DicomSequence(DicomTag.ContentSequence));
             new DicomFile(dataset).Save(dicomPath);
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"contentItems\":0", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.Equal(0, metadata.GetProperty("contentItems").GetInt32());
         }
         finally
         {
@@ -94,11 +102,14 @@ public class StructuredReportCommandTests
                 { DicomTag.Modality, "SR" },
                 { DicomTag.PatientID, "SR-UID" }
             };
+            dataset.Add(new DicomSequence(DicomTag.ContentSequence));
             new DicomFile(dataset).Save(dicomPath);
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains(sopUid.UID, result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.Equal(sopUid.UID, metadata.GetProperty("sopInstanceUid").GetString());
         }
         finally
         {
@@ -134,7 +145,9 @@ public class StructuredReportCommandTests
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("\"contentItems\":3", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.Equal(3, metadata.GetProperty("contentItems").GetInt32());
         }
         finally
         {
@@ -161,11 +174,14 @@ public class StructuredReportCommandTests
                 { DicomTag.DocumentTitle, "Radiology Report" },
                 { DicomTag.PatientID, "SR-TITLE" }
             };
+            dataset.Add(new DicomSequence(DicomTag.ContentSequence));
             new DicomFile(dataset).Save(dicomPath);
 
             var result = CliRunner.Run("sr-summary", dicomPath);
             Assert.Equal(0, result.ExitCode);
-            Assert.Contains("Radiology Report", result.Stdout);
+            using var json = JsonDocument.Parse(result.Stdout);
+            var metadata = json.RootElement.GetProperty("metadata");
+            Assert.Equal("Radiology Report", metadata.GetProperty("title").GetString());
         }
         finally
         {

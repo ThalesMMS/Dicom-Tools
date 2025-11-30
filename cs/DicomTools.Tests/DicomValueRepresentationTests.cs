@@ -168,20 +168,22 @@ public class DicomValueRepresentationTests
         dataset.Add(new DicomOtherWord(DicomTag.RedPaletteColorLookupTableData, new MemoryByteBuffer(bytes)));
 
         var element = dataset.GetDicomItem<DicomOtherWord>(DicomTag.RedPaletteColorLookupTableData);
-        var retrieved = element.Get<byte[]>();
-        Assert.Equal(bytes, retrieved);
+        var retrieved = element.Get<ushort[]>();
+        Assert.Equal(words, retrieved);
     }
 
     [Fact]
     public void DicomElement_MultiValue_US_StoresArray()
     {
         var dataset = new DicomDataset();
-        dataset.Add(DicomTag.PixelAspectRatio, (ushort)1, (ushort)1);
+        dataset.Add(DicomTag.AcquisitionMatrix, (ushort)512, (ushort)512, (ushort)0, (ushort)0);
 
-        var values = dataset.GetValues<ushort>(DicomTag.PixelAspectRatio);
-        Assert.Equal(2, values.Length);
-        Assert.Equal(1, values[0]);
-        Assert.Equal(1, values[1]);
+        var values = dataset.GetValues<ushort>(DicomTag.AcquisitionMatrix);
+        Assert.Equal(4, values.Length);
+        Assert.Equal(512, values[0]);
+        Assert.Equal(512, values[1]);
+        Assert.Equal(0, values[2]);
+        Assert.Equal(0, values[3]);
     }
 
     [Fact]

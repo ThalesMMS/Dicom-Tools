@@ -18,6 +18,7 @@ import org.dcm4che3.data.UID;
 import org.dcm4che3.data.VR;
 import org.dcm4che3.io.DicomInputStream;
 import org.dcm4che3.io.DicomOutputStream;
+import org.dcm4che3.util.UIDUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -88,15 +89,17 @@ class DicomTagManipulationTest {
     @Test
     void setsMultiValueTags() throws Exception {
         Attributes attrs = new Attributes();
-        attrs.setDoubles(Tag.PixelSpacing, VR.DS, new double[]{0.5, 0.5});
-        attrs.setInts(Tag.WindowCenter, VR.DS, new int[]{-600, 100});
-        attrs.setStrings(Tag.FrameOfReferenceUID, VR.UI, new String[]{"1.2.3.4", "5.6.7.8"});
+        attrs.setString(Tag.PixelSpacing, VR.DS, "0.5", "0.5");
+        attrs.setString(Tag.WindowCenter, VR.DS, "-600", "100");
+        attrs.setString(Tag.FrameOfReferenceUID, VR.UI, "1.2.3.4", "5.6.7.8");
 
         double[] spacing = attrs.getDoubles(Tag.PixelSpacing);
+        assertNotNull(spacing);
         assertArrayEquals(new double[]{0.5, 0.5}, spacing, 1e-6);
 
-        int[] centers = attrs.getInts(Tag.WindowCenter);
-        assertArrayEquals(new int[]{-600, 100}, centers);
+        double[] centers = attrs.getDoubles(Tag.WindowCenter);
+        assertNotNull(centers);
+        assertArrayEquals(new double[]{-600, 100}, centers, 1e-6);
     }
 
     @Test
@@ -131,7 +134,7 @@ class DicomTagManipulationTest {
         // Modifica várias tags
         dataset.setString(Tag.PatientName, VR.PN, "RoundTrip^Test");
         dataset.setInt(Tag.InstanceNumber, VR.IS, 999);
-        dataset.setDoubles(Tag.PixelSpacing, VR.DS, new double[]{0.3, 0.3});
+        dataset.setDouble(Tag.PixelSpacing, VR.DS, 0.3, 0.3);
         dataset.setString(Tag.StudyDescription, VR.LO, "Modified Study");
 
         Path output = tempDir.resolve("modified.dcm");
@@ -155,6 +158,11 @@ class DicomTagManipulationTest {
         // Tag privada (grupo ímpar, elemento arbitrário)
         int privateTag = 0x0009 << 16 | 0x0010;
         attrs.setString(privateTag, VR.LO, "Private Data");
+        attrs.setString(Tag.SOPClassUID, VR.UI, UID.SecondaryCaptureImageStorage);
+        attrs.setString(Tag.SOPInstanceUID, VR.UI, UIDUtils.createUID());
+        attrs.setString(Tag.StudyInstanceUID, VR.UI, UIDUtils.createUID());
+        attrs.setString(Tag.SeriesInstanceUID, VR.UI, UIDUtils.createUID());
+        attrs.setString(Tag.PatientID, VR.LO, "PRIVATE-TEST");
 
         assertTrue(attrs.contains(privateTag));
         assertEquals("Private Data", attrs.getString(privateTag));
