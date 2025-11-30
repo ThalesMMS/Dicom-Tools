@@ -208,13 +208,90 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME VTK_Tests COMMAND test_vtk WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
+    # Utilities Tests
+    add_executable(test_utils tests/test_utils.cpp)
+    target_include_directories(test_utils PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    target_include_directories(test_utils PRIVATE ${DICOMTOOLS_INCLUDE_ROOT})
+    target_link_libraries(test_utils PRIVATE dicom_cli)
+    add_test(NAME Utils_Tests COMMAND test_utils WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # Integration Tests
+    add_executable(test_integration tests/test_integration.cpp)
+    target_include_directories(test_integration PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    if(GDCM_FOUND)
+        target_compile_definitions(test_integration PRIVATE USE_GDCM)
+        if(GDCM_INCLUDE_DIRS)
+            target_include_directories(test_integration PRIVATE ${GDCM_INCLUDE_DIRS})
+        else()
+            include(${GDCM_USE_FILE})
+        endif()
+        target_link_libraries(test_integration PRIVATE ${GDCM_LIBRARIES})
+    endif()
+    if(DCMTK_FOUND)
+        target_compile_definitions(test_integration PRIVATE USE_DCMTK)
+        target_include_directories(test_integration PRIVATE ${DCMTK_INCLUDE_DIRS})
+        if(APPLE AND EXISTS "/opt/homebrew/lib")
+            target_link_directories(test_integration PRIVATE "/opt/homebrew/lib")
+        endif()
+        target_link_libraries(test_integration PRIVATE ${DCMTK_LIBRARIES})
+    endif()
+    add_test(NAME Integration_Tests COMMAND test_integration WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # Edge Cases Tests
+    add_executable(test_edge_cases tests/test_edge_cases.cpp)
+    target_include_directories(test_edge_cases PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    if(GDCM_FOUND)
+        target_compile_definitions(test_edge_cases PRIVATE USE_GDCM)
+        if(GDCM_INCLUDE_DIRS)
+            target_include_directories(test_edge_cases PRIVATE ${GDCM_INCLUDE_DIRS})
+        else()
+            include(${GDCM_USE_FILE})
+        endif()
+        target_link_libraries(test_edge_cases PRIVATE ${GDCM_LIBRARIES})
+    endif()
+    if(DCMTK_FOUND)
+        target_compile_definitions(test_edge_cases PRIVATE USE_DCMTK)
+        target_include_directories(test_edge_cases PRIVATE ${DCMTK_INCLUDE_DIRS})
+        if(APPLE AND EXISTS "/opt/homebrew/lib")
+            target_link_directories(test_edge_cases PRIVATE "/opt/homebrew/lib")
+        endif()
+        target_link_libraries(test_edge_cases PRIVATE ${DCMTK_LIBRARIES})
+    endif()
+    add_test(NAME EdgeCases_Tests COMMAND test_edge_cases WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
+    # Validation Tests
+    add_executable(test_validation tests/test_validation.cpp)
+    target_include_directories(test_validation PRIVATE ${CMAKE_SOURCE_DIR}/tests)
+    if(GDCM_FOUND)
+        target_compile_definitions(test_validation PRIVATE USE_GDCM)
+        if(GDCM_INCLUDE_DIRS)
+            target_include_directories(test_validation PRIVATE ${GDCM_INCLUDE_DIRS})
+        else()
+            include(${GDCM_USE_FILE})
+        endif()
+        target_link_libraries(test_validation PRIVATE ${GDCM_LIBRARIES})
+    endif()
+    if(DCMTK_FOUND)
+        target_compile_definitions(test_validation PRIVATE USE_DCMTK)
+        target_include_directories(test_validation PRIVATE ${DCMTK_INCLUDE_DIRS})
+        if(APPLE AND EXISTS "/opt/homebrew/lib")
+            target_link_directories(test_validation PRIVATE "/opt/homebrew/lib")
+        endif()
+        target_link_libraries(test_validation PRIVATE ${DCMTK_LIBRARIES})
+    endif()
+    add_test(NAME Validation_Tests COMMAND test_validation WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+
     # Combined test runner
     add_custom_target(run_cpp_tests
         COMMAND $<TARGET_FILE:test_gdcm>
         COMMAND $<TARGET_FILE:test_dcmtk>
         COMMAND $<TARGET_FILE:test_itk>
         COMMAND $<TARGET_FILE:test_vtk>
-        DEPENDS test_gdcm test_dcmtk test_itk test_vtk
+        COMMAND $<TARGET_FILE:test_utils>
+        COMMAND $<TARGET_FILE:test_integration>
+        COMMAND $<TARGET_FILE:test_edge_cases>
+        COMMAND $<TARGET_FILE:test_validation>
+        DEPENDS test_gdcm test_dcmtk test_itk test_vtk test_utils test_integration test_edge_cases test_validation
         COMMENT "Running all C++ library tests"
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     )

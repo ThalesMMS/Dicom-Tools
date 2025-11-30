@@ -11,6 +11,10 @@ This directory contains standalone C++ unit tests for GDCM, DCMTK, ITK, and VTK 
 | `test_dcmtk.cpp` | DCMTK library tests: datasets, codecs, image processing, validation |
 | `test_itk.cpp` | ITK library tests: filtering, resampling, segmentation, statistics |
 | `test_vtk.cpp` | VTK library tests: imaging, surface extraction, rendering primitives |
+| `test_utils.cpp` | Utility function tests: filesystem helpers, path manipulation |
+| `test_integration.cpp` | Integration tests: cross-library compatibility, workflows |
+| `test_edge_cases.cpp` | Edge case tests: error handling, boundary conditions, unusual inputs |
+| `test_validation.cpp` | DICOM validation tests: conformance checking, data integrity |
 
 ## Building
 
@@ -32,6 +36,10 @@ make
 ./test_dcmtk
 ./test_itk
 ./test_vtk
+./test_utils
+./test_integration
+./test_edge_cases
+./test_validation
 ```
 
 ### Via CTest
@@ -91,6 +99,41 @@ make run_cpp_tests
 - Transform and matrix operations
 - VTI and STL file writing
 - Rendering pipeline setup
+
+### Utils Tests
+- FileSystemUtils::FindFirstDicom functionality
+- FileSystemUtils::EnsureOutputDir directory creation
+- Path manipulation and resolution
+- Recursive directory iteration
+- Error handling for invalid paths
+
+### Integration Tests
+- Cross-library file reading compatibility
+- Metadata consistency across libraries
+- Round-trip read/write operations
+- Multi-step workflows (read-anonymize-write)
+- Directory series processing
+- Error propagation handling
+
+### Edge Cases Tests
+- Empty and null input handling
+- Very long paths and filenames
+- Special characters in paths
+- Zero-byte and corrupted files
+- Invalid tags and values
+- Unicode and special character handling
+- Multiple file handles
+- Rapid file operations
+
+### Validation Tests
+- Required tag presence (SOP Class/Instance UID)
+- VR (Value Representation) consistency
+- UID format and uniqueness validation
+- Transfer syntax validation
+- Date and time format validation
+- Image dimension validation
+- Sequence structure validation
+- File meta information validation
 
 ## Conditional Compilation
 
