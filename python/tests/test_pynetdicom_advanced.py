@@ -107,10 +107,14 @@ class TestAssociationNegotiation:
         called_ae = []
         
         def handle_assoc_rq(event):
-            ae_title = event.assoc.requestor.ae_title
-            if isinstance(ae_title, (bytes, bytearray)):
-                ae_title = ae_title.decode(errors="ignore")
-            called_ae.append(str(ae_title).strip())
+            candidates = []
+            for attr in ("ae_title", "calling_ae_title"):
+                value = getattr(event.assoc.requestor, attr, None)
+                if isinstance(value, (bytes, bytearray)):
+                    value = value.decode(errors="ignore")
+                if value is not None:
+                    candidates.append(str(value).strip())
+            called_ae.extend([c for c in candidates if c != ""])
 
         server = ae_scp.start_server(
             ("127.0.0.1", port),
@@ -128,6 +132,7 @@ class TestAssociationNegotiation:
             ae_scu.shutdown()
 
             time.sleep(0.1)
+            assert any(ae for ae in called_ae), "No AE title captured"
             assert "CUSTOM_SCU" in called_ae
         finally:
             server.shutdown()
