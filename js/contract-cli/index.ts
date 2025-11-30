@@ -154,11 +154,12 @@ export function formatPayload(
   };
 }
 
-function run(): void {
+export function run(): void {
   const args = parseArgs(process.argv);
   if (args.help || !args.op) usage();
 
-  const backingCmd = process.env.BACKING_CMD || 'python -m DICOM_reencoder.cli';
+  const pythonBin = process.env.PYTHON_BIN || 'python3';
+  const backingCmd = process.env.BACKING_CMD || `${pythonBin} -m DICOM_reencoder.cli`;
   const parts = backingCmd.split(' ');
   const cmd = parts.shift()!;
   const baseArgs = parts;
@@ -180,7 +181,7 @@ function run(): void {
   const payload = formatPayload(child, output);
 
   console.log(JSON.stringify(payload, null, 2));
-  process.exit(child.status || 0);
+  process.exit(payload.returncode);
 }
 
 // Entry point when executed directly
@@ -188,4 +189,3 @@ function run(): void {
 if (require.main === module) {
   run();
 }
-

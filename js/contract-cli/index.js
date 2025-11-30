@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 /**
  * Contract-compliant JS CLI shim.
- * This file now delegates to the TypeScript-compiled version in dist/index.js
- * Source: index.ts
+ * Delegates to the TypeScript build in dist/index.js.
  */
+const { run } = require('./dist/index.js');
 
-require('./dist/index.js');
+if (typeof run === 'function') {
+  run();
+} else {
+  console.error('contract-cli: missing run() export from dist build');
+  process.exit(1);
+}
