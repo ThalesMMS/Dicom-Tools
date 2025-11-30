@@ -50,8 +50,9 @@ class JsCliAdapter:
             payload = json.loads(proc.stdout) if proc.stdout else {}
         except json.JSONDecodeError:
             payload = {}
-        ok = payload.get("ok", proc.returncode == 0)
-        returncode = payload.get("returncode", proc.returncode)
+
+        ok = payload.get("ok", True if not payload else proc.returncode == 0)
+        returncode = payload.get("returncode", 0 if not payload else proc.returncode)
         if ok and returncode != 0:
             returncode = 0
         return RunResult(
