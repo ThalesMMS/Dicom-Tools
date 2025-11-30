@@ -50,9 +50,13 @@ class JsCliAdapter:
             payload = json.loads(proc.stdout) if proc.stdout else {}
         except json.JSONDecodeError:
             payload = {}
+        ok = payload.get("ok", proc.returncode == 0)
+        returncode = payload.get("returncode", proc.returncode)
+        if ok and returncode != 0:
+            returncode = 0
         return RunResult(
-            ok=proc.returncode == 0,
-            returncode=proc.returncode,
+            ok=ok,
+            returncode=returncode,
             stdout=proc.stdout,
             stderr=proc.stderr,
             output_files=payload.get("output_files") or [],
