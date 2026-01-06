@@ -1,4 +1,4 @@
-# Language Implementations
+# 4 Language Implementations
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -15,14 +15,14 @@ This document provides an overview of the six language backends that power the D
 
 For detailed documentation on individual backends, see:
 
-* Python implementation: [4.1](#4.1)
-* Rust implementation: [4.2](#4.2)
-* C++ implementation: [4.3](#4.3)
-* C# implementation: [4.4](#4.4)
-* Java implementation: [4.5](#4.5)
-* JavaScript implementation: [4.6](#4.6)
+* Python implementation: [4a](4a%20Python-Backend.md)
+* Rust implementation: [4b](4b%20Rust-Backend.md)
+* C++ implementation: [4c](4c%20C++-Backend.md)
+* C# implementation: [4d](4d%20C%23-Backend.md)
+* Java implementation: [4e](4e%20Java-Backend.md)
+* JavaScript implementation: [4f](4f%20JavaScript-Backend.md)
 
-For the adapter pattern that enables cross-language integration, see [3.2](#3.2).
+For the adapter pattern that enables cross-language integration, see [3b](3b%20Adapter-Pattern.md).
 
 ---
 
@@ -346,11 +346,11 @@ end
 
  shows how the adapter maps operations to CLI commands:
 
-* `info`: [line 71-72](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 71-72)
-* `anonymize`: [line 73-75](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 73-75)
-* `to_image`: [line 76-83](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 76-83)
-* `transcode`: [line 84-87](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 84-87)
-* `validate`: [line 88-89](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 88-89)
+* `info`: [interface/adapters/csharp_cli.py L71-L72](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L71-L72)
+* `anonymize`: [interface/adapters/csharp_cli.py L73-L75](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L73-L75)
+* `to_image`: [interface/adapters/csharp_cli.py L76-L83](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L76-L83)
+* `transcode`: [interface/adapters/csharp_cli.py L84-L87](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L84-L87)
+* `validate`: [interface/adapters/csharp_cli.py L88-L89](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L88-L89)
 
 **Sources:** [interface/adapters/csharp_cli.py L69-L181](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L69-L181)
 
@@ -452,12 +452,12 @@ end
 
 The script:
 
-1. Installs Python package in editable mode [line 17-23](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 17-23)
-2. Builds Rust release binary [line 25-27](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 25-27)
-3. Configures and builds C++ with CMake [line 29-38](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 29-38)
-4. Restores and builds C# solution [line 40-43](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 40-43)
-5. Packages Java JAR with Maven [line 45-47](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 45-47)
-6. Installs JavaScript dependencies [line 49-51](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 49-51)
+1. Installs Python package in editable mode [scripts/setup_all.sh L17-L23](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L17-L23)
+2. Builds Rust release binary [scripts/setup_all.sh L25-L27](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L25-L27)
+3. Configures and builds C++ with CMake [scripts/setup_all.sh L29-L38](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L29-L38)
+4. Restores and builds C# solution [scripts/setup_all.sh L40-L43](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L40-L43)
+5. Packages Java JAR with Maven [scripts/setup_all.sh L45-L47](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L45-L47)
+6. Installs JavaScript dependencies [scripts/setup_all.sh L49-L51](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L49-L51)
 
 **Sources:** [scripts/setup_all.sh L1-L60](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L1-L60)
 
@@ -479,7 +479,7 @@ Adapters use environment variables to allow runtime override of CLI paths, enabl
 env_cmd = os.environ.get("CS_DICOM_TOOLS_CMD")if env_cmd:    self.base_cmd = split_cmd(env_cmd)else:    default_cmd = self._find_default_cmd()    self.base_cmd = [default_cmd]
 ```
 
-The adapter tries Release build first, then Debug build, then falls back to PATH resolution [line 20-29](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 20-29)
+The adapter tries Release build first, then Debug build, then falls back to PATH resolution [interface/adapters/csharp_cli.py L20-L29](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L20-L29)
 
 ### Java Adapter Example
 
@@ -590,10 +590,10 @@ Each backend includes its own test suite while also participating in cross-langu
 
  validates that backends correctly declare their supported operations and I/O requirements:
 
-* C++ info operation uses directory output [line 4-7](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 4-7)
-* Rust to_image exposes window/level options [line 16-19](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 16-19)
-* Echo operations have no input [line 22-25](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 22-25)
-* VTK operations use directory I/O [line 36-39](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/line 36-39)
+* C++ info operation uses directory output [interface/tests/test_operation_specs.py L4-L7](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/tests/test_operation_specs.py#L4-L7)
+* Rust to_image exposes window/level options [interface/tests/test_operation_specs.py L16-L19](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/tests/test_operation_specs.py#L16-L19)
+* Echo operations have no input [interface/tests/test_operation_specs.py L22-L25](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/tests/test_operation_specs.py#L22-L25)
+* VTK operations use directory I/O [interface/tests/test_operation_specs.py L36-L39](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/tests/test_operation_specs.py#L36-L39)
 
 **Sources:** [interface/tests/test_operation_specs.py L1-L56](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/tests/test_operation_specs.py#L1-L56)
 
@@ -601,32 +601,32 @@ Each backend includes its own test suite while also participating in cross-langu
 
  [BUILD.md L24-L32](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L24-L32)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [Language Implementations](#4-language-implementations)
-* [Purpose and Scope](#4-purpose-and-scope)
-* [Backend Architecture Overview](#4-backend-architecture-overview)
-* [Adapter Integration Pattern](#4-adapter-integration-pattern)
-* [Library Ecosystem](#4-library-ecosystem)
-* [Backend Comparison Matrix](#4-backend-comparison-matrix)
-* [Adapter Implementation Details](#4-adapter-implementation-details)
-* [Adapter Class Structure](#4-adapter-class-structure)
-* [Common Adapter Methods](#4-common-adapter-methods)
-* [Operation Support by Backend](#4-operation-support-by-backend)
-* [Backend Selection Guide](#4-backend-selection-guide)
-* [When to Use Each Backend](#4-when-to-use-each-backend)
-* [Build Artifacts and Configuration](#4-build-artifacts-and-configuration)
-* [Default Binary Locations](#4-default-binary-locations)
-* [Build Commands](#4-build-commands)
-* [Environment Variable Configuration](#4-environment-variable-configuration)
-* [C# Adapter Example](#4-c-adapter-example)
-* [Java Adapter Example](#4-java-adapter-example)
-* [Rust Adapter Example](#4-rust-adapter-example)
-* [JavaScript Backend Architecture](#4-javascript-backend-architecture)
-* [Testing Strategy](#4-testing-strategy)
+* [Language Implementations](4%20Language-Implementations.md)
+* [Purpose and Scope](4%20Language-Implementations.md)
+* [Backend Architecture Overview](4%20Language-Implementations.md)
+* [Adapter Integration Pattern](4%20Language-Implementations.md)
+* [Library Ecosystem](4%20Language-Implementations.md)
+* [Backend Comparison Matrix](4%20Language-Implementations.md)
+* [Adapter Implementation Details](4%20Language-Implementations.md)
+* [Adapter Class Structure](4%20Language-Implementations.md)
+* [Common Adapter Methods](4%20Language-Implementations.md)
+* [Operation Support by Backend](4%20Language-Implementations.md)
+* [Backend Selection Guide](4%20Language-Implementations.md)
+* [When to Use Each Backend](4%20Language-Implementations.md)
+* [Build Artifacts and Configuration](4%20Language-Implementations.md)
+* [Default Binary Locations](4%20Language-Implementations.md)
+* [Build Commands](4%20Language-Implementations.md)
+* [Environment Variable Configuration](4%20Language-Implementations.md)
+* [C# Adapter Example](4%20Language-Implementations.md)
+* [Java Adapter Example](4%20Language-Implementations.md)
+* [Rust Adapter Example](4%20Language-Implementations.md)
+* [JavaScript Backend Architecture](4%20Language-Implementations.md)
+* [Testing Strategy](4%20Language-Implementations.md)
 
 Ask Devin about Dicom-Tools

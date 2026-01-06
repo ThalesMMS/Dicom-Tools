@@ -1,4 +1,4 @@
-# Tag Modification and Anonymization
+# 5c Tag Modification and Anonymization
 
 > **Relevant source files**
 > * [python/tests/test_anonymize_dicom.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_anonymize_dicom.py)
@@ -10,7 +10,7 @@
 > * [python/tests/test_organize_dicom.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_organize_dicom.py)
 > * [python/tests/test_pixel_stats.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_pixel_stats.py)
 
-This page covers DICOM tag modification and anonymization operations. Tag modification allows editing individual or multiple DICOM tags, while anonymization provides systematic removal of Protected Health Information (PHI) with UID regeneration and date shifting. For general file inspection and validation, see [Core File Operations](#5.1). For pixel data processing, see [Image Conversion and Processing](#5.2). For batch processing of multiple files, see [Batch Processing](#5.6).
+This page covers DICOM tag modification and anonymization operations. Tag modification allows editing individual or multiple DICOM tags, while anonymization provides systematic removal of Protected Health Information (PHI) with UID regeneration and date shifting. For general file inspection and validation, see [Core File Operations](5a%20Core-File-Operations.md). For pixel data processing, see [Image Conversion and Processing](5b%20Image-Conversion-and-Processing.md). For batch processing of multiple files, see [Batch Processing](5f%20Batch-Processing.md).
 
 **Sources:** [python/tests/test_modify_tags.py L1-L219](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_modify_tags.py#L1-L219)
 
@@ -503,9 +503,9 @@ The tag modification and anonymization functionality is primarily implemented in
 
  [python/tests/test_batch_process.py L1-L21](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_batch_process.py#L1-L21)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

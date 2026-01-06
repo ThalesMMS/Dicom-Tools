@@ -1,4 +1,4 @@
-# CPU-Based Analysis
+# 6c CPU-Based Analysis
 
 > **Relevant source files**
 > * [js/viewer-gateway/src/main.ts](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts)
@@ -9,7 +9,7 @@
 
 This page documents the CPU-based volume analysis capabilities provided by the `volumeUtils` module in the JavaScript viewer. These functions perform computationally intensive operations on DICOM volume data using pure JavaScript/TypeScript, without requiring GPU acceleration or WebGL contexts. This is useful for generating specific outputs like projection images, histograms, and resampled slices that may not be supported by the GPU rendering pipeline, or when running in environments where GPU access is limited.
 
-For GPU-accelerated 2D and 3D rendering capabilities, see [2D Stack Viewing](#6.1) and [3D Volume Rendering](#6.2). For detailed information on the web viewer architecture, see [Web Viewer (JavaScript)](#2.3).
+For GPU-accelerated 2D and 3D rendering capabilities, see [2D Stack Viewing](6a%202D-Stack-Viewing.md) and [3D Volume Rendering](6b%203D-Volume-Rendering.md). For detailed information on the web viewer architecture, see [Web Viewer (JavaScript)](2c%20Web-Viewer-%28JavaScript%29.md).
 
 **Sources:** [js/viewer-gateway/src/main.ts L1-L17](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L1-L17)
 
@@ -391,11 +391,11 @@ PutImage -.-> Canvas
 
 The rendering function handles three cases:
 
-1. **Windowed Float32**: If floating-point data and window options provided, apply window/level [lines 223-225](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/lines 223-225)
-2. **Auto-normalized Float32**: If floating-point without window, auto-scale to min-max [lines 229-240](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/lines 229-240)
-3. **Direct Uint8**: If already 8-bit, use directly [lines 226-227](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/lines 226-227)
+1. **Windowed Float32**: If floating-point data and window options provided, apply window/level [js/viewer-gateway/src/main.ts L223-L225](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L223-L225)
+2. **Auto-normalized Float32**: If floating-point without window, auto-scale to min-max [js/viewer-gateway/src/main.ts L229-L240](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L229-L240)
+3. **Direct Uint8**: If already 8-bit, use directly [js/viewer-gateway/src/main.ts L226-L227](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L226-L227)
 
-Final conversion creates RGBA ImageData where R=G=B=value (grayscale) and A=255 (opaque) [lines 243-251](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/lines 243-251)
+Final conversion creates RGBA ImageData where R=G=B=value (grayscale) and A=255 (opaque) [js/viewer-gateway/src/main.ts L243-L251](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L243-L251)
 
 **Sources:** [js/viewer-gateway/src/main.ts L215-L254](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L215-L254)
 
@@ -496,7 +496,7 @@ let cachedVolumeData: VolumeData | null = null;async function ensureVolu
 
 Cache invalidation occurs when:
 
-* A new volume is loaded in either viewport [lines 347, 369](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/lines 347, 369)
+* A new volume is loaded in either viewport [js/viewer-gateway/src/main.ts L347, L369](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L347-L369)
 * The volume changes (not automatically detected)
 
 ### Memory Usage
@@ -567,9 +567,9 @@ The CPU-based analysis system provides a comprehensive suite of volume processin
 
 This architecture allows the web viewer to perform sophisticated analysis tasks that would be difficult or impossible with GPU pipelines alone, while maintaining reasonable performance through TypedArray optimizations and caching strategies.
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

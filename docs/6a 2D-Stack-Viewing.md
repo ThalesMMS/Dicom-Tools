@@ -1,4 +1,4 @@
-# 2D Stack Viewing
+# 6a 2D Stack Viewing
 
 > **Relevant source files**
 > * [js/INTEGRATION.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/INTEGRATION.md)
@@ -13,7 +13,7 @@
 
 This document describes the 2D stack viewing capability in the JavaScript web viewer, which enables slice-by-slice navigation through DICOM series in the browser. Stack viewing is the fundamental mode for displaying sequential medical images (CT, MR, etc.) where the user scrolls through individual slices along an acquisition axis.
 
-For 3D volume rendering and multi-planar reconstruction capabilities, see [3D Volume Rendering](#6.2). For CPU-based image analysis operations (projections, histograms, windowing), see [CPU-Based Analysis](#6.3).
+For 3D volume rendering and multi-planar reconstruction capabilities, see [3D Volume Rendering](6b%203D-Volume-Rendering.md). For CPU-based image analysis operations (projections, histograms, windowing), see [CPU-Based Analysis](6c%20CPU-Based-Analysis.md).
 
 **Sources:** [js/viewer-gateway/src/main.ts L1-L490](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L1-L490)
 
@@ -436,9 +436,9 @@ The `viewport` property provides access to the underlying Cornerstone3D stack vi
 
 **Sources:** [js/viewer-gateway/src/viewerGateway.ts L50-L62](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/viewerGateway.ts#L50-L62)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

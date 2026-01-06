@@ -1,4 +1,4 @@
-# Python Tests
+# 7b Python Tests
 
 > **Relevant source files**
 > * [python/DICOM_reencoder/core/factories.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/DICOM_reencoder/core/factories.py)
@@ -19,7 +19,7 @@
 
 This page documents the Python test suite for the Dicom-Tools repository. The Python backend provides the most comprehensive DICOM functionality with 20+ CLI commands, and the test suite ensures correctness across core modules, library integrations, and CLI operations. The tests validate pydicom, pynetdicom, GDCM, SimpleITK, and dicom-numpy integrations, as well as all CLI commands for anonymization, conversion, batch processing, and network operations.
 
-For information about the overall testing strategy across all language backends, see [Testing Strategy](#7.1). For cross-language contract validation, see [Interface and Contract Tests](#7.4).
+For information about the overall testing strategy across all language backends, see [Testing Strategy](7a%20Testing-Strategy.md). For cross-language contract validation, see [Interface and Contract Tests](7d%20Interface-and-Contract-Tests.md).
 
 ---
 
@@ -960,9 +960,9 @@ Optional dependencies are handled with `pytest.importorskip()` to gracefully ski
 
  [python/tests/test_dicom_numpy_advanced.py L16](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_dicom_numpy_advanced.py#L16-L16)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

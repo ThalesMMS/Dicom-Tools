@@ -1,4 +1,4 @@
-# DICOM Operations
+# 5 DICOM Operations
 
 > **Relevant source files**
 > * [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)
@@ -16,7 +16,7 @@
 
 This page provides a comprehensive reference for all DICOM operations supported by Dicom-Tools. Operations are the fundamental units of functionality that can be invoked across any language backend through the unified CLI contract system. Each operation performs a specific DICOM-related task such as extracting metadata, anonymizing files, converting to images, or performing network services.
 
-For implementation details on specific operation categories, see [Core File Operations](#5.1), [Image Conversion and Processing](#5.2), [Tag Modification and Anonymization](#5.3), [3D Volume Reconstruction](#5.4), [Network Operations](#5.5), and [Batch Processing](#5.6). For the adapter pattern that routes operations to backends, see [Adapter Pattern](#3.2).
+For implementation details on specific operation categories, see [Core File Operations](5a%20Core-File-Operations.md), [Image Conversion and Processing](5b%20Image-Conversion-and-Processing.md), [Tag Modification and Anonymization](5c%20Tag-Modification-and-Anonymization.md), [3D Volume Reconstruction](5d%203D-Volume-Reconstruction.md), [Network Operations](5e%20Network-Operations.md), and [Batch Processing](5f%20Batch-Processing.md). For the adapter pattern that routes operations to backends, see [Adapter Pattern](3b%20Adapter-Pattern.md).
 
 ## Operation Architecture
 
@@ -595,42 +595,42 @@ Sources: [interface/adapters/python_cli.py L18-L30](https://github.com/ThalesMMS
 
  [interface/adapters/js_cli.py L24-L27](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/js_cli.py#L24-L27)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [DICOM Operations](#5-dicom-operations)
-* [Operation Architecture](#5-operation-architecture)
-* [Operation Request Structure](#5-operation-request-structure)
-* [Canonical Operation Set](#5-canonical-operation-set)
-* [Operation Categories](#5-operation-categories)
-* [Backend Support Matrix](#5-backend-support-matrix)
-* [Operation Specification Format](#5-operation-specification-format)
-* [Request Envelope](#5-request-envelope)
-* [Response Envelope](#5-response-envelope)
-* [Common Operation Patterns](#5-common-operation-patterns)
-* [Metadata Extraction ( info )](#5-metadata-extraction-object-object)
-* [Anonymization ( anonymize )](#5-anonymization-object-object)
-* [Image Conversion ( to_image )](#5-image-conversion-object-object)
-* [Transfer Syntax Conversion ( transcode )](#5-transfer-syntax-conversion-object-object)
-* [Statistics Generation ( stats )](#5-statistics-generation-object-object)
-* [Operation Options](#5-operation-options)
-* [Batch Operations](#5-batch-operations)
-* [Batch Operation Types](#5-batch-operation-types)
-* [Network Operations](#5-network-operations)
-* [C-ECHO Operation](#5-c-echo-operation)
-* [Volume Operations](#5-volume-operations)
-* [Volume Construction ( volume )](#5-volume-construction-object-object)
-* [NIfTI Export ( nifti )](#5-nifti-export-object-object)
-* [Testing Operations](#5-testing-operations)
-* [Python Backend Tests](#5-python-backend-tests)
-* [C++ Backend Tests](#5-c-backend-tests)
-* [Java Backend Tests](#5-java-backend-tests)
-* [C# Backend Tests](#5-c-backend-tests-1)
-* [Custom Commands](#5-custom-commands)
-* [Output File Inference](#5-output-file-inference)
-* [Operation Validation](#5-operation-validation)
+* [DICOM Operations](5%20DICOM-Operations.md)
+* [Operation Architecture](5%20DICOM-Operations.md)
+* [Operation Request Structure](5%20DICOM-Operations.md)
+* [Canonical Operation Set](5%20DICOM-Operations.md)
+* [Operation Categories](5%20DICOM-Operations.md)
+* [Backend Support Matrix](5%20DICOM-Operations.md)
+* [Operation Specification Format](5%20DICOM-Operations.md)
+* [Request Envelope](5%20DICOM-Operations.md)
+* [Response Envelope](5%20DICOM-Operations.md)
+* [Common Operation Patterns](5%20DICOM-Operations.md)
+* [Metadata Extraction ( info )](5%20DICOM-Operations.md)
+* [Anonymization ( anonymize )](5%20DICOM-Operations.md)
+* [Image Conversion ( to_image )](5%20DICOM-Operations.md)
+* [Transfer Syntax Conversion ( transcode )](5%20DICOM-Operations.md)
+* [Statistics Generation ( stats )](5%20DICOM-Operations.md)
+* [Operation Options](5%20DICOM-Operations.md)
+* [Batch Operations](5%20DICOM-Operations.md)
+* [Batch Operation Types](5%20DICOM-Operations.md)
+* [Network Operations](5%20DICOM-Operations.md)
+* [C-ECHO Operation](5%20DICOM-Operations.md)
+* [Volume Operations](5%20DICOM-Operations.md)
+* [Volume Construction ( volume )](5%20DICOM-Operations.md)
+* [NIfTI Export ( nifti )](5%20DICOM-Operations.md)
+* [Testing Operations](5%20DICOM-Operations.md)
+* [Python Backend Tests](5%20DICOM-Operations.md)
+* [C++ Backend Tests](5%20DICOM-Operations.md)
+* [Java Backend Tests](5%20DICOM-Operations.md)
+* [C# Backend Tests](5%20DICOM-Operations.md)
+* [Custom Commands](5%20DICOM-Operations.md)
+* [Output File Inference](5%20DICOM-Operations.md)
+* [Operation Validation](5%20DICOM-Operations.md)
 
 Ask Devin about Dicom-Tools

@@ -1,4 +1,4 @@
-# Network Operations
+# 5e Network Operations
 
 > **Relevant source files**
 > * [cs/DicomTools.Tests/DicomWebIntegrationTests.cs](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Tests/DicomWebIntegrationTests.cs)
@@ -12,7 +12,7 @@
 > * [python/tests/test_pydicom_advanced.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_pydicom_advanced.py)
 > * [python/tests/test_pynetdicom_advanced.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_pynetdicom_advanced.py)
 
-This page documents DICOM network services supported in the Dicom-Tools repository, including DIMSE protocol operations (C-ECHO, C-STORE, C-FIND, C-MOVE, Worklist) and modern DICOMweb RESTful services (QIDO-RS, STOW-RS, WADO-RS). For file-based operations like metadata extraction and validation, see [Core File Operations](#5.1). For batch processing workflows that may combine network transfers with local file operations, see [Batch Processing](#5.6).
+This page documents DICOM network services supported in the Dicom-Tools repository, including DIMSE protocol operations (C-ECHO, C-STORE, C-FIND, C-MOVE, Worklist) and modern DICOMweb RESTful services (QIDO-RS, STOW-RS, WADO-RS). For file-based operations like metadata extraction and validation, see [Core File Operations](5a%20Core-File-Operations.md). For batch processing workflows that may combine network transfers with local file operations, see [Batch Processing](5f%20Batch-Processing.md).
 
 ## DIMSE Protocol Overview
 
@@ -902,9 +902,9 @@ Based on patterns in test files and high-level diagrams showing operation covera
 * [cs/DicomTools.Tests/WorklistTests.cs L1-L88](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Tests/WorklistTests.cs#L1-L88)
 * [cs/DicomTools.Tests/DicomWebIntegrationTests.cs L1-L75](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Tests/DicomWebIntegrationTests.cs#L1-L75)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

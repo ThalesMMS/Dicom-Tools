@@ -1,4 +1,4 @@
-# Rust Backend
+# 4b Rust Backend
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -17,10 +17,10 @@ The Rust backend is a modern DICOM processing implementation built on the [dicom
 
 For information about:
 
-* Using the Rust backend through the GUI or headless runner: see [User Interfaces](#2)
-* The CLI contract that all backends implement: see [CLI Contract System](#3)
-* Other language implementations: see [Language Implementations](#4)
-* Specific DICOM operations: see [DICOM Operations](#5)
+* Using the Rust backend through the GUI or headless runner: see [User Interfaces](2%20User-Interfaces.md)
+* The CLI contract that all backends implement: see [CLI Contract System](3%20CLI-Contract-System.md)
+* Other language implementations: see [Language Implementations](4%20Language-Implementations.md)
+* Specific DICOM operations: see [DICOM Operations](5%20DICOM-Operations.md)
 
 ## Architecture and Integration
 
@@ -355,9 +355,9 @@ The Rust backend occupies a unique position in the multi-language ecosystem:
 
 **When to Use Other Backends:**
 
-* **Python**: Comprehensive operations, network features, rapid prototyping ([Python Backend](#4.1))
-* **C++**: Advanced visualization (VTK), specialized formats (SR/RT) ([C++ Backend](#4.3))
-* **C#/Java**: Enterprise environments, DICOMweb integration ([C# Backend](#4.4), [Java Backend](#4.5))
+* **Python**: Comprehensive operations, network features, rapid prototyping ([Python Backend](4a%20Python-Backend.md))
+* **C++**: Advanced visualization (VTK), specialized formats (SR/RT) ([C++ Backend](4c%20C++-Backend.md))
+* **C#/Java**: Enterprise environments, DICOMweb integration ([C# Backend](4d%20C%23-Backend.md), [Java Backend](4e%20Java-Backend.md))
 
 Sources: [README.md L7-L22](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L7-L22)
 
@@ -472,9 +472,9 @@ The GitHub Actions workflow builds and tests the Rust backend on every push:
 
 Sources: [BUILD.md L47-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L47-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

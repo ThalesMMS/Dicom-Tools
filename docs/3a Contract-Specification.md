@@ -1,4 +1,4 @@
-# Contract Specification
+# 3a Contract Specification
 
 > **Relevant source files**
 > * [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)
@@ -10,7 +10,7 @@
 
 This document specifies the CLI contract that enables language-agnostic interoperability across all DICOM Tools backends. The contract defines a standardized JSON-based request/response envelope format and a canonical set of DICOM operations that all backends can implement.
 
-For information about how adapters translate contract requests into backend-specific CLI invocations, see [Adapter Pattern](#3.2). For environment variable configuration of backend executables, see [Environment Configuration](#3.3).
+For information about how adapters translate contract requests into backend-specific CLI invocations, see [Adapter Pattern](3b%20Adapter-Pattern.md). For environment variable configuration of backend executables, see [Environment Configuration](3c%20Environment-Configuration.md).
 
 **Sources:** [interface/CONTRACT.md L1-L13](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md#L1-L13)
 
@@ -485,9 +485,9 @@ end
 
 **Sources:** [interface/CONTRACT.md L28-L74](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md#L28-L74)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

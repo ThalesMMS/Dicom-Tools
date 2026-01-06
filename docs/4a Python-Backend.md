@@ -1,4 +1,4 @@
-# Python Backend
+# 4a Python Backend
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -20,7 +20,7 @@
 
 ## Purpose and Scope
 
-The Python backend is the most comprehensive DICOM processing implementation in the Dicom-Tools repository, providing 20+ CLI commands for file manipulation, network operations, and 3D volume reconstruction. This page documents the Python-specific architecture, core libraries, CLI interface, and operational capabilities. For details on how the Python backend integrates with the unified CLI contract system, see [CLI Contract System](#3). For information about specific DICOM operations, see [DICOM Operations](#5).
+The Python backend is the most comprehensive DICOM processing implementation in the Dicom-Tools repository, providing 20+ CLI commands for file manipulation, network operations, and 3D volume reconstruction. This page documents the Python-specific architecture, core libraries, CLI interface, and operational capabilities. For details on how the Python backend integrates with the unified CLI contract system, see [CLI Contract System](3%20CLI-Contract-System.md). For information about specific DICOM operations, see [DICOM Operations](5%20DICOM-Operations.md).
 
 ---
 
@@ -1082,9 +1082,9 @@ from interface.adapters import get_adapteradapter = get_adapter("python")re
 
  [scripts/setup_all.sh L18-L23](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L18-L23)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

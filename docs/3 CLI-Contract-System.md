@@ -1,4 +1,4 @@
-# CLI Contract System
+# 3 CLI Contract System
 
 > **Relevant source files**
 > * [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)
@@ -12,7 +12,7 @@
 
 The CLI Contract System is the central integration mechanism that enables cross-language interoperability in the DICOM Tools repository. It defines a standardized JSON-based request/response protocol that allows multiple programming languages (Python, Rust, C++, C#, Java, JavaScript) to expose DICOM operations through a unified interface. This system decouples user interfaces from backend implementations using an adapter pattern.
 
-For detailed information about the JSON request/response formats and the complete list of canonical operations, see [Contract Specification](#3.1). For implementation details of how adapters translate requests into CLI commands, see [Adapter Pattern](#3.2). For configuration options, see [Environment Configuration](#3.3).
+For detailed information about the JSON request/response formats and the complete list of canonical operations, see [Contract Specification](3a%20Contract-Specification.md). For implementation details of how adapters translate requests into CLI commands, see [Adapter Pattern](3b%20Adapter-Pattern.md). For configuration options, see [Environment Configuration](3c%20Environment-Configuration.md).
 
 ---
 
@@ -442,30 +442,30 @@ Sources: [interface/adapters/python_cli.py L26](https://github.com/ThalesMMS/Dic
 
  [interface/adapters/rust_cli.py L43-L45](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/rust_cli.py#L43-L45)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [CLI Contract System](#3-cli-contract-system)
-* [Core Architecture](#3-core-architecture)
-* [Request/Response Envelope](#3-requestresponse-envelope)
-* [Adapter Factory Pattern](#3-adapter-factory-pattern)
-* [Adapter Factory Implementation](#3-adapter-factory-implementation)
-* [Request Processing Flow](#3-request-processing-flow)
-* [End-to-End Request Flow](#3-end-to-end-request-flow)
-* [Command Building Strategy](#3-command-building-strategy)
-* [Operation Translation Example](#3-operation-translation-example)
-* [Backend Capability Matrix](#3-backend-capability-matrix)
-* [Core Operations Support](#3-core-operations-support)
-* [Advanced Operations Support](#3-advanced-operations-support)
-* [Batch Operations Support](#3-batch-operations-support)
-* [Operation Requirements](#3-operation-requirements)
-* [Input Requirements Mapping](#3-input-requirements-mapping)
-* [JavaScript Shim Adapter](#3-javascript-shim-adapter)
-* [JavaScript Delegation Pattern](#3-javascript-delegation-pattern)
-* [Custom Commands](#3-custom-commands)
-* [Error Handling](#3-error-handling)
+* [CLI Contract System](3%20CLI-Contract-System.md)
+* [Core Architecture](3%20CLI-Contract-System.md)
+* [Request/Response Envelope](3%20CLI-Contract-System.md)
+* [Adapter Factory Pattern](3%20CLI-Contract-System.md)
+* [Adapter Factory Implementation](3%20CLI-Contract-System.md)
+* [Request Processing Flow](3%20CLI-Contract-System.md)
+* [End-to-End Request Flow](3%20CLI-Contract-System.md)
+* [Command Building Strategy](3%20CLI-Contract-System.md)
+* [Operation Translation Example](3%20CLI-Contract-System.md)
+* [Backend Capability Matrix](3%20CLI-Contract-System.md)
+* [Core Operations Support](3%20CLI-Contract-System.md)
+* [Advanced Operations Support](3%20CLI-Contract-System.md)
+* [Batch Operations Support](3%20CLI-Contract-System.md)
+* [Operation Requirements](3%20CLI-Contract-System.md)
+* [Input Requirements Mapping](3%20CLI-Contract-System.md)
+* [JavaScript Shim Adapter](3%20CLI-Contract-System.md)
+* [JavaScript Delegation Pattern](3%20CLI-Contract-System.md)
+* [Custom Commands](3%20CLI-Contract-System.md)
+* [Error Handling](3%20CLI-Contract-System.md)
 
 Ask Devin about Dicom-Tools

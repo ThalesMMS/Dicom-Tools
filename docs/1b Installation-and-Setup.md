@@ -1,4 +1,4 @@
-# Installation and Setup
+# 1b Installation and Setup
 
 > **Relevant source files**
 > * [.github/workflows/ci.yml](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml)
@@ -9,7 +9,7 @@
 
 This document provides step-by-step instructions for installing and building the Dicom-Tools multi-language toolkit. It covers system prerequisites, the one-shot setup script, individual language build processes, and environment variable configuration for runtime customization.
 
-For architectural context on how these components interact, see [Architecture Overview](#1.1). For immediate usage examples after installation, see [Quick Start Guide](#1.3).
+For architectural context on how these components interact, see [Architecture Overview](1a%20Architecture-Overview.md). For immediate usage examples after installation, see [Quick Start Guide](1c%20Quick-Start-Guide.md).
 
 ---
 
@@ -481,9 +481,9 @@ export CARGO_INCREMENTAL=1cargo build
 
  [BUILD.md L1-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L1-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

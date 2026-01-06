@@ -1,4 +1,4 @@
-# User Interfaces
+# 2 User Interfaces
 
 > **Relevant source files**
 > * [interface/adapters/cpp_cli.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/cpp_cli.py)
@@ -9,7 +9,7 @@
 
 This document describes the three primary user interfaces provided by Dicom-Tools: the TkApp desktop GUI, the contract runner for headless CLI execution, and the browser-based web viewer. Each interface serves different use cases while sharing the same underlying backend infrastructure through the CLI contract system.
 
-For detailed information about specific interface implementations, see [TkApp Desktop GUI](#2.1), [Contract Runner (Headless CLI)](#2.2), and [Web Viewer (JavaScript)](#2.3). For information about the CLI contract system that enables cross-language interoperability, see [CLI Contract System](#3).
+For detailed information about specific interface implementations, see [TkApp Desktop GUI](2a%20TkApp-Desktop-GUI.md), [Contract Runner (Headless CLI)](2b%20Contract-Runner-%28Headless-CLI%29.md), and [Web Viewer (JavaScript)](2c%20Web-Viewer-%28JavaScript%29.md). For information about the CLI contract system that enables cross-language interoperability, see [CLI Contract System](3%20CLI-Contract-System.md).
 
 ---
 
@@ -333,7 +333,7 @@ The contract runner expects JSON request files with the following structure:
 {  "ok": true,  "returncode": 0,  "output_files": ["/path/to/output.dcm"],  "metadata": {    "backend": "python",    "operation": "anonymize",    "timing": 0.123  },  "stdout": "...",  "stderr": ""}
 ```
 
-For complete specification details, see [Contract Specification](#3.1).
+For complete specification details, see [Contract Specification](3a%20Contract-Specification.md).
 
 **Sources:** [interface/adapters/runner.py L1-L100](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/runner.py#L1-L100)
 
@@ -628,28 +628,28 @@ Each interface has dedicated test coverage:
 
  (inferred), [js/viewer-gateway/tests/main.entry.test.ts L1-L173](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/tests/main.entry.test.ts#L1-L173)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [User Interfaces](#2-user-interfaces)
-* [Interface Architecture Overview](#2-interface-architecture-overview)
-* [Interface Comparison Matrix](#2-interface-comparison-matrix)
-* [TkApp Desktop GUI](#2-tkapp-desktop-gui)
-* [TkApp Component Architecture](#2-tkapp-component-architecture)
-* [TkApp Operation Configuration](#2-tkapp-operation-configuration)
-* [Key TkApp Methods](#2-key-tkapp-methods)
-* [Contract Runner (Headless CLI)](#2-contract-runner-headless-cli)
-* [Contract Runner Architecture](#2-contract-runner-architecture)
-* [Request/Response Format](#2-requestresponse-format)
-* [Web Viewer (JavaScript)](#2-web-viewer-javascript)
-* [Web Viewer Component Architecture](#2-web-viewer-component-architecture)
-* [Web Viewer Viewport Types](#2-web-viewer-viewport-types)
-* [CPU-Based Volume Analysis](#2-cpu-based-volume-analysis)
-* [DICOMweb Integration](#2-dicomweb-integration)
-* [Interface Selection Guide](#2-interface-selection-guide)
-* [Interface Testing](#2-interface-testing)
+* [User Interfaces](2%20User-Interfaces.md)
+* [Interface Architecture Overview](2%20User-Interfaces.md)
+* [Interface Comparison Matrix](2%20User-Interfaces.md)
+* [TkApp Desktop GUI](2%20User-Interfaces.md)
+* [TkApp Component Architecture](2%20User-Interfaces.md)
+* [TkApp Operation Configuration](2%20User-Interfaces.md)
+* [Key TkApp Methods](2%20User-Interfaces.md)
+* [Contract Runner (Headless CLI)](2%20User-Interfaces.md)
+* [Contract Runner Architecture](2%20User-Interfaces.md)
+* [Request/Response Format](2%20User-Interfaces.md)
+* [Web Viewer (JavaScript)](2%20User-Interfaces.md)
+* [Web Viewer Component Architecture](2%20User-Interfaces.md)
+* [Web Viewer Viewport Types](2%20User-Interfaces.md)
+* [CPU-Based Volume Analysis](2%20User-Interfaces.md)
+* [DICOMweb Integration](2%20User-Interfaces.md)
+* [Interface Selection Guide](2%20User-Interfaces.md)
+* [Interface Testing](2%20User-Interfaces.md)
 
 Ask Devin about Dicom-Tools

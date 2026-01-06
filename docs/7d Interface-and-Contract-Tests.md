@@ -1,4 +1,4 @@
-# Interface and Contract Tests
+# 7d Interface and Contract Tests
 
 > **Relevant source files**
 > * [cs/DicomTools.Cli/CliApp.cs](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Cli/CliApp.cs)
@@ -12,7 +12,7 @@
 
 This document describes the interface and contract testing layer that validates cross-language interoperability in the Dicom-Tools repository. These tests ensure all language backends correctly implement the CLI contract and that adapters properly translate generic requests into backend-specific commands.
 
-For language-specific unit tests, see [Python Tests](#7.2), [C# Tests](#7.3), and [JavaScript Tests](#7.5). For the overall testing philosophy, see [Testing Strategy](#7.1). For details on the contract specification itself, see [Contract Specification](#3.1).
+For language-specific unit tests, see [Python Tests](7b%20Python-Tests.md), [C# Tests](7c%20C%23-Tests.md), and [JavaScript Tests](7e%20JavaScript-Tests.md). For the overall testing philosophy, see [Testing Strategy](7a%20Testing-Strategy.md). For details on the contract specification itself, see [Contract Specification](3a%20Contract-Specification.md).
 
 ---
 
@@ -771,16 +771,16 @@ class Result:    def __init__(self, ok=True):        self.ok = 
 
 ## Related Documentation
 
-* **[Testing Strategy](#7.1)**: Overall testing philosophy and two-tier approach
-* **[Python Tests](#7.2)**: Language-specific unit tests for Python backend
-* **[C# Tests](#7.3)**: xUnit tests for fo-dicom implementation
-* **[JavaScript Tests](#7.5)**: Vitest tests for web viewer components
-* **[Contract Specification](#3.1)**: Detailed contract format and operation definitions
-* **[Adapter Pattern](#3.2)**: How adapters implement the abstraction layer
+* **[Testing Strategy](7a%20Testing-Strategy.md)**: Overall testing philosophy and two-tier approach
+* **[Python Tests](7b%20Python-Tests.md)**: Language-specific unit tests for Python backend
+* **[C# Tests](7c%20C%23-Tests.md)**: xUnit tests for fo-dicom implementation
+* **[JavaScript Tests](7e%20JavaScript-Tests.md)**: Vitest tests for web viewer components
+* **[Contract Specification](3a%20Contract-Specification.md)**: Detailed contract format and operation definitions
+* **[Adapter Pattern](3b%20Adapter-Pattern.md)**: How adapters implement the abstraction layer
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

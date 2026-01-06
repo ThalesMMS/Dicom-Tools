@@ -1,4 +1,4 @@
-# TkApp Desktop GUI
+# 2a TkApp Desktop GUI
 
 > **Relevant source files**
 > * [cs/DicomTools.Cli/CliApp.cs](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Cli/CliApp.cs)
@@ -12,7 +12,7 @@
 
 The TkApp Desktop GUI is a cross-platform graphical interface built with Python's Tkinter library that provides point-and-click access to all DICOM operations across all language backends. It serves as the primary user-friendly entry point for the Dicom-Tools multi-language system, eliminating the need for command-line expertise.
 
-This page covers the GUI architecture, component structure, and interaction patterns. For the underlying CLI contract that the GUI uses to communicate with backends, see [CLI Contract System](#3). For information about running operations in headless/automated mode, see [Contract Runner](#2.2).
+This page covers the GUI architecture, component structure, and interaction patterns. For the underlying CLI contract that the GUI uses to communicate with backends, see [CLI Contract System](3%20CLI-Contract-System.md). For information about running operations in headless/automated mode, see [Contract Runner](2b%20Contract-Runner-%28Headless-CLI%29.md).
 
 **Sources:** [interface/app.py L1-L15](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/app.py#L1-L15)
 
@@ -994,14 +994,14 @@ self.preview_img = tk.PhotoImage(file=output_file)self.preview_label.configure
 
 ## Related Components
 
-* **CLI Contract Specification:** See [Contract Specification](#3.1) for the request/response format
-* **Adapter Pattern:** See [Adapter Pattern](#3.2) for how requests are translated to CLI invocations
-* **Contract Runner:** See [Contract Runner](#2.2) for headless/automated execution
-* **Language Backends:** See [Language Implementations](#4) for backend-specific details
+* **CLI Contract Specification:** See [Contract Specification](3a%20Contract-Specification.md) for the request/response format
+* **Adapter Pattern:** See [Adapter Pattern](3b%20Adapter-Pattern.md) for how requests are translated to CLI invocations
+* **Contract Runner:** See [Contract Runner](2b%20Contract-Runner-%28Headless-CLI%29.md) for headless/automated execution
+* **Language Backends:** See [Language Implementations](4%20Language-Implementations.md) for backend-specific details
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

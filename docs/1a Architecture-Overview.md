@@ -1,4 +1,4 @@
-# Architecture Overview
+# 1a Architecture Overview
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -15,7 +15,7 @@
 
 This document describes the high-level architecture of the Dicom-Tools repository, explaining how six language implementations (Python, Rust, C++, C#, Java, JavaScript) are unified through a contract-based abstraction layer. It covers the adapter pattern, CLI contract system, user interface components, and environment configuration mechanisms.
 
-For detailed information about specific backends, see sections [4.1](#4.1) through [4.6](#4.6). For the CLI contract specification, see [3.1](#3.1). For user interface details, see sections [2.1](#2.1) through [2.3](#2.3).
+For detailed information about specific backends, see sections [4a](4a%20Python-Backend.md) through [4f](4f%20JavaScript-Backend.md). For the CLI contract specification, see [3a](3a%20Contract-Specification.md). For user interface details, see sections [2a](2a%20TkApp-Desktop-GUI.md) through [2c](2c%20Web-Viewer-%28JavaScript%29.md).
 
 ---
 
@@ -543,9 +543,9 @@ This design allows adding new backends (e.g., Go, Swift) by implementing a singl
 
  [BUILD.md L1-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L1-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

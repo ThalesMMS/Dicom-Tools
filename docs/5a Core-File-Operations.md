@@ -1,4 +1,4 @@
-# Core File Operations
+# 5a Core File Operations
 
 > **Relevant source files**
 > * [cs/DicomTools.Tests/CiEnvironment.cs](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Tests/CiEnvironment.cs)
@@ -25,7 +25,7 @@ This page documents four primary operations:
 * **dump**: Display complete dataset structure
 * **stats**: Calculate pixel data statistics and histograms
 
-For operations that modify DICOM files, see [Tag Modification and Anonymization](#5.3). For image export and transcoding, see [Image Conversion and Processing](#5.2). For processing multiple files, see [Batch Processing](#5.6).
+For operations that modify DICOM files, see [Tag Modification and Anonymization](5c%20Tag-Modification-and-Anonymization.md). For image export and transcoding, see [Image Conversion and Processing](5b%20Image-Conversion-and-Processing.md). For processing multiple files, see [Batch Processing](5f%20Batch-Processing.md).
 
 ---
 
@@ -727,7 +727,7 @@ Bin   Range            Count    Bar
 
 ### JSON Output Consistency
 
-All backends that support JSON output produce compatible schemas, enabling cross-language processing. The adapter layer (see [Adapter Pattern](#3.2)) normalizes minor differences in field naming (e.g., `StudyInstanceUid` vs `StudyInstanceUID`).
+All backends that support JSON output produce compatible schemas, enabling cross-language processing. The adapter layer (see [Adapter Pattern](3b%20Adapter-Pattern.md)) normalizes minor differences in field naming (e.g., `StudyInstanceUid` vs `StudyInstanceUID`).
 
 ### Performance Characteristics
 
@@ -826,7 +826,7 @@ Core file operations serve as inputs to processing operations:
 
 ### Batch Processing
 
-Core operations integrate with batch processing (see [Batch Processing](#5.6)):
+Core operations integrate with batch processing (see [Batch Processing](5f%20Batch-Processing.md)):
 
 ```
 from DICOM_reencoder.batch_process import find_dicom_files, validate_batch# Find all DICOM filesfiles = find_dicom_files("/data/dicom", recursive=True)# Validate all filesvalidate_batch(files)# Process only valid filesvalid_files = [f for f in files if validate_file(f)]
@@ -851,9 +851,9 @@ from DICOM_reencoder.batch_process import find_dicom_files, validate_batch#�
 
 ```
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

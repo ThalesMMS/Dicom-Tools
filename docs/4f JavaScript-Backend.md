@@ -1,4 +1,4 @@
-# JavaScript Backend
+# 4f JavaScript Backend
 
 > **Relevant source files**
 > * [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)
@@ -14,7 +14,7 @@
 
 This document describes the JavaScript backend implementation for Dicom-Tools. Unlike other language backends that directly implement DICOM operations, the JavaScript backend is a **CLI shim** that delegates all operations to the Python backend while maintaining contract compliance. This enables Node.js environments to integrate with the Dicom-Tools toolkit without reimplementing DICOM processing logic.
 
-For information about the Python backend that handles the actual DICOM operations, see [Python Backend](#4.1). For details about the CLI contract specification, see [Contract Specification](#3.1). For the web-based medical image viewer built with JavaScript, see [Web Viewer (JavaScript)](#2.3).
+For information about the Python backend that handles the actual DICOM operations, see [Python Backend](4a%20Python-Backend.md). For details about the CLI contract specification, see [Contract Specification](3a%20Contract-Specification.md). For the web-based medical image viewer built with JavaScript, see [Web Viewer (JavaScript)](2c%20Web-Viewer-%28JavaScript%29.md).
 
 ---
 
@@ -497,17 +497,17 @@ The JavaScript backend is implemented as a shim rather than a native DICOM proce
 | --- | --- | --- |
 | Node.js CLI automation | ✓ Yes | - |
 | Integrating with JavaScript build tools | ✓ Yes | - |
-| Web browser DICOM processing | ✗ No | Use [Web Viewer](#2.3) with Cornerstone3D |
-| High-performance batch processing | ✗ No | Use [Python Backend](#4.1) directly |
+| Web browser DICOM processing | ✗ No | Use [Web Viewer](2c%20Web-Viewer-%28JavaScript%29.md) with Cornerstone3D |
+| High-performance batch processing | ✗ No | Use [Python Backend](4a%20Python-Backend.md) directly |
 | Cross-platform CLI distribution | ✓ Yes | Bundle with Node.js runtime |
 
 **Sources:** [interface/CONTRACT.md L82](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md#L82-L82)
 
  [js/contract-cli/README.md L1-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/contract-cli/README.md#L1-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

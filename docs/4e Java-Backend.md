@@ -1,4 +1,4 @@
-# Java Backend
+# 4e Java Backend
 
 > **Relevant source files**
 > * [.github/workflows/ci.yml](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml)
@@ -12,7 +12,7 @@
 
 The Java backend provides DICOM processing capabilities using the **dcm4che3** library (version 5.34.1), a mature and comprehensive Java implementation of the DICOM standard. This backend is built with Maven and packaged as an executable uber JAR, offering core file operations, network services, DICOMweb support, and specialized medical imaging features including Structured Reports (SR) and Radiotherapy (RT) operations.
 
-For general backend architecture and the CLI contract system, see [Architecture Overview](#1.1). For information about other language implementations, see [Language Implementations](#4). For details on specific DICOM operations, see [DICOM Operations](#5).
+For general backend architecture and the CLI contract system, see [Architecture Overview](1a%20Architecture-Overview.md). For information about other language implementations, see [Language Implementations](4%20Language-Implementations.md). For details on specific DICOM operations, see [DICOM Operations](5%20DICOM-Operations.md).
 
 **Sources:** [java/dcm4che-tests/pom.xml L1-L209](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/java/dcm4che-tests/pom.xml#L1-L209)
 
@@ -659,9 +659,9 @@ The Java backend leverages dcm4che3, a mature and feature-rich DICOM library, to
 
 The Java backend is particularly well-suited for environments requiring enterprise-grade DICOM conformance, network services, and integration with existing Java-based medical imaging systems.
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

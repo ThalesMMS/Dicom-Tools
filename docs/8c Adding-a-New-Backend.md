@@ -14,7 +14,7 @@
 
 This guide explains how to add a new language backend to the Dicom-Tools system. A backend is a language-specific implementation (e.g., Python, Rust, C++) that exposes DICOM operations through a standardized CLI contract.
 
-For information about the CLI contract specification itself, see [CLI Contract System](#3). For details on how adapters translate requests, see [Adapter Pattern](#3.2). For adding new operations to existing backends, see [Adding a New Operation](#8.4).
+For information about the CLI contract specification itself, see [CLI Contract System](3%20CLI-Contract-System.md). For details on how adapters translate requests, see [Adapter Pattern](3b%20Adapter-Pattern.md). For adding new operations to existing backends, see [Adding a New Operation](8d%20Adding-a-New-Operation.md).
 
 ---
 
@@ -490,9 +490,9 @@ The adapter pattern ensures the UI remains language-agnostic while each backend 
 
  [interface/app.py L1-L805](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/app.py#L1-L805)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

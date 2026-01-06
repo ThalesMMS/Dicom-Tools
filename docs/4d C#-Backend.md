@@ -1,4 +1,4 @@
-# C# Backend
+# 4d C# Backend
 
 > **Relevant source files**
 > * [cs/DicomTools.Tests/CiEnvironment.cs](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Tests/CiEnvironment.cs)
@@ -19,7 +19,7 @@
 
 This document describes the C# implementation of DICOM Tools, which provides a command-line interface built on the fo-dicom library for .NET 8. The C# backend implements core DICOM file operations, comprehensive network services (DIMSE and DICOMweb), and specialized support for Structured Reports (SR) and Radiotherapy (RT) objects.
 
-For information about how the C# backend integrates with the multi-language system, see [CLI Contract System](#3). For details on specific operations like anonymization and network services, see [DICOM Operations](#5). For testing strategies, see [C# Tests](#7.3).
+For information about how the C# backend integrates with the multi-language system, see [CLI Contract System](3%20CLI-Contract-System.md). For details on specific operations like anonymization and network services, see [DICOM Operations](5%20DICOM-Operations.md). For testing strategies, see [C# Tests](7c%20C%23-Tests.md).
 
 ## Architecture Overview
 
@@ -645,11 +645,11 @@ export CS_DICOM_TOOLS_CMD="/usr/local/bin/DicomTools.Cli"
 
 **Sources:** [interface/adapters/csharp_cli.py L13-L18](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py#L13-L18)
 
-The C# backend integrates seamlessly with the universal setup script for automated builds. See [Build System](#8.1) for details on the multi-language build process.
+The C# backend integrates seamlessly with the universal setup script for automated builds. See [Build System](8a%20Build-System.md) for details on the multi-language build process.
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

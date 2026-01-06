@@ -1,4 +1,4 @@
-# C# Tests
+# 7c C# Tests
 
 > **Relevant source files**
 > * [cs/DicomTools.Tests/CiEnvironment.cs](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/cs/DicomTools.Tests/CiEnvironment.cs)
@@ -13,7 +13,7 @@
 
 The C# test suite validates the fo-dicom-based CLI implementation across multiple dimensions: contract compliance, network operations (DIMSE and DICOMweb), core file operations, and helper utilities. Tests use xUnit with in-memory DICOM service providers to avoid external dependencies.
 
-This page documents the C# backend's testing approach. For the overall testing strategy across all backends, see [Testing Strategy](#7.1). For cross-language contract validation, see [Interface and Contract Tests](#7.4).
+This page documents the C# backend's testing approach. For the overall testing strategy across all backends, see [Testing Strategy](7a%20Testing-Strategy.md). For cross-language contract validation, see [Interface and Contract Tests](7d%20Interface-and-Contract-Tests.md).
 
 ---
 
@@ -637,9 +637,9 @@ dotnet test --filter "FullyQualifiedName~Network"dotnet test --filter "Ful
 
 **Sources:** Standard .NET testing conventions
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

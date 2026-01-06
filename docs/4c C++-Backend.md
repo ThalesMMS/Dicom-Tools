@@ -1,4 +1,4 @@
-# C++ Backend
+# 4c C++ Backend
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -11,7 +11,7 @@
 
 This page documents the C++ backend implementation of the Dicom-Tools toolkit. The C++ backend leverages four major medical imaging libraries (DCMTK, GDCM, ITK, VTK) to provide DICOM file processing, advanced visualization, and specialized medical format support. It is particularly distinguished by its VTK-based 3D visualization capabilities and support for Structured Reports (SR) and Radiotherapy (RT) data structures.
 
-For information about building all backends including C++, see [Build System](#8.1). For details on the CLI contract that the C++ backend implements, see [CLI Contract System](#3). For operation-specific documentation, see [DICOM Operations](#5).
+For information about building all backends including C++, see [Build System](8a%20Build-System.md). For details on the CLI contract that the C++ backend implements, see [CLI Contract System](3%20CLI-Contract-System.md). For operation-specific documentation, see [DICOM Operations](5%20DICOM-Operations.md).
 
 ---
 
@@ -789,9 +789,9 @@ The C++ backend fills a unique niche in the multi-language toolkit:
 
  [interface/app.py L149-L187](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/app.py#L149-L187)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

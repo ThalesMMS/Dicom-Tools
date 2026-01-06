@@ -1,4 +1,4 @@
-# Development
+# 8 Development
 
 > **Relevant source files**
 > * [.github/workflows/ci.yml](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml)
@@ -7,7 +7,7 @@
 > * [java/dcm4che-tests/pom.xml](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/java/dcm4che-tests/pom.xml)
 > * [scripts/setup_all.sh](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh)
 
-This page provides an overview of development practices, tools, and workflows for contributors to the Dicom-Tools repository. It covers the development environment setup, repository structure, build processes, and testing infrastructure. For detailed information about the build system, see [Build System](#8.1). For CI/CD pipeline configuration, see [CI/CD Pipeline](#8.2). For guides on extending the toolkit, see [Adding a New Backend](#8.3) and [Adding a New Operation](#8.4).
+This page provides an overview of development practices, tools, and workflows for contributors to the Dicom-Tools repository. It covers the development environment setup, repository structure, build processes, and testing infrastructure. For detailed information about the build system, see [Build System](8a%20Build-System.md). For CI/CD pipeline configuration, see [CI/CD Pipeline](8b%20CI-CD-Pipeline.md). For guides on extending the toolkit, see [Adding a New Backend](8c%20Adding-a-New-Backend.md) and [Adding a New Operation](8d%20Adding-a-New-Operation.md).
 
 ---
 
@@ -394,7 +394,7 @@ The CI pipeline defined in [.github/workflows/ci.yml L1-L138](https://github.com
 * **JavaScript Job** [.github/workflows/ci.yml L75-L93](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml#L75-L93) : Sets up Node.js 20 with npm cache, runs `npm ci`, builds, and executes coverage tests
 * **Interface Job** [.github/workflows/ci.yml L95-L137](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml#L95-L137) : Builds Rust and C++ backends, sets environment variables for binary paths, and runs `pytest interface/tests/` for cross-language validation
 
-For detailed testing documentation, see [Testing](#7).
+For detailed testing documentation, see [Testing](7%20Testing.md).
 
 Sources: [.github/workflows/ci.yml L1-L138](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml#L1-L138)
 
@@ -501,10 +501,10 @@ Sources: [README.md L42](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/
 
 ### Additional Documentation
 
-* **Build System Details**: See [Build System](#8.1) for comprehensive build configuration and artifact management
-* **CI/CD Pipeline**: See [CI/CD Pipeline](#8.2) for GitHub Actions workflow details and CI best practices
-* **Extension Guides**: * [Adding a New Backend](#8.3): Guide for implementing a new language backend * [Adding a New Operation](#8.4): Guide for adding operations across all backends
-* **Testing Strategy**: See [Testing](#7) for comprehensive testing documentation
+* **Build System Details**: See [Build System](8a%20Build-System.md) for comprehensive build configuration and artifact management
+* **CI/CD Pipeline**: See [CI/CD Pipeline](8b%20CI-CD-Pipeline.md) for GitHub Actions workflow details and CI best practices
+* **Extension Guides**: * [Adding a New Backend](8c%20Adding-a-New-Backend.md): Guide for implementing a new language backend * [Adding a New Operation](8d%20Adding-a-New-Operation.md): Guide for adding operations across all backends
+* **Testing Strategy**: See [Testing](7%20Testing.md) for comprehensive testing documentation
 * **CLI Contract**: [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)  defines the request/response format for all backends
 
 ### Quick Reference Files
@@ -521,32 +521,32 @@ Sources: [README.md L1-L43](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cb
 
  [BUILD.md L1-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L1-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [Development](#8-development)
-* [Development Environment Overview](#8-development-environment-overview)
-* [Required Tools](#8-required-tools)
-* [Repository Structure for Developers](#8-repository-structure-for-developers)
-* [Development Workflow](#8-development-workflow)
-* [Standard Development Cycle](#8-standard-development-cycle)
-* [Common Development Commands](#8-common-development-commands)
-* [Build Artifacts and Locations](#8-build-artifacts-and-locations)
-* [Build Output Paths](#8-build-output-paths)
-* [Environment Variables for Development](#8-environment-variables-for-development)
-* [Backend Configuration](#8-backend-configuration)
-* [Build Configuration](#8-build-configuration)
-* [Testing Infrastructure Overview](#8-testing-infrastructure-overview)
-* [Multi-Tier Testing Strategy](#8-multi-tier-testing-strategy)
-* [Code Organization Principles](#8-code-organization-principles)
-* [Language Backend Structure](#8-language-backend-structure)
-* [Adapter Pattern Implementation](#8-adapter-pattern-implementation)
-* [Adapter Factory Flow](#8-adapter-factory-flow)
-* [Development Resources](#8-development-resources)
-* [Additional Documentation](#8-additional-documentation)
-* [Quick Reference Files](#8-quick-reference-files)
+* [Development](8%20Development.md)
+* [Development Environment Overview](8%20Development.md)
+* [Required Tools](8%20Development.md)
+* [Repository Structure for Developers](8%20Development.md)
+* [Development Workflow](8%20Development.md)
+* [Standard Development Cycle](8%20Development.md)
+* [Common Development Commands](8%20Development.md)
+* [Build Artifacts and Locations](8%20Development.md)
+* [Build Output Paths](8%20Development.md)
+* [Environment Variables for Development](8%20Development.md)
+* [Backend Configuration](8%20Development.md)
+* [Build Configuration](8%20Development.md)
+* [Testing Infrastructure Overview](8%20Development.md)
+* [Multi-Tier Testing Strategy](8%20Development.md)
+* [Code Organization Principles](8%20Development.md)
+* [Language Backend Structure](8%20Development.md)
+* [Adapter Pattern Implementation](8%20Development.md)
+* [Adapter Factory Flow](8%20Development.md)
+* [Development Resources](8%20Development.md)
+* [Additional Documentation](8%20Development.md)
+* [Quick Reference Files](8%20Development.md)
 
 Ask Devin about Dicom-Tools

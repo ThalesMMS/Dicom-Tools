@@ -1,4 +1,4 @@
-# Web Viewer (JavaScript)
+# 2c Web Viewer (JavaScript)
 
 > **Relevant source files**
 > * [js/INTEGRATION.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/INTEGRATION.md)
@@ -11,7 +11,7 @@
 
 The Web Viewer is a browser-based medical image viewer built on Cornerstone3D v4 that provides GPU-accelerated 2D stack viewing and 3D volume rendering capabilities. It serves as a standalone demonstration of DICOM visualization using modern web technologies and can load data via WADO-URI (HTTP static files) or DICOMweb (QIDO-RS/WADO-RS) protocols.
 
-This viewer is distinct from the desktop TkApp GUI (see [TkApp Desktop GUI](#2.1)) and the headless contract runner (see [Contract Runner](#2.2)). It operates entirely in the browser and does not interact with the CLI contract system used by other backends.
+This viewer is distinct from the desktop TkApp GUI (see [TkApp Desktop GUI](2a%20TkApp-Desktop-GUI.md)) and the headless contract runner (see [Contract Runner](2b%20Contract-Runner-%28Headless-CLI%29.md)). It operates entirely in the browser and does not interact with the CLI contract system used by other backends.
 
 **Sources:** [js/viewer-gateway/src/main.ts L1-L490](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/src/main.ts#L1-L490)
 
@@ -954,7 +954,7 @@ Development dependencies:
 
 The Web Viewer operates independently from the multi-language backend system:
 
-* **No CLI contract usage**: Unlike TkApp and contract_runner (see [CLI Contract System](#3)), the viewer does not interact with backend CLIs
+* **No CLI contract usage**: Unlike TkApp and contract_runner (see [CLI Contract System](3%20CLI-Contract-System.md)), the viewer does not interact with backend CLIs
 * **Browser-only execution**: All processing happens client-side in JavaScript/WebAssembly
 * **Shared sample data**: Uses the same `sample_series/` DICOM files as Python/Rust/C++ backends for consistency
 * **Complementary visualization**: Provides GPU-accelerated web-based viewing while backends handle batch processing, anonymization, and network operations
@@ -963,9 +963,9 @@ The viewer can be deployed as a standalone web application or embedded into larg
 
 **Sources:** Diagram 1 and Diagram 5 from high-level architecture, [js/INTEGRATION.md L1-L94](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/INTEGRATION.md#L1-L94)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

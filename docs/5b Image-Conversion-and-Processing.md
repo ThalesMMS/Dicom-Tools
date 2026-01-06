@@ -1,4 +1,4 @@
-# Image Conversion and Processing
+# 5b Image Conversion and Processing
 
 > **Relevant source files**
 > * [interface/adapters/csharp_cli.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/csharp_cli.py)
@@ -16,7 +16,7 @@
 
 This page documents the image conversion and processing operations in Dicom-Tools: converting DICOM files to standard image formats (`to_image`), transcoding between transfer syntaxes (`transcode`), and anonymizing patient information (`anonymize`). These operations manipulate pixel data and file metadata while preserving or transforming the DICOM structure.
 
-For detailed information about tag modification strategies and batch PHI removal, see [Tag Modification and Anonymization](#5.3). For statistics and validation operations that don't modify files, see [Core File Operations](#5.1).
+For detailed information about tag modification strategies and batch PHI removal, see [Tag Modification and Anonymization](5c%20Tag-Modification-and-Anonymization.md). For statistics and validation operations that don't modify files, see [Core File Operations](5a%20Core-File-Operations.md).
 
 ---
 
@@ -638,7 +638,7 @@ All backends support frame selection for multiframe DICOM images:
 
 ### Batch Processing Integration
 
-For processing multiple files or all frames in a multiframe image, see [Batch Processing](#5.6).
+For processing multiple files or all frames in a multiframe image, see [Batch Processing](5f%20Batch-Processing.md).
 
 **Sources:** [python/tests/test_batch_process.py L156-L189](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_batch_process.py#L156-L189)
 
@@ -710,9 +710,9 @@ When optional features are unavailable:
 
  [python/tests/test_core_modules.py L139-L149](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_core_modules.py#L139-L149)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

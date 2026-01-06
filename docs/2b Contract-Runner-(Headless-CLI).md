@@ -1,4 +1,4 @@
-# Contract Runner (Headless CLI)
+# 2b Contract Runner (Headless CLI)
 
 > **Relevant source files**
 > * [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)
@@ -14,7 +14,7 @@
 
 The Contract Runner is a programmatic interface for executing DICOM operations without a graphical user interface. It provides direct access to the CLI contract system, allowing automated scripts, batch processing, and integration with external tools to perform DICOM operations across all language backends.
 
-This page covers the Python-based adapter layer that translates contract requests into backend-specific CLI invocations. For the contract specification itself, see [CLI Contract System](#3). For the desktop GUI interface, see [TkApp Desktop GUI](#2.1). For individual backend implementations, see [Language Implementations](#4).
+This page covers the Python-based adapter layer that translates contract requests into backend-specific CLI invocations. For the contract specification itself, see [CLI Contract System](3%20CLI-Contract-System.md). For the desktop GUI interface, see [TkApp Desktop GUI](2a%20TkApp-Desktop-GUI.md). For individual backend implementations, see [Language Implementations](4%20Language-Implementations.md).
 
 **Sources:** [interface/CONTRACT.md L1-L14](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md#L1-L14)
 
@@ -523,9 +523,9 @@ CLI processes are isolated and automatically cleaned up. Large operations (e.g.,
 
  (referenced but not provided), [interface/adapters/python_cli.py L18-L43](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/python_cli.py#L18-L43)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

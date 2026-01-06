@@ -9,7 +9,7 @@
 
 This document explains the build system for the Dicom-Tools repository, covering how each language backend is compiled or installed, where build artifacts are placed, and how the system locates executables at runtime. The build system is designed to support six language implementations (Python, Rust, C++, C#, Java, JavaScript) with a single-command setup via `setup_all.sh`.
 
-For information about runtime configuration and how adapters locate these built artifacts, see [Environment Configuration](#3.3). For details on the CI/CD pipeline that automates these builds, see [CI/CD Pipeline](#8.2).
+For information about runtime configuration and how adapters locate these built artifacts, see [Environment Configuration](3c%20Environment-Configuration.md). For details on the CI/CD pipeline that automates these builds, see [CI/CD Pipeline](8b%20CI-CD-Pipeline.md).
 
 **Sources:** [README.md L1-L43](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L1-L43)
 
@@ -375,7 +375,7 @@ The following table shows where each language places its build artifacts:
 
 **Sources:** [BUILD.md L34-L41](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L34-L41)
 
- [README.md L53-L59](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L53-L59)
+ README.md
 
 ---
 
@@ -614,11 +614,11 @@ The Dicom-Tools build system supports six language implementations through:
 5. **Make Targets**: Convenience targets for common operations
 6. **CI Integration**: GitHub Actions workflow automates the full build and test cycle
 
-For information on how these build artifacts are integrated into the testing pipeline, see [CI/CD Pipeline](#8.2). For details on how adapters locate and invoke these artifacts, see [Adapter Pattern](#3.2) and [Environment Configuration](#3.3).
+For information on how these build artifacts are integrated into the testing pipeline, see [CI/CD Pipeline](8b%20CI-CD-Pipeline.md). For details on how adapters locate and invoke these artifacts, see [Adapter Pattern](3b%20Adapter-Pattern.md) and [Environment Configuration](3c%20Environment-Configuration.md).
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

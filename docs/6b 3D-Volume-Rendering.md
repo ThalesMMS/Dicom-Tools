@@ -1,4 +1,4 @@
-# 3D Volume Rendering
+# 6b 3D Volume Rendering
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -10,7 +10,7 @@
 
 ## Purpose and Scope
 
-This page documents the 3D volume rendering capabilities in the JavaScript web viewer. The volume viewport enables GPU-accelerated visualization of DICOM series as 3D volumes with support for Maximum Intensity Projection (MIP), Multi-Planar Reconstruction (MPR), and direct volume rendering. For 2D slice-by-slice navigation, see [2D Stack Viewing](#6.1). For CPU-based volume analysis operations, see [CPU-Based Analysis](#6.3).
+This page documents the 3D volume rendering capabilities in the JavaScript web viewer. The volume viewport enables GPU-accelerated visualization of DICOM series as 3D volumes with support for Maximum Intensity Projection (MIP), Multi-Planar Reconstruction (MPR), and direct volume rendering. For 2D slice-by-slice navigation, see [2D Stack Viewing](6a%202D-Stack-Viewing.md). For CPU-based volume analysis operations, see [CPU-Based Analysis](6c%20CPU-Based-Analysis.md).
 
 The volume rendering system is built on Cornerstone3D and VTK.js, providing real-time interaction with medical imaging volumes in a web browser.
 
@@ -274,7 +274,7 @@ end
 
 **Sources:** Diagram 3 from high-level architecture, [README.md L18](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L18-L18)
 
-The C++ backend (see [C++ Backend](#4.3)) provides complementary functionality:
+The C++ backend (see [C++ Backend](4c%20C++-Backend.md)) provides complementary functionality:
 
 * Server-side volume rendering
 * Export to NIfTI and NRRD formats
@@ -297,9 +297,9 @@ The complete control flow for volume viewport interaction:
 
 All volume operations maintain the GPU-resident volume data, enabling instant updates to the visualization without reloading from the network or filesystem. The volume handle returned by `createVolumeViewport` serves as the primary interface for runtime control of the 3D rendering.
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

@@ -1,4 +1,4 @@
-# 3D Volume Reconstruction
+# 5d 3D Volume Reconstruction
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -14,7 +14,7 @@
 
 This page explains how to reconstruct 3D volumes from 2D DICOM slice series. Topics covered include the `dicom_numpy.combine_slices()` function, affine transformation matrices, coordinate system conversions, and NIfTI format export.
 
-For pixel-level image processing operations, see [Image Conversion and Processing](#5.2). For visualization of reconstructed volumes, see [3D Volume Rendering](#6.2).
+For pixel-level image processing operations, see [Image Conversion and Processing](5b%20Image-Conversion-and-Processing.md). For visualization of reconstructed volumes, see [3D Volume Rendering](6b%203D-Volume-Rendering.md).
 
 ---
 
@@ -633,9 +633,9 @@ Key test scenarios covered:
 
  [python/DICOM_reencoder/core/factories.py L41-L100](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/DICOM_reencoder/core/factories.py#L41-L100)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

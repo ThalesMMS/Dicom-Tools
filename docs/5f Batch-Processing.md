@@ -1,4 +1,4 @@
-# Batch Processing
+# 5f Batch Processing
 
 > **Relevant source files**
 > * [python/tests/test_anonymize_dicom.py](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_anonymize_dicom.py)
@@ -12,7 +12,7 @@
 
 This page documents the batch processing capabilities for handling multiple DICOM files in a single operation. Batch processing includes automated file discovery, bulk decompression, anonymization, image conversion, and validation operations.
 
-For individual file operations, see [Core File Operations](#5.1), [Image Conversion and Processing](#5.2), and [Tag Modification and Anonymization](#5.3). For organizing DICOM files by hierarchy, see the organization functions in the Python backend.
+For individual file operations, see [Core File Operations](5a%20Core-File-Operations.md), [Image Conversion and Processing](5b%20Image-Conversion-and-Processing.md), and [Tag Modification and Anonymization](5c%20Tag-Modification-and-Anonymization.md). For organizing DICOM files by hierarchy, see the organization functions in the Python backend.
 
 **Sources:** [python/tests/test_batch_process.py L1-L263](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_batch_process.py#L1-L263)
 
@@ -772,9 +772,9 @@ Batch operations process files sequentially to manage memory usage:
 
 **Sources:** [python/tests/test_batch_process.py L1-L263](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/tests/test_batch_process.py#L1-L263)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

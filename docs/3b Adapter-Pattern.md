@@ -1,4 +1,4 @@
-# Adapter Pattern
+# 3b Adapter Pattern
 
 > **Relevant source files**
 > * [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)
@@ -16,7 +16,7 @@
 
 This page documents the adapter pattern implementation that enables cross-language interoperability in the DICOM Tools repository. The adapter layer translates generic request dictionaries into backend-specific CLI invocations, allowing the TkApp GUI and contract runner to work uniformly with six different language implementations (Python, Rust, C++, C#, Java, JavaScript).
 
-For the complete CLI contract specification that adapters must implement, see [Contract Specification](#3.1). For environment configuration details, see [Environment Configuration](#3.3).
+For the complete CLI contract specification that adapters must implement, see [Contract Specification](3a%20Contract-Specification.md). For environment configuration details, see [Environment Configuration](3c%20Environment-Configuration.md).
 
 ---
 
@@ -555,9 +555,9 @@ def _build_cmd(self, op: str, input_path: str, output: str | None,  �
 
  [interface/CONTRACT.md L28-L75](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md#L28-L75)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

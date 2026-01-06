@@ -1,4 +1,4 @@
-# Testing Strategy
+# 7a Testing Strategy
 
 > **Relevant source files**
 > * [.github/workflows/ci.yml](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml)
@@ -9,7 +9,7 @@
 
 This document explains the comprehensive testing approach used in the Dicom-Tools repository to ensure correctness, interoperability, and contract compliance across six language implementations (Python, Rust, C++, C#, Java, JavaScript).
 
-For details on specific language test suites, see [Python Tests](#7.2), [C# Tests](#7.3), [Interface and Contract Tests](#7.4), and [JavaScript Tests](#7.5). For information on the CLI contract that tests validate, see [Contract Specification](#3.1).
+For details on specific language test suites, see [Python Tests](7b%20Python-Tests.md), [C# Tests](7c%20C%23-Tests.md), [Interface and Contract Tests](7d%20Interface-and-Contract-Tests.md), and [JavaScript Tests](7e%20JavaScript-Tests.md). For information on the CLI contract that tests validate, see [Contract Specification](3a%20Contract-Specification.md).
 
 ---
 
@@ -584,9 +584,9 @@ The [scripts/setup_all.sh](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd
 
  [BUILD.md L1-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L1-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

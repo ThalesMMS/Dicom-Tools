@@ -20,7 +20,7 @@ Adding a new operation requires modifications across multiple layers:
 * **Adapter translation** logic
 * **Test suites**
 
-For information about implementing a completely new language backend, see [Adding a New Backend](#8.3). For details on the contract system itself, see [CLI Contract System](#3) and [Contract Specification](#3.1).
+For information about implementing a completely new language backend, see [Adding a New Backend](8c%20Adding-a-New-Backend.md). For details on the contract system itself, see [CLI Contract System](3%20CLI-Contract-System.md) and [Contract Specification](3a%20Contract-Specification.md).
 
 ---
 
@@ -455,9 +455,9 @@ The modular architecture allows operations to be implemented incrementally acros
 
  [interface/adapters/](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/adapters/)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

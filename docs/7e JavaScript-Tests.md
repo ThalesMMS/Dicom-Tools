@@ -1,4 +1,4 @@
-# JavaScript Tests
+# 7e JavaScript Tests
 
 > **Relevant source files**
 > * [js/contract-cli/README.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/contract-cli/README.md)
@@ -9,7 +9,7 @@
 > * [js/viewer-gateway/tests/main.entry.test.ts](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/tests/main.entry.test.ts)
 > * [python/screenshots/ui.png](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/python/screenshots/ui.png)
 
-This page documents the JavaScript testing infrastructure for the Dicom-Tools repository, covering unit tests for both the `contract-cli` shim and the `viewer-gateway` web application. For language-specific backend tests (Python, Rust, C++, etc.), see [7.2](#7.2). For cross-language contract validation, see [7.4](#7.4).
+This page documents the JavaScript testing infrastructure for the Dicom-Tools repository, covering unit tests for both the `contract-cli` shim and the `viewer-gateway` web application. For language-specific backend tests (Python, Rust, C++, etc.), see [7.2](7b%20Python-Tests.md). For cross-language contract validation, see [7.4](7d%20Interface-and-Contract-Tests.md).
 
 ## Testing Framework
 
@@ -638,9 +638,9 @@ Key testing utilities provided by the framework:
 
 **Sources:** [js/viewer-gateway/tests/main.entry.test.ts L1-L76](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/js/viewer-gateway/tests/main.entry.test.ts#L1-L76)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

@@ -6,7 +6,7 @@
 
 ## Purpose and Scope
 
-This page documents the automated Continuous Integration and Continuous Deployment (CI/CD) pipeline implemented using GitHub Actions. The pipeline validates all six language backends (Python, Rust, C++, C#, Java, JavaScript) and ensures cross-language contract compliance through integration tests. For information about the contract system that the pipeline validates, see [CLI Contract System](#3). For details on building the backends locally, see [Build System](#8.1).
+This page documents the automated Continuous Integration and Continuous Deployment (CI/CD) pipeline implemented using GitHub Actions. The pipeline validates all six language backends (Python, Rust, C++, C#, Java, JavaScript) and ensures cross-language contract compliance through integration tests. For information about the contract system that the pipeline validates, see [CLI Contract System](3%20CLI-Contract-System.md). For details on building the backends locally, see [Build System](8a%20Build-System.md).
 
 ---
 
@@ -544,13 +544,13 @@ The CI/CD pipeline provides comprehensive validation of the multi-language DICOM
 | JavaScript | Vitest with coverage | ~2-3 min |
 | Interface | Cross-language contract tests | ~8-10 min |
 
-The `interface` job is the most comprehensive, building and testing multiple backends to ensure cross-language compatibility. For information about running tests locally, see [Testing Strategy](#7.1).
+The `interface` job is the most comprehensive, building and testing multiple backends to ensure cross-language compatibility. For information about running tests locally, see [Testing Strategy](7a%20Testing-Strategy.md).
 
 **Sources:** [.github/workflows/ci.yml L1-L138](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml#L1-L138)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

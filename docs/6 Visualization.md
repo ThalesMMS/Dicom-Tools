@@ -1,4 +1,4 @@
-# Visualization
+# 6 Visualization
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -12,7 +12,7 @@
 
 This page covers the visualization capabilities available in the Dicom-Tools repository, focusing on how DICOM medical images are rendered and interacted with. The system provides both web-based GPU-accelerated viewers and native desktop visualization tools.
 
-For information about converting DICOM files to standard image formats (PNG, JPEG), see [Image Conversion and Processing](#5.2). For network-based image retrieval (DICOMweb, WADO), see [Network Operations](#5.5).
+For information about converting DICOM files to standard image formats (PNG, JPEG), see [Image Conversion and Processing](5b%20Image-Conversion-and-Processing.md). For network-based image retrieval (DICOMweb, WADO), see [Network Operations](5e%20Network-Operations.md).
 
 **Sources:** [README.md L1-L43](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L1-L43)
 
@@ -635,7 +635,7 @@ These codecs are loaded on-demand and cached by the browser.
 
 ## Integration with CLI Contract
 
-The visualization components can be integrated with the CLI contract system (see [CLI Contract System](#3)) for automated workflows:
+The visualization components can be integrated with the CLI contract system (see [CLI Contract System](3%20CLI-Contract-System.md)) for automated workflows:
 
 ```mermaid
 flowchart TD
@@ -666,54 +666,54 @@ subgraph subGraph0 ["Automation Pipeline"]
 end
 ```
 
-The contract runner [Contract Runner](#2.2) can be used to batch-convert entire DICOM series to standard image formats, which are then loaded into visualization tools.
+The contract runner [Contract Runner](2b%20Contract-Runner-%28Headless-CLI%29.md) can be used to batch-convert entire DICOM series to standard image formats, which are then loaded into visualization tools.
 
 **Sources:** [README.md L42](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L42-L42)
 
  [BUILD.md L34-L41](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L34-L41)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [Visualization](#6-visualization)
-* [Purpose and Scope](#6-purpose-and-scope)
-* [Visualization Architecture](#6-visualization-architecture)
-* [Component Overview](#6-component-overview)
-* [Web Viewer Architecture](#6-web-viewer-architecture)
-* [Core Components](#6-core-components)
-* [Stack Viewport (2D Viewing)](#6-stack-viewport-2d-viewing)
-* [Initialization](#6-initialization)
-* [Window/Level Controls](#6-windowlevel-controls)
-* [Volume Viewport (3D/MPR Rendering)](#6-volume-viewport-3dmpr-rendering)
-* [Viewport Creation](#6-viewport-creation)
-* [Orientation Control](#6-orientation-control)
-* [Slab Thickness](#6-slab-thickness)
-* [CPU-Based Volume Analysis](#6-cpu-based-volume-analysis)
-* [Data Extraction](#6-data-extraction)
-* [Projection Types](#6-projection-types)
-* [Histogram Computation](#6-histogram-computation)
-* [Slice Resampling](#6-slice-resampling)
-* [DICOMweb Integration](#6-dicomweb-integration)
-* [Configuration](#6-configuration)
-* [Loading Flow](#6-loading-flow)
-* [C++ VTK Visualization](#6-c-vtk-visualization)
-* [Capabilities](#6-capabilities)
-* [VTK Pipeline](#6-vtk-pipeline)
-* [Image Export and Conversion](#6-image-export-and-conversion)
-* [Backend Comparison](#6-backend-comparison)
-* [Python Backend Example](#6-python-backend-example)
-* [Export Workflow](#6-export-workflow)
-* [Testing and Validation](#6-testing-and-validation)
-* [Web Viewer Tests](#6-web-viewer-tests)
-* [C++ VTK Tests](#6-c-vtk-tests)
-* [Cross-Backend Validation](#6-cross-backend-validation)
-* [Performance Considerations](#6-performance-considerations)
-* [GPU vs. CPU Processing](#6-gpu-vs-cpu-processing)
-* [Memory Management](#6-memory-management)
-* [Codec Performance](#6-codec-performance)
-* [Integration with CLI Contract](#6-integration-with-cli-contract)
+* [Visualization](6%20Visualization.md)
+* [Purpose and Scope](6%20Visualization.md)
+* [Visualization Architecture](6%20Visualization.md)
+* [Component Overview](6%20Visualization.md)
+* [Web Viewer Architecture](6%20Visualization.md)
+* [Core Components](6%20Visualization.md)
+* [Stack Viewport (2D Viewing)](6%20Visualization.md)
+* [Initialization](6%20Visualization.md)
+* [Window/Level Controls](6%20Visualization.md)
+* [Volume Viewport (3D/MPR Rendering)](6%20Visualization.md)
+* [Viewport Creation](6%20Visualization.md)
+* [Orientation Control](6%20Visualization.md)
+* [Slab Thickness](6%20Visualization.md)
+* [CPU-Based Volume Analysis](6%20Visualization.md)
+* [Data Extraction](6%20Visualization.md)
+* [Projection Types](6%20Visualization.md)
+* [Histogram Computation](6%20Visualization.md)
+* [Slice Resampling](6%20Visualization.md)
+* [DICOMweb Integration](6%20Visualization.md)
+* [Configuration](6%20Visualization.md)
+* [Loading Flow](6%20Visualization.md)
+* [C++ VTK Visualization](6%20Visualization.md)
+* [Capabilities](6%20Visualization.md)
+* [VTK Pipeline](6%20Visualization.md)
+* [Image Export and Conversion](6%20Visualization.md)
+* [Backend Comparison](6%20Visualization.md)
+* [Python Backend Example](6%20Visualization.md)
+* [Export Workflow](6%20Visualization.md)
+* [Testing and Validation](6%20Visualization.md)
+* [Web Viewer Tests](6%20Visualization.md)
+* [C++ VTK Tests](6%20Visualization.md)
+* [Cross-Backend Validation](6%20Visualization.md)
+* [Performance Considerations](6%20Visualization.md)
+* [GPU vs. CPU Processing](6%20Visualization.md)
+* [Memory Management](6%20Visualization.md)
+* [Codec Performance](6%20Visualization.md)
+* [Integration with CLI Contract](6%20Visualization.md)
 
 Ask Devin about Dicom-Tools

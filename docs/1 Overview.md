@@ -1,4 +1,4 @@
-# Overview
+# 1 Overview
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -7,7 +7,7 @@
 
 This document introduces the Dicom-Tools repository, a multi-language DICOM processing toolkit that provides unified interfaces across six programming language implementations. It covers the repository structure, core architectural patterns, and the key components that enable cross-language interoperability.
 
-For step-by-step installation instructions, see [Installation and Setup](#1.2). For hands-on usage examples, see [Quick Start Guide](#1.3). For detailed information about individual language backends, see [Language Implementations](#4).
+For step-by-step installation instructions, see [Installation and Setup](1b%20Installation-and-Setup.md). For hands-on usage examples, see [Quick Start Guide](1c%20Quick-Start-Guide.md). For detailed information about individual language backends, see [Language Implementations](4%20Language-Implementations.md).
 
 ## Purpose and Scope
 
@@ -189,7 +189,7 @@ end
 
 The contract defines operations like `info`, `anonymize`, `validate`, `transcode`, `to_image`, `echo`, `store_scu`, and many others. Each backend CLI receives JSON-formatted requests and returns JSON responses conforming to the specification.
 
-For complete contract details, see [CLI Contract System](#3) and [Contract Specification](#3.1).
+For complete contract details, see [CLI Contract System](3%20CLI-Contract-System.md) and [Contract Specification](3a%20Contract-Specification.md).
 
 **Sources:** [README.md L41-L42](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L41-L42)
 
@@ -223,7 +223,7 @@ sequenceDiagram
 
 Each adapter class implements a `handle(request: dict) -> RunResult` method and manages environment variable resolution for CLI paths.
 
-For adapter implementation details, see [Adapter Pattern](#3.2).
+For adapter implementation details, see [Adapter Pattern](3b%20Adapter-Pattern.md).
 
 **Sources:** [README.md L22](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L22-L22)
 
@@ -258,7 +258,7 @@ The following table summarizes the capabilities and unique strengths of each lan
 | VTK operations | ✗ | ✗ | ✓ | ✗ | ✗ | ✗ |
 | Web server | ✗ | ✓ | ✗ | ✗ | ✗ | ✗ |
 
-For detailed information on each backend, see [Language Implementations](#4).
+For detailed information on each backend, see [Language Implementations](4%20Language-Implementations.md).
 
 **Sources:** [README.md L7-L22](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L7-L22)
 
@@ -268,9 +268,9 @@ For detailed information on each backend, see [Language Implementations](#4).
 
 Dicom-Tools provides three primary user interfaces:
 
-1. **TkApp Desktop GUI** (`interface/app.py`) - Tkinter-based graphical interface for interactive DICOM processing. Provides backend selection, operation configuration, and result visualization. See [TkApp Desktop GUI](#2.1).
-2. **Contract Runner** (`interface/contract_runner.py`) - Headless command-line executor for automated, scriptable DICOM processing. Accepts JSON request files or command-line arguments. See [Contract Runner (Headless CLI)](#2.2).
-3. **Web Viewer** (`js/viewer-gateway/`) - Browser-based medical image viewer built on Cornerstone3D. Supports 2D stack viewing, 3D volume rendering, and DICOMweb integration. See [Web Viewer (JavaScript)](#2.3).
+1. **TkApp Desktop GUI** (`interface/app.py`) - Tkinter-based graphical interface for interactive DICOM processing. Provides backend selection, operation configuration, and result visualization. See [TkApp Desktop GUI](2a%20TkApp-Desktop-GUI.md).
+2. **Contract Runner** (`interface/contract_runner.py`) - Headless command-line executor for automated, scriptable DICOM processing. Accepts JSON request files or command-line arguments. See [Contract Runner (Headless CLI)](2b%20Contract-Runner-%28Headless-CLI%29.md).
+3. **Web Viewer** (`js/viewer-gateway/`) - Browser-based medical image viewer built on Cornerstone3D. Supports 2D stack viewing, 3D volume rendering, and DICOMweb integration. See [Web Viewer (JavaScript)](2c%20Web-Viewer-%28JavaScript%29.md).
 
 **Sources:** [README.md L22](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L22-L22)
 
@@ -337,7 +337,7 @@ Environment variables can override default CLI paths:
 * `JS_DICOM_TOOLS_CMD` - JavaScript CLI path
 * `BACKING_CMD` - Backend command for JS contract-cli shim
 
-For complete build system details, see [Build System](#8.1).
+For complete build system details, see [Build System](8a%20Build-System.md).
 
 **Sources:** [scripts/setup_all.sh L1-L60](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/scripts/setup_all.sh#L1-L60)
 
@@ -402,7 +402,7 @@ end
 
 All tests use the shared `sample_series/` directory for consistent test data across languages.
 
-For detailed testing information, see [Testing](#7) and [Testing Strategy](#7.1).
+For detailed testing information, see [Testing](7%20Testing.md) and [Testing Strategy](7a%20Testing-Strategy.md).
 
 **Sources:** [README.md L32-L40](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L32-L40)
 
@@ -427,7 +427,7 @@ To use Dicom-Tools, you need:
 # Clone repositorygit clone https://github.com/ThalesMMS/Dicom-Tools.gitcd Dicom-Tools# One-command setup (builds all backends)./scripts/setup_all.sh# Launch GUIpython -m interface.app# Or use headless contract runnerpython -m interface.contract_runner --backend python --op info --input sample_series/IM-0001-0001.dcm
 ```
 
-For detailed setup instructions, see [Installation and Setup](#1.2). For usage examples, see [Quick Start Guide](#1.3).
+For detailed setup instructions, see [Installation and Setup](1b%20Installation-and-Setup.md). For usage examples, see [Quick Start Guide](1c%20Quick-Start-Guide.md).
 
 **Sources:** [README.md L27-L31](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L27-L31)
 
@@ -435,27 +435,28 @@ For detailed setup instructions, see [Installation and Setup](#1.2). For usage e
 
  [BUILD.md L1-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L1-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [Overview](#1-overview)
-* [Purpose and Scope](#1-purpose-and-scope)
-* [Repository Structure](#1-repository-structure)
-* [Directory Layout](#1-directory-layout)
-* [Core Architecture Concepts](#1-core-architecture-concepts)
-* [CLI Contract System](#1-cli-contract-system)
-* [Adapter Pattern Implementation](#1-adapter-pattern-implementation)
-* [Language Backend Capabilities](#1-language-backend-capabilities)
-* [Operation Support Matrix](#1-operation-support-matrix)
-* [Key Components](#1-key-components)
-* [User Interfaces](#1-user-interfaces)
-* [Build System](#1-build-system)
-* [Testing Infrastructure](#1-testing-infrastructure)
-* [Getting Started](#1-getting-started)
-* [Prerequisites](#1-prerequisites)
-* [Quick Setup](#1-quick-setup)
+- [1 Overview](1%20Overview.md)
+  - [Purpose and Scope](#purpose-and-scope)
+  - [Repository Structure](#repository-structure)
+    - [Directory Layout](#directory-layout)
+  - [Core Architecture Concepts](#core-architecture-concepts)
+    - [CLI Contract System](#cli-contract-system)
+    - [Adapter Pattern Implementation](#adapter-pattern-implementation)
+  - [Language Backend Capabilities](#language-backend-capabilities)
+    - [Operation Support Matrix](#operation-support-matrix)
+  - [Key Components](#key-components)
+    - [User Interfaces](#user-interfaces)
+    - [Build System](#build-system)
+    - [Testing Infrastructure](#testing-infrastructure)
+  - [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Quick Setup](#quick-setup)
+    - [On this page](#on-this-page)
 
 Ask Devin about Dicom-Tools

@@ -1,4 +1,4 @@
-# Testing
+# 7 Testing
 
 > **Relevant source files**
 > * [.github/workflows/ci.yml](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/.github/workflows/ci.yml)
@@ -12,7 +12,7 @@
 
 This document describes the comprehensive testing strategy for the Dicom-Tools repository, including unit tests, integration tests, and cross-language contract validation. The testing infrastructure ensures that all six language implementations (Python, Rust, C++, C#, Java, JavaScript) maintain correctness and interoperability through the shared CLI contract.
 
-For information about the CLI contract specification itself, see [CLI Contract System](#3). For details on the CI/CD pipeline configuration, see [CI/CD Pipeline](#8.2). For development guidelines on adding tests for new features, see [Adding a New Operation](#8.4).
+For information about the CLI contract specification itself, see [CLI Contract System](3%20CLI-Contract-System.md). For details on the CI/CD pipeline configuration, see [CI/CD Pipeline](8b%20CI-CD-Pipeline.md). For development guidelines on adding tests for new features, see [Adding a New Operation](8d%20Adding-a-New-Operation.md).
 
 ## Testing Philosophy
 
@@ -524,27 +524,27 @@ sequenceDiagram
 
  [interface/tests/test_adapters_build_cmds.py L1-L99](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/tests/test_adapters_build_cmds.py#L1-L99)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
-* [Testing](#7-testing)
-* [Purpose and Scope](#7-purpose-and-scope)
-* [Testing Philosophy](#7-testing-philosophy)
-* [Test Organization](#7-test-organization)
-* [Language-Specific Test Suites](#7-language-specific-test-suites)
-* [Interface Tests](#7-interface-tests)
-* [Continuous Integration Pipeline](#7-continuous-integration-pipeline)
-* [CI Job Configuration](#7-ci-job-configuration)
-* [Test Data Management](#7-test-data-management)
-* [Running Tests Locally](#7-running-tests-locally)
-* [Individual Language Tests](#7-individual-language-tests)
-* [Interface Tests](#7-interface-tests-1)
-* [Test Coverage Tools](#7-test-coverage-tools)
-* [Java Coverage Configuration](#7-java-coverage-configuration)
-* [JavaScript Coverage Configuration](#7-javascript-coverage-configuration)
-* [Test Execution Flow](#7-test-execution-flow)
+* [Testing](7%20Testing.md)
+* [Purpose and Scope](7%20Testing.md)
+* [Testing Philosophy](7%20Testing.md)
+* [Test Organization](7%20Testing.md)
+* [Language-Specific Test Suites](7%20Testing.md)
+* [Interface Tests](7%20Testing.md)
+* [Continuous Integration Pipeline](7%20Testing.md)
+* [CI Job Configuration](7%20Testing.md)
+* [Test Data Management](7%20Testing.md)
+* [Running Tests Locally](7%20Testing.md)
+* [Individual Language Tests](7%20Testing.md)
+* [Interface Tests](7%20Testing.md)
+* [Test Coverage Tools](7%20Testing.md)
+* [Java Coverage Configuration](7%20Testing.md)
+* [JavaScript Coverage Configuration](7%20Testing.md)
+* [Test Execution Flow](7%20Testing.md)
 
 Ask Devin about Dicom-Tools

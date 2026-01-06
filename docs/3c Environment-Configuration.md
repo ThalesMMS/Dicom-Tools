@@ -1,4 +1,4 @@
-# Environment Configuration
+# 3c Environment Configuration
 
 > **Relevant source files**
 > * [interface/CONTRACT.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/interface/CONTRACT.md)
@@ -12,7 +12,7 @@
 
 This page documents the environment variables used to configure and override backend CLI paths in the Dicom-Tools system. These variables enable flexible deployment scenarios including development, continuous integration, and production environments by allowing runtime customization of how the adapter layer locates and invokes backend executables.
 
-For information about the contract specification itself, see [Contract Specification](#3.1). For details on how adapters translate requests into CLI invocations, see [Adapter Pattern](#3.2).
+For information about the contract specification itself, see [Contract Specification](3a%20Contract-Specification.md). For details on how adapters translate requests into CLI invocations, see [Adapter Pattern](3b%20Adapter-Pattern.md).
 
 ---
 
@@ -518,11 +518,11 @@ This factory pattern ensures:
 
 Environment configuration in Dicom-Tools provides flexible runtime control over backend executable locations through a standardized set of environment variables. Each adapter implements its own resolution logic with sensible defaults while supporting override for development, CI, and production scenarios. The system's design ensures that configuration complexity is encapsulated within adapters, maintaining clean separation between the UI layer and backend implementation details.
 
-For information on how these configured commands are invoked during operation handling, see [Adapter Pattern](#3.2). For the complete list of operations supported by each backend, see [Contract Specification](#3.1).
+For information on how these configured commands are invoked during operation handling, see [Adapter Pattern](3b%20Adapter-Pattern.md). For the complete list of operations supported by each backend, see [Contract Specification](3a%20Contract-Specification.md).
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 

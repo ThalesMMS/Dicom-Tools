@@ -1,4 +1,4 @@
-# Quick Start Guide
+# 1c Quick Start Guide
 
 > **Relevant source files**
 > * [BUILD.md](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md)
@@ -11,7 +11,7 @@
 
 This guide provides immediate, hands-on examples for using Dicom-Tools to perform common DICOM operations. It demonstrates both the graphical interface (TkApp) and command-line usage (contract runner and direct backend access) with concrete examples and expected outputs.
 
-For complete installation instructions, see [Installation and Setup](#1.2). For detailed GUI features, see [TkApp Desktop GUI](#2.1). For the underlying architecture, see [Architecture Overview](#1.1).
+For complete installation instructions, see [Installation and Setup](1b%20Installation-and-Setup.md). For detailed GUI features, see [TkApp Desktop GUI](2a%20TkApp-Desktop-GUI.md). For the underlying architecture, see [Architecture Overview](1a%20Architecture-Overview.md).
 
 ---
 
@@ -510,20 +510,20 @@ Check the operation support matrix above. Not all backends implement all operati
 
 Now that you've completed the quick start:
 
-* **For GUI usage:** See [TkApp Desktop GUI](#2.1) for complete feature documentation
-* **For CLI automation:** See [Contract Runner](#2.2) for headless scripting
-* **For web viewing:** See [Web Viewer (JavaScript)](#2.3) for browser-based visualization
-* **For specific operations:** See [DICOM Operations](#5) for comprehensive operation reference
-* **For backend details:** See [Language Implementations](#4) for language-specific features
-* **For development:** See [Development](#8) for contribution guidelines
+* **For GUI usage:** See [TkApp Desktop GUI](2a%20TkApp-Desktop-GUI.md) for complete feature documentation
+* **For CLI automation:** See [Contract Runner](2b%20Contract-Runner-%28Headless-CLI%29.md) for headless scripting
+* **For web viewing:** See [Web Viewer (JavaScript)](2c%20Web-Viewer-%28JavaScript%29.md) for browser-based visualization
+* **For specific operations:** See [DICOM Operations](5%20DICOM-Operations.md) for comprehensive operation reference
+* **For backend details:** See [Language Implementations](4%20Language-Implementations.md) for language-specific features
+* **For development:** See [Development](8%20Development.md) for contribution guidelines
 
 **Sources:** [README.md L1-L43](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/README.md#L1-L43)
 
  [BUILD.md L1-L48](https://github.com/ThalesMMS/Dicom-Tools/blob/c7b4cbd8/BUILD.md#L1-L48)
 
-Refresh this wiki
 
-Last indexed: 5 January 2026 ([c7b4cb](https://github.com/ThalesMMS/Dicom-Tools/commit/c7b4cbd8))
+
+
 
 ### On this page
 
