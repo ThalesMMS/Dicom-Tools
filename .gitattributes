@@ -2,7 +2,4 @@
 * text=auto
 
 # Exclude shell scripts from language stats
-*.sh linguist-vendored
-scripts/** linguist-vendored
-sample_series/** linguist-vendored
 *.inc linguist-language=C++
