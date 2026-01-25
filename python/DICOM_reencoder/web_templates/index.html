@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DICOM Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="page">
+  <!-- Hero introduction -->
+  <header class="hero">
+    <div>
+      <p class="eyebrow">DICOM Tools</p>
+      <h1>Inspect, anonymize, and validate medical images without friction.</h1>
+      <p class="lede">Drop a DICOM file to see metadata, render an image, review pixel statistics, and anonymize safely.</p>
+    </div>
+    <div class="badge">
+      <div class="badge-label">Powered by</div>
+      <div class="badge-stack">
+        <span>Pydicom</span>
+        <span>pynetdicom</span>
+        <span>dicom-numpy</span>
+        <span>SimpleITK</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main panels: upload, preview, and details -->
+  <main class="layout">
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Upload</p>
+          <h2>Bring your DICOM</h2>
+          <p class="hint">Drag a file here or browse to start exploring.</p>
+        </div>
+        <button id="browseBtn" class="btn ghost">Browse</button>
+      </div>
+      <div id="uploadArea" class="dropzone">
+        <input id="fileInput" type="file" accept=".dcm,.dicom" hidden>
+        <div class="drop-icon">⟲</div>
+        <p class="drop-title">Drop a DICOM file</p>
+        <p class="hint">Up to 100MB • Extensions: .dcm / .dicom</p>
+      </div>
+      <div id="status" class="status-bar" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Preview</p>
+          <h2>Image & Actions</h2>
+          <p class="hint">Windowed image preview plus quick actions.</p>
+        </div>
+        <div class="actions">
+          <button id="metaBtn" class="btn" disabled>Metadata</button>
+          <button id="statsBtn" class="btn" disabled>Pixel stats</button>
+          <button id="anonymizeBtn" class="btn" disabled>Anonymize</button>
+          <button id="validateBtn" class="btn ghost" disabled>Validate</button>
+        </div>
+      </div>
+      <div id="viewer" class="viewer muted">Upload a DICOM file to render the image.</div>
+    </section>
+
+    <section id="details" class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Details</p>
+          <h2>Metadata & Stats</h2>
+          <p class="hint">Patient, study, and pixel information rendered on demand.</p>
+        </div>
+      </div>
+      <div id="detailsBody" class="details-body">
+        <div class="placeholder">No metadata yet. Upload a file and click an action above.</div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footnote">DICOM Tools • Local-first web UI • Flask</footer>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

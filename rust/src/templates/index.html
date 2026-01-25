@@ -1,0 +1,437 @@
+<!--
+// index.html
+// Dicom-Tools-rs
+//
+// Single-page web UI for uploading DICOM files, previewing frames, viewing metadata, and running anonymization/validation calls.
+//
+// Thales Matheus Mendonça Santos - November 2025
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DICOM Tools (Rust)</title>
+    <!-- Lightweight single-page UI to exercise the Rust web API without external assets. -->
+    <style>
+        :root {
+            --bg: #0f1829;
+            --panel: #111d32;
+            --muted: #8aa0c2;
+            --text: #e7edf5;
+            --accent: #ff7043;
+            --accent-strong: #ff8b4d;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px;
+            background: radial-gradient(circle at 20% 20%, rgba(255,112,67,0.08), transparent 30%),
+                        radial-gradient(circle at 80% 0%, rgba(118,203,255,0.08), transparent 25%),
+                        var(--bg);
+            font-family: 'Space Grotesk', 'DM Sans', 'Avenir Next', system-ui, sans-serif;
+            color: var(--text);
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header {
+            background: linear-gradient(135deg, rgba(255,112,67,0.12), rgba(255,255,255,0.02));
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+        }
+
+        h1 { margin: 0; font-size: 26px; letter-spacing: 0.02em; }
+        .subtitle { margin-top: 6px; color: var(--muted); font-size: 15px; }
+
+        .chips { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .chip {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        .grid {
+            margin-top: 18px;
+            display: grid;
+            grid-template-columns: 1fr 1.1fr;
+            gap: 16px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .panel h2 { margin: 0 0 12px; font-size: 18px; }
+
+        .status-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .status-pill {
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .status-pill.active { color: var(--text); border-color: rgba(255,112,67,0.5); }
+
+        .upload-area {
+            border: 1.5px dashed var(--muted);
+            border-radius: 14px;
+            padding: 28px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: rgba(255,255,255,0.02);
+        }
+        .upload-area:hover, .upload-area.dragover { border-color: var(--accent); background: rgba(255,112,67,0.06); }
+
+        .actions { margin-top: 12px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .btn {
+            padding: 12px 14px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: #0c1424;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(255,112,67,0.35); }
+        .btn.secondary { background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid var(--border); }
+        .btn.danger { background: linear-gradient(135deg, #ff4b4b, #ff6b6b); color: #0c1424; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-top: 14px; }
+        .info-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
+        .info-label { color: var(--muted); font-size: 12px; }
+        .info-value { font-size: 15px; margin-top: 4px; }
+
+        .viewer { min-height: 480px; display: flex; flex-direction: column; gap: 12px; }
+        .viewer #viewerContent { flex: 1; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 16px; overflow: auto; }
+        .viewer img { max-width: 100%; border-radius: 10px; display: block; margin: 0 auto; }
+
+        .loading { display: none; text-align: center; padding: 12px; }
+        .loading.active { display: block; }
+        .spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--accent); animation: spin 1s linear infinite; margin: 8px auto; }
+
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+        .stat-card { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+        .stat-label { color: var(--muted); font-size: 12px; }
+        .stat-value { font-size: 22px; font-weight: 700; }
+
+        .alert { padding: 12px; border-radius: 10px; margin-bottom: 10px; }
+        .alert.success { background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.35); }
+        .alert.error { background: rgba(255, 75, 75, 0.1); border: 1px solid rgba(255, 75, 75, 0.35); }
+        .alert.warning { background: rgba(255, 193, 7, 0.12); border: 1px solid rgba(255, 193, 7, 0.35); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 860px) {
+            .grid { grid-template-columns: 1fr; }
+            header { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>DICOM Tools • Rust</h1>
+                <p class="subtitle">Fast inspection, anonymization, and previews powered by dicom-rs</p>
+                <div class="chips">
+                    <span class="chip">CLI ready</span>
+                    <span class="chip">Axum web UI</span>
+                    <span class="chip">dicom-rs 0.7</span>
+                </div>
+            </div>
+            <div class="status-bar" id="statusBar">
+                <span class="status-pill">No file loaded</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <section class="panel">
+                <h2>Upload & Actions</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div style="font-size: 42px; margin-bottom: 6px;">📁</div>
+                    <div>Drop a DICOM file here or click to browse</div>
+                    <input type="file" id="fileInput" accept=".dcm,.dicom" style="display: none;">
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <div>Processing...</div>
+                </div>
+
+                <div class="info-grid" id="fileInfo" style="display: none;">
+                    <div class="info-card"><div class="info-label">Patient</div><div class="info-value" id="infoPatient">—</div></div>
+                    <div class="info-card"><div class="info-label">Modality</div><div class="info-value" id="infoModality">—</div></div>
+                    <div class="info-card"><div class="info-label">Study Date</div><div class="info-value" id="infoStudyDate">—</div></div>
+                    <div class="info-card"><div class="info-label">Pixel Data</div><div class="info-value" id="infoPixel">—</div></div>
+                    <div class="info-card"><div class="info-label">Transfer Syntax</div><div class="info-value" id="infoTransferSyntax">—</div></div>
+                    <div class="info-card"><div class="info-label">Dimensions / Frames</div><div class="info-value" id="infoDimensions">—</div></div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn secondary" onclick="showMetadata()">View Metadata</button>
+                    <button class="btn secondary" onclick="showJson()">View JSON</button>
+                    <button class="btn secondary" onclick="showStats()">Pixel Stats</button>
+                    <button class="btn" onclick="validateFile()">Validate</button>
+                    <button class="btn danger" onclick="anonymize()">Anonymize & Download</button>
+                </div>
+            </section>
+
+            <section class="panel viewer">
+                <h2>Viewer & Details</h2>
+                <div id="viewerContent">
+                    <p style="color: var(--muted); text-align: center; padding: 32px;">Upload a DICOM file to preview the first frame, inspect metadata, or anonymize safely.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Cache DOM lookups up front to keep later handlers terse and fast.
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const viewerContent = document.getElementById('viewerContent');
+        const loadingEl = document.getElementById('loading');
+        const statusBar = document.getElementById('statusBar');
+
+        // Global-ish UI state: current file name and quick metadata snapshot.
+        const state = { currentFilename: null, info: null };
+
+        // Click and drag-drop both funnel through the same upload path.
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) uploadFile(file);
+        });
+        fileInput.addEventListener('change', (e) => { const file = e.target.files[0]; if (file) uploadFile(file); });
+
+        function setLoading(active) {
+            // Shared spinner toggle used by most networked actions.
+            loadingEl.classList.toggle('active', active);
+        }
+
+        function updateStatus(text, tone = 'muted') {
+            // Condensed status badges so the user always sees the latest state.
+            statusBar.innerHTML = '';
+            const pill = document.createElement('span');
+            pill.className = 'status-pill active';
+            pill.textContent = text;
+            if (tone === 'warning') pill.style.borderColor = 'rgba(255,193,7,0.4)';
+            if (tone === 'error') pill.style.borderColor = 'rgba(255,75,75,0.45)';
+            statusBar.appendChild(pill);
+        }
+
+        function renderFileInfo(info) {
+            // Populate the small summary grid below the uploader.
+            document.getElementById('fileInfo').style.display = 'grid';
+            document.getElementById('infoPatient').textContent = info.patient_name || 'N/A';
+            document.getElementById('infoModality').textContent = info.modality || 'N/A';
+            document.getElementById('infoStudyDate').textContent = info.study_date || 'N/A';
+            document.getElementById('infoPixel').textContent = info.has_pixel_data ? 'Present' : 'None';
+            document.getElementById('infoTransferSyntax').textContent = info.transfer_syntax || 'Unknown';
+            const dims = (info.rows && info.columns) ? `${info.rows} × ${info.columns}` : 'N/A';
+            const frames = info.number_of_frames ? `${info.number_of_frames} frame${info.number_of_frames > 1 ? 's' : ''}` : '1 frame?';
+            document.getElementById('infoDimensions').textContent = `${dims} · ${frames}`;
+        }
+
+        async function uploadFile(file) {
+            // POST the raw file, then prefetch quick info so the UI can react immediately.
+            const formData = new FormData();
+            formData.append('file', file);
+            setLoading(true);
+            updateStatus('Uploading…');
+
+            try {
+                const response = await fetch('/api/upload', { method: 'POST', body: formData });
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error || 'Upload failed');
+
+                state.currentFilename = data.filename;
+                state.info = data.info || {};
+                renderFileInfo(state.info);
+                updateStatus(`Loaded ${state.currentFilename}`);
+                showPreview();
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+                updateStatus('Upload failed', 'error');
+            }
+
+            setLoading(false);
+        }
+
+        function showPreview() {
+            if (!state.currentFilename) return;
+            if (state.info && state.info.has_pixel_data) {
+                // Append a cache buster so users see the latest frame even after anonymization.
+                const timestamp = new Date().getTime();
+                viewerContent.innerHTML = `<img src="/api/image/${state.currentFilename}?t=${timestamp}" alt="DICOM frame">`;
+            } else {
+                viewerContent.innerHTML = '<p style="color: var(--muted); text-align: center; padding: 32px;">No pixel data present in this file.</p>';
+            }
+        }
+
+        async function showMetadata() {
+            if (!state.currentFilename) return alert('Load a file first.');
+            viewerContent.innerHTML = '<p style="text-align:center;color:var(--muted);">Loading metadata…</p>';
+
+            try {
+                // Fetch categorized metadata sections and render them as cards.
+                const response = await fetch(`/api/metadata/${state.currentFilename}`);
+                const data = await response.json();
+                let html = '<h3>Metadata</h3>';
+                const renderSection = (name, obj) => {
+                    html += `<div style="margin-top:10px;">`;
+                    html += `<div style="font-weight:600;margin-bottom:6px;">${name}</div>`;
+                    for (const [key, value] of Object.entries(obj)) {
+                        html += `<div class="info-card"><div class="info-label">${key}</div><div class="info-value">${value}</div></div>`;
+                    }
+                    html += '</div>';
+                };
+                html += '<div class="info-grid">';
+                renderSection('Patient', data.patient || {});
+                renderSection('Study', data.study || {});
+                renderSection('Image', data.image || {});
+                renderSection('Technical', data.misc || {});
+                html += '</div>';
+                viewerContent.innerHTML = html;
+            } catch (error) {
+                viewerContent.innerHTML = '<div class="alert error">Failed to load metadata.</div>';
+            }
+        }
+
+        async function showStats() {
+            if (!state.currentFilename) return alert('Load a file first.');
+            viewerContent.innerHTML = '<p style="text-align:center;color:var(--muted);">Calculating pixel statistics…</p>';
+
+            try {
+                // Pixel statistics are precomputed server-side to avoid heavy browser work.
+                const response = await fetch(`/api/stats/${state.currentFilename}`);
+                const data = await response.json();
+                const stats = [
+                    { label: 'Minimum', value: data.min?.toFixed(2) },
+                    { label: 'Maximum', value: data.max?.toFixed(2) },
+                    { label: 'Mean', value: data.mean?.toFixed(2) },
+                    { label: 'Median', value: data.median ? data.median.toFixed(2) : 'N/A' },
+                    { label: 'Std Dev', value: data.std_dev ? data.std_dev.toFixed(2) : 'N/A' },
+                    { label: 'Total Pixels', value: data.total_pixels?.toLocaleString() },
+                    { label: 'Shape', value: Array.isArray(data.shape) ? data.shape.join(' × ') : '—' },
+                ];
+
+                let html = '<h3>Pixel Statistics</h3><div class="stat-grid">';
+                stats.forEach(stat => {
+                    html += `<div class="stat-card"><div class="stat-label">${stat.label}</div><div class="stat-value">${stat.value || '—'}</div></div>`;
+                });
+                html += '</div>';
+                viewerContent.innerHTML = html;
+            } catch (error) {
+                viewerContent.innerHTML = '<div class="alert error">Failed to compute statistics.</div>';
+            }
+
+        // Render the DICOM JSON representation returned by the server.
+        async function showJson() {
+            if (!state.currentFilename) return alert('Load a file first.');
+            viewerContent.innerHTML = '<p style="text-align:center;color:var(--muted);">Generating JSON…</p>';
+
+            try {
+                const response = await fetch(`/api/json/${state.currentFilename}`);
+                const data = await response.json();
+                const pretty = JSON.stringify(data, null, 2);
+                const pre = document.createElement('pre');
+                pre.style.background = 'rgba(255,255,255,0.04)';
+                pre.style.border = `1px solid var(--border)`;
+                pre.style.padding = '12px';
+                pre.style.borderRadius = '10px';
+                pre.style.overflow = 'auto';
+                pre.textContent = pretty;
+                viewerContent.innerHTML = '<h3>Dicom JSON</h3>';
+                viewerContent.appendChild(pre);
+                updateStatus('JSON view ready');
+            } catch (error) {
+                viewerContent.innerHTML = '<div class="alert error">Failed to render JSON.</div>';
+                updateStatus('JSON view failed', 'error');
+            }
+        }
+        }
+
+        async function anonymize() {
+            if (!state.currentFilename) return alert('Load a file first.');
+            if (!confirm('Anonymize this DICOM file? Patient attributes will be replaced.')) return;
+            setLoading(true);
+            updateStatus('Anonymizing…');
+
+            try {
+                // Request a server-side anonymized copy, then trigger a download.
+                const response = await fetch(`/api/anonymize/${state.currentFilename}`, { method: 'POST' });
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error || 'Anonymization failed');
+                state.currentFilename = data.filename;
+                updateStatus('Anonymized copy ready');
+                window.location.href = `/api/download/${data.filename}`;
+            } catch (error) {
+                alert('Anonymization failed: ' + error.message);
+                updateStatus('Anonymization failed', 'error');
+            }
+
+            setLoading(false);
+        }
+
+        async function validateFile() {
+            if (!state.currentFilename) return alert('Load a file first.');
+            viewerContent.innerHTML = '<p style="text-align:center;color:var(--muted);">Validating…</p>';
+
+            try {
+                // Validation returns both hard errors (missing tags) and softer warnings.
+                const response = await fetch(`/api/validate/${state.currentFilename}`);
+                const data = await response.json();
+                let html = '';
+                if (data.valid) {
+                    html += '<div class="alert success">✓ File is valid</div>';
+                } else {
+                    html += '<div class="alert error">Validation failed</div>';
+                }
+
+                if (data.errors && data.errors.length) {
+                    data.errors.forEach(err => { html += `<div class="alert error">${err}</div>`; });
+                }
+                if (data.warnings && data.warnings.length) {
+                    data.warnings.forEach(w => { html += `<div class="alert warning">${w}</div>`; });
+                }
+
+                if ((!data.errors || !data.errors.length) && (!data.warnings || !data.warnings.length)) {
+                    html += '<div class="alert">No warnings or errors reported.</div>';
+                }
+
+                viewerContent.innerHTML = html;
+                updateStatus(data.valid ? 'Valid DICOM' : 'Needs attention', data.valid ? 'muted' : 'warning');
+            } catch (error) {
+                viewerContent.innerHTML = '<div class="alert error">Validation failed.</div>';
+                updateStatus('Validation failed', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
