@@ -1,53 +1,53 @@
-# Interface unificada (Tkinter + contrato CLI/JSON)
+# Unified interface (Tkinter + CLI/JSON contract)
 
-Este diretório concentra a UI Tkinter e os adaptadores que chamam os backends C++/Python/Rust via subprocesso, trocando requisições/respostas no formato descrito em `CONTRACT.md`.
+This directory contains the Tkinter UI and the adapters that call the C++/Python/Rust backends through subprocesses, exchanging requests/responses in the format described in `CONTRACT.md`.
 
-## Requisitos
-- Python 3 instalado.
-- Backends compilados/instalados:
-  - Python: `pip install -e python` ou usar diretamente `python -m DICOM_reencoder.cli` (cwd `python/`).
-  - Rust: `cargo build --release` em `rust/` (gera `rust/target/release/dicom-tools`).
-  - C++: `cmake --build .` em `cpp/build` (gera `cpp/build/DicomTools`).
+## Requirements
+- Python 3 installed.
+- Compiled/installed backends:
+  - Python: `pip install -e python` or use `python -m DICOM_reencoder.cli` directly (cwd `python/`).
+  - Rust: `cargo build --release` in `rust/` (produces `rust/target/release/dicom-tools`).
+  - C++: `cmake --build .` in `cpp/build` (produces `cpp/build/DicomTools`).
 
 Optional env vars to point binaries:
 - `PYTHON_DICOM_TOOLS_CMD` (default `python -m DICOM_reencoder.cli`, cwd `python/`)
-- `RUST_DICOM_TOOLS_CMD` (overrides rust binary) ou `RUST_DICOM_TOOLS_BIN` (default `rust/target/release/dicom-tools`; fallback `cargo run --release --`)
+- `RUST_DICOM_TOOLS_CMD` (overrides the Rust binary) or `RUST_DICOM_TOOLS_BIN` (default `rust/target/release/dicom-tools`; fallback `cargo run --release --`)
 - `CPP_DICOM_TOOLS_BIN` (default `cpp/build/DicomTools`)
-- `CS_DICOM_TOOLS_CMD` (default `cs/bin/Release/net8.0/DicomTools.Cli` ou Debug fallback)
+- `CS_DICOM_TOOLS_CMD` (default `cs/bin/Release/net8.0/DicomTools.Cli` or Debug fallback)
 - `JAVA_DICOM_TOOLS_CMD` (default `java/dcm4che-tests/target/dcm4che-tests.jar` via `java -jar`)
 - `JS_DICOM_TOOLS_CMD` (default `node js/contract-cli/index.js`)
 
-## Usando a UI Tkinter
+## Using the Tkinter UI
 ```bash
 python -m interface.app
 ```
-Escolha backend, operação, caminhos de entrada/saída, e (opcional) um JSON de opções. O resultado aparece em JSON no painel inferior.
+Choose the backend, operation, input/output paths, and optionally a JSON options payload. The result appears as JSON in the lower panel.
 
-## Usando o executor headless (sem UI)
+## Using the headless runner (without UI)
 ```bash
-# Com flags
-python -m interface.contract_runner --backend python --op info --input /caminho/arquivo.dcm
+# With flags
+python -m interface.contract_runner --backend python --op info --input /path/to/file.dcm
 
-# Com arquivo JSON
+# With a JSON file
 python -m interface.contract_runner --request-file request.json
 
 # Via pipe
 echo '{"backend":"rust","op":"dump","input":"file.dcm"}' | python -m interface.contract_runner
 ```
 
-## Contrato
-O formato de requisição/resposta e o mapeamento mínimo de operações estão em `CONTRACT.md`. As respostas do runner incluem sempre `ok`, `returncode`, `stdout/stderr`, `artifacts` (aliases de `output_files`), `metadata`, além de `backend` e `operation` para facilitar depuração.
+## Contract
+The request/response format and the minimum operation mapping live in `CONTRACT.md`. Runner responses always include `ok`, `returncode`, `stdout/stderr`, `artifacts` (aliases for `output_files`), `metadata`, plus `backend` and `operation` to make debugging easier.
 
-## Arquitetura reativa da UI
-- Event bus + Command pattern (`interface/input/event_bus.py`) mantêm UI e engine desacoplados.
-- `ToolManager` centraliza ferramentas (scroll/zoom/pan/WL/ROI/overlay/MPR) e gera `frame_requested` para o render loop.
-- `RenderLoop` (`interface/components/render_loop.py`) consome os requests e emite `frame_ready` assim que o core terminar.
-- Viewers (`TwoDViewer`, `MPRViewer`, `VolumeViewer`) só reagem a `frame_ready` e renderizam overlays via `OverlayManager`.
-- Pipeline alvo: `UI Input → Command → Core → Frame → Viewer → UI`.
+## Reactive UI architecture
+- Event bus + Command pattern (`interface/input/event_bus.py`) keep the UI and engine decoupled.
+- `ToolManager` centralizes tools (scroll/zoom/pan/WL/ROI/overlay/MPR) and emits `frame_requested` to the render loop.
+- `RenderLoop` (`interface/components/render_loop.py`) consumes requests and emits `frame_ready` as soon as the core finishes.
+- Viewers (`TwoDViewer`, `MPRViewer`, `VolumeViewer`) only react to `frame_ready` and render overlays through `OverlayManager`.
+- Target pipeline: `UI Input → Command → Core → Frame → Viewer → UI`.
 
-O render loop tem proteção contra reentrância: eventos `frame_ready` que disparem novos `frame_requested` são ignorados enquanto um frame está sendo gerado, evitando loops infinitos.
+The render loop has reentrancy protection: `frame_ready` events that trigger new `frame_requested` events are ignored while a frame is being generated, preventing infinite loops.
 
-Para uso headless/testável:
+For headless / testable usage:
 ```python
 from interface.runtime import InterfaceRuntime
 from interface.state.frames import Frame
@@ -60,29 +60,29 @@ runtime = InterfaceRuntime.create(DummyEngine())
 runtime.inputs.scroll("2d", 1)
 ```
 
-## Eventos/inputs padronizados
-Todos os viewers compartilham os mesmos comandos: `onScroll`, `onZoom`, `onPan`, `onWindowLevel`, `onChangeSeries`, `onToggleOverlay`, `onSelectROI`, `onDrag`, `onRebuildMPR`. Os adapters em `interface/input/adapters.py` cuidam do mapeamento de mouse/teclado/gestos para esses comandos.
+## Standardized events/inputs
+All viewers share the same commands: `onScroll`, `onZoom`, `onPan`, `onWindowLevel`, `onChangeSeries`, `onToggleOverlay`, `onSelectROI`, `onDrag`, `onRebuildMPR`. The adapters in `interface/input/adapters.py` handle the mapping from mouse/keyboard/gestures to those commands.
 
 ## Overlays
-`OverlayManager` (`interface/overlays/manager.py`) concentra WL/WW, índice da imagem, localização, espessura, timestamp, nome da série, ferramenta ativa e marcadores de orientação. A UI só chama `overlay.render(context, state)`.
+`OverlayManager` (`interface/overlays/manager.py`) centralizes WL/WW, image index, location, thickness, timestamp, series name, active tool, and orientation markers. The UI only calls `overlay.render(context, state)`.
 
-## Estrutura da pasta
-- `components/`: viewers reativos + render loop.
-- `input/`: event bus, controller unificado, adapters 2D/MPR/Volume, `ToolManager`.
-- `overlays/`: `OverlayManager` e overlays padrão.
+## Folder structure
+- `components/`: reactive viewers + render loop.
+- `input/`: event bus, unified controller, 2D/MPR/Volume adapters, `ToolManager`.
+- `overlays/`: `OverlayManager` and default overlays.
 - `state/`: `UIState`, `ViewerState`, `FrameRequest/Frame`.
-- `utils/`: helpers de geometria (pan/zoom/transform, clipping de ROI, bounding boxes).
+- `utils/`: geometry helpers (pan/zoom/transform, ROI clipping, bounding boxes).
 
-## Convenções de coordenadas
-- Pan/zoom operam em coordenadas de canvas (origem no canto superior esquerdo).
-- `window_center/window_width` seguem valores numéricos do frame (sem acoplamento a toolkit gráfico).
-- Transformações 2D mantêm matriz 3x3 (translate/scale) em `ViewerState`.
+## Coordinate conventions
+- Pan/zoom operate in canvas coordinates (origin at the top-left corner).
+- `window_center/window_width` follow numeric frame values (without coupling to a graphics toolkit).
+- 2D transforms keep a 3x3 (translate/scale) matrix in `ViewerState`.
 
-## Testes
+## Tests
 ```bash
 python3 -m pytest interface/tests
-# ou com cobertura
+# or with coverage
 python3 -m pytest interface/tests --cov=interface --cov-report=term-missing
 ```
-Dependências de dev (pytest, pytest-cov, coverage) estão em `interface/requirements-dev.txt`.
-Cobertura inclui runner do contrato e interações de UI (scroll, zoom, pan, WL, overlays, troca de viewer, rebuild MPR).
+Dev dependencies (pytest, pytest-cov, coverage) live in `interface/requirements-dev.txt`.
+Coverage includes the contract runner and UI interactions (scroll, zoom, pan, WL, overlays, viewer switching, MPR rebuild).
