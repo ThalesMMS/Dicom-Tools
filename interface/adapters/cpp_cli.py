@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
+from interface.operations import get_operation_spec, requires_input
+
 from .runner import RunResult, ensure_dir, parse_json_maybe, run_process, split_cmd
 
 
@@ -22,26 +24,17 @@ class CppCliAdapter:
         output = request.get("output")
         options = request.get("options", {}) or {}
 
-        requires_input = op not in {"custom"}
-        if not op or (requires_input and not input_path):
+        if not op:
+            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+        spec = get_operation_spec("cpp", op)
+        if requires_input(spec, op) and not input_path:
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
         cmd, output_files = self._build_cmd(op, input_path, output, options)
         if cmd is None:
             return RunResult(False, 1, "", f"operação não suportada pelo backend C++: {op}", [], None)
 
-        test_ops = {
-            "test_gdcm",
-            "test_dcmtk",
-            "test_itk",
-            "test_vtk_unit",
-            "test_utils",
-            "test_integration",
-            "test_edge_cases",
-            "test_validation",
-            "run_cpp_tests",
-        }
-        cwd = self.root / "cpp" / "build" if op in test_ops else None
+        cwd = self.root / "cpp" / "build" if spec.get("input") == "none" else None
 
         result = run_process(cmd, cwd=cwd)
         meta = parse_json_maybe(result.stdout)

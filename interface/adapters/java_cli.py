@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List
 
+from interface.operations import get_operation_spec, requires_input
+
 from .runner import RunResult, parse_json_maybe, run_process
 
 
@@ -22,9 +24,10 @@ class JavaCliAdapter:
         input_path = request.get("input")
         output = request.get("output")
 
-        no_input_ops = {"echo", "custom", "worklist", "qido", "wado"}
-        requires_input = op not in no_input_ops
-        if not op or (requires_input and not input_path):
+        if not op:
+            return RunResult(False, 1, "", "op é obrigatório", [], None)
+        spec = get_operation_spec("java", op)
+        if requires_input(spec, op) and not input_path:
             return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
 
         cmd = self._build_cmd(op, input_path, output, options)

@@ -1,9 +1,12 @@
+import pytest
+
+from interface.adapters import get_adapter
 from interface.adapters.cpp_cli import CppCliAdapter
 from interface.adapters.csharp_cli import CSharpCliAdapter
 from interface.adapters.java_cli import JavaCliAdapter
 from interface.adapters.python_cli import PythonCliAdapter
+from interface.adapters.runner import RunResult
 from interface.adapters.rust_cli import RustCliAdapter
-from interface.adapters import get_adapter
 
 
 def test_python_cli_builds_commands(tmp_path):
@@ -28,12 +31,12 @@ def test_rust_cli_builds_commands(tmp_path):
     adapter = RustCliAdapter()
     input_path = str(tmp_path / "in.dcm")
     assert adapter._build_cmd("info", input_path, None, {"verbose": True})[-1] == "--verbose"
-    assert "to-image" in adapter._build_cmd("to_image", input_path, None, {"frame": 2})[1]
-    assert "transcode" in adapter._build_cmd("transcode", input_path, None, {"syntax": "ts"})[1]
-    assert "validate" in adapter._build_cmd("validate", input_path, None, {})[1]
-    assert "histogram" in adapter._build_cmd("histogram", input_path, None, {"bins": 8})[1]
-    assert "echo" in adapter._build_cmd("echo", input_path, None, {"host": "1.2.3.4", "port": 11112})[1]
-    assert "stats" in adapter._build_cmd("stats", input_path, None, {})[1]
+    assert "to-image" in adapter._build_cmd("to_image", input_path, None, {"frame": 2})
+    assert "transcode" in adapter._build_cmd("transcode", input_path, None, {"syntax": "ts"})
+    assert "validate" in adapter._build_cmd("validate", input_path, None, {})
+    assert "histogram" in adapter._build_cmd("histogram", input_path, None, {"bins": 8})
+    assert "echo" in adapter._build_cmd("echo", input_path, None, {"host": "1.2.3.4", "port": 11112})
+    assert "stats" in adapter._build_cmd("stats", input_path, None, {})
 
 
 def test_cpp_cli_builds_commands(tmp_path):
@@ -96,3 +99,93 @@ def test_get_adapter_invalid():
         pass
     else:  # pragma: no cover
         assert False, "Expected ValueError"
+
+
+def test_cpp_test_runner_does_not_require_input(monkeypatch):
+    monkeypatch.setattr(
+        "interface.adapters.cpp_cli.run_process",
+        lambda cmd, cwd=None: RunResult(ok=True, returncode=0, stdout="", stderr="", output_files=[]),
+    )
+    adapter = CppCliAdapter()
+    result = adapter.handle({"op": "run_cpp_tests", "options": {}})
+    assert result.ok is True
+
+
+def test_java_test_runner_does_not_require_input(monkeypatch):
+    monkeypatch.setattr(
+        "interface.adapters.java_cli.run_process",
+        lambda cmd, cwd=None: RunResult(ok=True, returncode=0, stdout="", stderr="", output_files=[]),
+    )
+    adapter = JavaCliAdapter()
+    result = adapter.handle({"op": "run_java_tests", "options": {}})
+    assert result.ok is True
+
+
+# --- Additional edge cases for cpp no_input_ops (all members of the set) ---
+
+@pytest.mark.parametrize("op", [
+    "test_gdcm",
+    "test_dcmtk",
+    "test_itk",
+    "test_vtk_unit",
+    "test_utils",
+    "test_integration",
+    "test_edge_cases",
+    "test_validation",
+    "run_cpp_tests",
+])
+def test_cpp_all_no_input_ops_accept_empty_input(monkeypatch, op):
+    monkeypatch.setattr(
+        "interface.adapters.cpp_cli.run_process",
+        lambda cmd, cwd=None: RunResult(ok=True, returncode=0, stdout="", stderr="", output_files=[]),
+    )
+    adapter = CppCliAdapter()
+    result = adapter.handle({"op": op, "options": {}})
+    assert result.ok is True, f"{op} should succeed without input"
+
+
+def test_cpp_handle_missing_op_returns_error():
+    adapter = CppCliAdapter()
+    result = adapter.handle({"op": "", "input": "/some/file.dcm", "options": {}})
+    assert result.ok is False
+    assert result.returncode == 1
+
+
+def test_cpp_regular_op_without_input_returns_error():
+    adapter = CppCliAdapter()
+    result = adapter.handle({"op": "info", "input": "", "options": {}})
+    assert result.ok is False
+    assert result.returncode == 1
+
+
+def test_java_handle_missing_op_returns_error():
+    adapter = JavaCliAdapter()
+    result = adapter.handle({"op": "", "input": "/some/file.dcm", "options": {}})
+    assert result.ok is False
+    assert result.returncode == 1
+    assert result.stderr == "op é obrigatório"
+
+
+def test_java_handle_missing_input_for_info_returns_error():
+    adapter = JavaCliAdapter()
+    result = adapter.handle({"op": "info", "input": "", "options": {}})
+    assert result.ok is False
+    assert result.returncode == 1
+
+
+@pytest.mark.parametrize("op", [
+    "test_uid",
+    "test_datetime",
+    "test_charset",
+    "test_workflow",
+    "test_validation_java",
+    "run_java_tests",
+])
+def test_java_test_ops_do_not_require_input(monkeypatch, op):
+    monkeypatch.setattr(
+        "interface.adapters.java_cli.run_process",
+        lambda cmd, cwd=None: RunResult(ok=True, returncode=0, stdout="", stderr="", output_files=[]),
+    )
+    adapter = JavaCliAdapter()
+    result = adapter.handle({"op": op, "options": {}})
+    assert result.ok is True, f"{op} should succeed without input"
