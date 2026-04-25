@@ -1,4 +1,4 @@
-# Adapters para cada backend CLI (Python, Rust, C++).
+# Adapters for each CLI backend (Python, Rust, C++).
 from .python_cli import PythonCliAdapter
 from .rust_cli import RustCliAdapter
 from .cpp_cli import CppCliAdapter
@@ -21,4 +21,4 @@ def get_adapter(backend: str):
         return JavaCliAdapter()
     if backend == "js":
         return JsCliAdapter()
-    raise ValueError(f"Backend não suportado: {backend}")
+    raise ValueError(f"Unsupported backend: {backend}")

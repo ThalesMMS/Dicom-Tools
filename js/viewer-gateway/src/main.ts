@@ -147,7 +147,7 @@ function createAnalysisSection(root: HTMLElement) {
   minipBtn.textContent = 'CPU MinIP';
   const aipBtn = document.createElement('button');
   aipBtn.textContent = 'CPU AIP';
-  projectionRow.append('Projeções: ', mipBtn, minipBtn, aipBtn);
+  projectionRow.append('Projections: ', mipBtn, minipBtn, aipBtn);
 
   const voiSliceBtn = document.createElement('button');
   voiSliceBtn.textContent = 'Window/Level axial';
@@ -165,7 +165,7 @@ function createAnalysisSection(root: HTMLElement) {
   resampleH.size = 4;
   const resampleBtn = document.createElement('button');
   resampleBtn.textContent = 'Resample axial slice';
-  resampleRow.append('Resample alvo: ', resampleW, ' x ', resampleH, resampleBtn, ' ', voiSliceBtn);
+  resampleRow.append('Resample target: ', resampleW, ' x ', resampleH, resampleBtn, ' ', voiSliceBtn);
 
   const histogramRow = document.createElement('div');
   const binsInput = document.createElement('input');
@@ -175,7 +175,7 @@ function createAnalysisSection(root: HTMLElement) {
   binsInput.value = '256';
   binsInput.size = 5;
   const histogramBtn = document.createElement('button');
-  histogramBtn.textContent = 'Calcular histograma';
+  histogramBtn.textContent = 'Calculate histogram';
   histogramRow.append('Bins: ', binsInput, histogramBtn);
 
   const previewCanvas = document.createElement('canvas');
@@ -424,7 +424,7 @@ async function bootstrap() {
     const sourceHandle = volumeHandle ?? dicomwebHandle;
     const extracted = extractVolumeDataFromCornerstone(sourceHandle);
     if (!extracted) {
-      reportStatus(analysis.info, 'error', 'Volume ainda não carregado ou sem dados escalar.');
+      reportStatus(analysis.info, 'error', 'Volume is not loaded yet or has no scalar data.');
       return null;
     }
     cachedVolumeData = extracted;
@@ -443,7 +443,7 @@ async function bootstrap() {
     renderSliceToCanvas(slice, analysis.previewCanvas, {
       window: { center: Number(controls.voiCenter.value), width: Number(controls.voiWidth.value) },
     });
-    reportStatus(analysis.info, 'info', `Renderizou ${kind.toUpperCase()} em ${slice.width}x${slice.height}`);
+    reportStatus(analysis.info, 'info', `Rendered ${kind.toUpperCase()} at ${slice.width}x${slice.height}`);
   }
 
   analysis.mipBtn.addEventListener('click', () => renderProjection('mip'));
@@ -459,7 +459,7 @@ async function bootstrap() {
     const slice = extractAxialSlice(volumeData, sliceIndex);
     const windowed = windowLevelSlice(slice, center, width);
     renderSliceToCanvas(windowed, analysis.previewCanvas);
-    reportStatus(analysis.info, 'info', `Window/Level no corte axial ${sliceIndex} (C=${center}, W=${width})`);
+    reportStatus(analysis.info, 'info', `Window/Level on axial slice ${sliceIndex} (C=${center}, W=${width})`);
   });
 
   analysis.resampleBtn.addEventListener('click', async () => {
@@ -473,7 +473,7 @@ async function bootstrap() {
     renderSliceToCanvas(resampled, analysis.previewCanvas, {
       window: { center: Number(controls.voiCenter.value), width: Number(controls.voiWidth.value) },
     });
-    reportStatus(analysis.info, 'info', `Resample axial ${sliceIndex} para ${targetW}x${targetH}`);
+    reportStatus(analysis.info, 'info', `Resampled axial slice ${sliceIndex} to ${targetW}x${targetH}`);
   });
 
   analysis.histogramBtn.addEventListener('click', async () => {
@@ -483,7 +483,7 @@ async function bootstrap() {
     const hist = computeHistogram(volumeData, bins);
     drawHistogram(hist, analysis.histogramCanvas);
     analysis.histogramInfo.textContent = `Range: [${hist.min.toFixed(1)}, ${hist.max.toFixed(1)}], binWidth=${hist.binWidth.toFixed(2)} (bins=${bins})`;
-    reportStatus(analysis.info, 'info', `Histograma gerado com ${bins} bins`);
+    reportStatus(analysis.info, 'info', `Generated histogram with ${bins} bins`);
   });
 }
 

@@ -149,6 +149,7 @@ def test_cpp_handle_missing_op_returns_error():
     result = adapter.handle({"op": "", "input": "/some/file.dcm", "options": {}})
     assert result.ok is False
     assert result.returncode == 1
+    assert result.stderr == "op is required"
 
 
 def test_cpp_regular_op_without_input_returns_error():
@@ -156,6 +157,7 @@ def test_cpp_regular_op_without_input_returns_error():
     result = adapter.handle({"op": "info", "input": "", "options": {}})
     assert result.ok is False
     assert result.returncode == 1
+    assert result.stderr == "input is required"
 
 
 def test_java_handle_missing_op_returns_error():
@@ -163,7 +165,7 @@ def test_java_handle_missing_op_returns_error():
     result = adapter.handle({"op": "", "input": "/some/file.dcm", "options": {}})
     assert result.ok is False
     assert result.returncode == 1
-    assert result.stderr == "op é obrigatório"
+    assert result.stderr == "op is required"
 
 
 def test_java_handle_missing_input_for_info_returns_error():

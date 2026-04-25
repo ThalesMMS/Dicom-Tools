@@ -6,7 +6,7 @@ from .runner import RunResult, parse_json_maybe, run_process, split_cmd
 
 
 class CSharpCliAdapter:
-    """Adapter para CLI fo-dicom (projeto cs/). Usa binário DicomTools.Cli, preferindo Release/net8.0 e fallback para Debug."""
+    """Adapter for fo-dicom CLI (cs/ project). Uses DicomTools.Cli binary, preferring Release/net8.0 with fallback to Debug."""
 
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
@@ -51,11 +51,11 @@ class CSharpCliAdapter:
         }
         requires_input = op not in no_input_ops
         if not op or (requires_input and not input_path):
-            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+            return RunResult(False, 1, "", "op and input are required", [], None)
 
         cmd = self._build_cmd(op, input_path, output, options)
         if cmd is None:
-            return RunResult(False, 1, "", f"operação não suportada pelo backend C#: {op}", [], None)
+            return RunResult(False, 1, "", f"operation not supported by C# backend: {op}", [], None)
 
         result = run_process(cmd, cwd=self.root / "cs")
         meta = parse_json_maybe(result.stdout)

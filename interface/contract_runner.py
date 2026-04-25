@@ -1,8 +1,8 @@
 """
-Executa requisições do contrato CLI/JSON via linha de comando (sem UI).
+Runs CLI/JSON contract requests from the command line (no UI).
 
-Uso:
-  python -m interface.contract_runner --backend python --op info --input /caminho/arquivo.dcm
+Usage:
+  python -m interface.contract_runner --backend python --op info --input /path/file.dcm
   python -m interface.contract_runner --request-file request.json
   echo '{"backend": "rust", "op": "dump", "input": "file.dcm"}' | python -m interface.contract_runner
 """
@@ -19,12 +19,12 @@ def load_request_from_args(args: argparse.Namespace) -> dict:
     if args.request_file:
         return json.loads(Path(args.request_file).read_text())
     if not sys.stdin.isatty():
-        # Permite pipe: echo '{...}' | python -m interface.contract_runner
+        # Allows piping: echo '{...}' | python -m interface.contract_runner
         payload = sys.stdin.read()
         if payload.strip():
             return json.loads(payload)
 
-    # Modo flags individuais
+    # Individual flag mode
     options = json.loads(args.options) if args.options else {}
     return {
         "backend": args.backend,
@@ -36,20 +36,20 @@ def load_request_from_args(args: argparse.Namespace) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Executor do contrato CLI/JSON (sem UI)")
-    parser.add_argument("--request-file", help="Arquivo JSON com a requisição completa")
+    parser = argparse.ArgumentParser(description="CLI/JSON contract executor (no UI)")
+    parser.add_argument("--request-file", help="JSON file with the complete request")
     parser.add_argument("--backend", help="Backend (python|rust|cpp|java|csharp|js)")
-    parser.add_argument("--op", help="Operação (info, anonymize, ...)")
-    parser.add_argument("--input", help="Caminho de entrada")
-    parser.add_argument("--output", help="Caminho de saída opcional")
-    parser.add_argument("--options", help='JSON com options (ex: \'{"frame":0}\')')
+    parser.add_argument("--op", help="Operation (info, anonymize, ...)")
+    parser.add_argument("--input", help="Input path")
+    parser.add_argument("--output", help="Optional output path")
+    parser.add_argument("--options", help='JSON options (for example: \'{"frame":0}\')')
 
     args = parser.parse_args()
 
     try:
         request = load_request_from_args(args)
     except Exception as exc:
-        print(f"Erro lendo request: {exc}", file=sys.stderr)
+        print(f"Error reading request: {exc}", file=sys.stderr)
         return 1
 
     try:

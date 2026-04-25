@@ -2,7 +2,7 @@
 // stats_tests.rs
 // Dicom-Tools-rs
 //
-// Testes para cálculo de estatísticas de pixels DICOM.
+// Tests for DICOM pixel statistics calculation.
 //
 // Thales Matheus Mendonça Santos - November 2025
 
@@ -14,6 +14,10 @@ use dicom_tools::stats;
 use tempfile::tempdir;
 
 fn create_test_dicom_with_pixels(path: &std::path::Path, pixels: Vec<u8>) {
+    create_test_dicom_with_shape(path, pixels, 2, 2);
+}
+
+fn create_test_dicom_with_shape(path: &std::path::Path, pixels: Vec<u8>, rows: u16, columns: u16) {
     let mut obj = InMemDicomObject::new_empty_with_dict(StandardDataDictionary);
     obj.put(DataElement::new(
         Tag(0x0010, 0x0010),
@@ -33,12 +37,12 @@ fn create_test_dicom_with_pixels(path: &std::path::Path, pixels: Vec<u8>) {
     obj.put(DataElement::new(
         Tag(0x0028, 0x0010),
         VR::US,
-        PrimitiveValue::from(2_u16),
+        PrimitiveValue::from(rows),
     ));
     obj.put(DataElement::new(
         Tag(0x0028, 0x0011),
         VR::US,
-        PrimitiveValue::from(2_u16),
+        PrimitiveValue::from(columns),
     ));
     obj.put(DataElement::new(
         Tag(0x0028, 0x0002),
@@ -96,7 +100,7 @@ fn test_pixel_statistics_basic() {
     let dir = tempdir().expect("tempdir");
     let path = dir.path().join("stats.dcm");
 
-    // Criar imagem 2x2 com valores conhecidos
+    // Create 2x2 image with known values
     let pixels = vec![0_u8, 50, 100, 150];
     create_test_dicom_with_pixels(&path, pixels);
 
@@ -108,6 +112,8 @@ fn test_pixel_statistics_basic() {
     assert!(stats_result.max <= 255.0);
     assert!(stats_result.mean > 0.0);
     assert!(stats_result.median.is_some());
+    let median = stats_result.median.expect("median");
+    assert!((median - 75.0).abs() < f32::EPSILON);
 }
 
 #[test]
@@ -149,9 +155,9 @@ fn test_histogram() {
     let dir = tempdir().expect("tempdir");
     let path = dir.path().join("hist.dcm");
 
-    // Criar imagem com valores distribuídos
+    // Create image with distributed values
     let pixels: Vec<u8> = (0u8..=255).collect();
-    create_test_dicom_with_pixels(&path, pixels);
+    create_test_dicom_with_shape(&path, pixels, 16, 16);
 
     let histogram = stats::histogram_for_file(&path, 10).expect("histogram");
 
@@ -159,9 +165,8 @@ fn test_histogram() {
     assert!(histogram.min >= 0.0);
     assert!(histogram.max <= 255.0);
     
-    // Verificar que todos os bins têm contagem > 0 (distribuição uniforme)
-    let total_count: u64 = histogram.bins.iter().sum();
-    assert!(total_count > 0);
+    // Verify all bins have count > 0 (uniform distribution)
+    assert!(histogram.bins.iter().all(|count| *count > 0));
 }
 
 #[test]
@@ -178,4 +183,3 @@ fn test_histogram_empty() {
     assert_eq!(histogram.min, 0.0);
     assert_eq!(histogram.max, 0.0);
 }
-

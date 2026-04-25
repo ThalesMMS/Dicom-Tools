@@ -181,7 +181,7 @@ class TkApp:
     def _requires_input(self, spec: dict, op: str) -> bool:
         return requires_input(spec, op)
 
-    # Compatibilidade com testes antigos
+    # Compatibility with older tests.
     def _require_input(self, op: str) -> bool:
         backend = self.backend.get() if hasattr(self.backend, "get") else ""
         spec = get_operation_spec(backend, op)

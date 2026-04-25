@@ -8,7 +8,7 @@ from .runner import RunResult, parse_json_maybe, run_process
 
 
 class JavaCliAdapter:
-    """Adapter para CLI Java (dcm4che). Usa o jar em java/dcm4che-tests/target/dcm4che-tests.jar."""
+    """Adapter for the Java CLI (dcm4che). Uses the jar at java/dcm4che-tests/target/dcm4che-tests.jar."""
 
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
@@ -25,14 +25,14 @@ class JavaCliAdapter:
         output = request.get("output")
 
         if not op:
-            return RunResult(False, 1, "", "op é obrigatório", [], None)
+            return RunResult(False, 1, "", "op is required", [], None)
         spec = get_operation_spec("java", op)
         if requires_input(spec, op) and not input_path:
-            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+            return RunResult(False, 1, "", "op and input are required", [], None)
 
         cmd = self._build_cmd(op, input_path, output, options)
         if cmd is None:
-            return RunResult(False, 1, "", f"operação não suportada pelo backend Java: {op}", [], None)
+            return RunResult(False, 1, "", f"operation not supported by Java backend: {op}", [], None)
 
         result = run_process(cmd, cwd=self.root / "java")
         meta = parse_json_maybe(result.stdout)

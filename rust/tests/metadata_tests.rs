@@ -2,7 +2,7 @@
 // metadata_tests.rs
 // Dicom-Tools-rs
 //
-// Testes para extração de metadados básicos e detalhados de objetos DICOM.
+// Tests for basic and detailed metadata extraction from DICOM objects.
 //
 // Thales Matheus Mendonça Santos - November 2025
 
@@ -202,4 +202,3 @@ fn test_info_to_json() {
     assert!(json.contains("Test^Patient"));
     assert!(json.contains("CT"));
 }
-

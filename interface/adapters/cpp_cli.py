@@ -8,7 +8,7 @@ from .runner import RunResult, ensure_dir, parse_json_maybe, run_process, split_
 
 
 class CppCliAdapter:
-    """Chama o executável C++ (`DicomTools`)."""
+    """Calls the C++ executable (`DicomTools`)."""
 
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
@@ -25,14 +25,14 @@ class CppCliAdapter:
         options = request.get("options", {}) or {}
 
         if not op:
-            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+            return RunResult(False, 1, "", "op is required", [], None)
         spec = get_operation_spec("cpp", op)
         if requires_input(spec, op) and not input_path:
-            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+            return RunResult(False, 1, "", "input is required", [], None)
 
         cmd, output_files = self._build_cmd(op, input_path, output, options)
         if cmd is None:
-            return RunResult(False, 1, "", f"operação não suportada pelo backend C++: {op}", [], None)
+            return RunResult(False, 1, "", f"operation not supported by C++ backend: {op}", [], None)
 
         cwd = self.root / "cpp" / "build" if spec.get("input") == "none" else None
 
@@ -80,7 +80,7 @@ class CppCliAdapter:
             return cmd, [str(output_dir / Path(input_path).name)]
 
         if op == "validate":
-            # Não há validação dedicada; usar dump como proxy mínima.
+            # No dedicated validation; use dump as minimal proxy.
             cmd = [*self.base_cmd, "gdcm:dump", "-i", input_path, "-o", str(output_dir)]
             return cmd, [str(output_dir / "dump.txt")]
 

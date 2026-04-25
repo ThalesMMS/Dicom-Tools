@@ -2,7 +2,7 @@
 // dicom_access_tests.rs
 // Dicom-Tools-rs
 //
-// Testes para o trait ElementAccess que fornece acesso uniforme a elementos DICOM.
+// Tests for ElementAccess trait providing uniform access to DICOM elements.
 //
 // Thales Matheus Mendonça Santos - November 2025
 
@@ -55,7 +55,7 @@ fn test_has_element_inmem() {
 #[test]
 fn test_transfer_syntax_inmem() {
     let obj = create_test_object();
-    // InMemDicomObject não tem transfer syntax por padrão
+    // InMemDicomObject has no transfer syntax by default
     assert_eq!(obj.transfer_syntax(), None);
 }
 
@@ -135,4 +135,3 @@ fn test_transfer_syntax_filedicom() {
     assert!(ts.is_some());
     assert!(ts.unwrap().contains("1.2.840.10008.1.2.1"));
 }
-

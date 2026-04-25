@@ -24,12 +24,12 @@ class JsCliAdapter:
 
         requires_input = op not in {"echo", "custom"}
         if not op or (requires_input and not input_path):
-            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+            return RunResult(False, 1, "", "op and input are required", [], None)
 
         if op == "custom":
             custom_cmd = options.get("custom_cmd")
             if not custom_cmd:
-                return RunResult(False, 1, "", "custom_cmd ausente", [], None)
+                return RunResult(False, 1, "", "missing custom_cmd", [], None)
             parts = shlex.split(str(custom_cmd))
             parts = [str(input_path) if p == "{input}" else str(output) if p == "{output}" else p for p in parts]
             args = self.cmd + parts

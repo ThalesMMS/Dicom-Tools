@@ -2,7 +2,7 @@
 // transcode_tests.rs
 // Dicom-Tools-rs
 //
-// Testes para transcodificação de arquivos DICOM entre transfer syntaxes.
+// Tests for transcoding DICOM files between transfer syntaxes.
 //
 // Thales Matheus Mendonça Santos - November 2025
 
@@ -107,10 +107,10 @@ fn test_transcode_to_explicit_vr() {
     )
     .expect("transcode");
 
-    // Verificar que o arquivo foi criado
+    // Verify that the file was created.
     assert!(output_path.exists());
 
-    // Verificar que pode ser lido
+    // Verify that it can be read.
     let obj = dicom::object::open_file(&output_path).expect("open transcoded file");
     let patient_name = obj.element(Tag(0x0010, 0x0010)).unwrap().to_str().unwrap();
     assert_eq!(patient_name, "Transcode^Test");
@@ -131,10 +131,10 @@ fn test_transcode_to_implicit_vr() {
     )
     .expect("transcode");
 
-    // Verificar que o arquivo foi criado
+    // Verify that the file was created.
     assert!(output_path.exists());
 
-    // Verificar que pode ser lido
+    // Verify that it can be read.
     let obj = dicom::object::open_file(&output_path).expect("open transcoded file");
     let patient_name = obj.element(Tag(0x0010, 0x0010)).unwrap().to_str().unwrap();
     assert_eq!(patient_name, "Transcode^Test");
@@ -158,9 +158,8 @@ fn test_transcode_preserves_metadata() {
     let input_obj = dicom::object::open_file(&input_path).expect("open input");
     let output_obj = dicom::object::open_file(&output_path).expect("open output");
 
-    // Verificar que metadados importantes são preservados
+    // Verify that important metadata is preserved.
     let input_sop = input_obj.element(Tag(0x0008, 0x0018)).unwrap().to_str().unwrap();
     let output_sop = output_obj.element(Tag(0x0008, 0x0018)).unwrap().to_str().unwrap();
     assert_eq!(input_sop, output_sop);
 }
-

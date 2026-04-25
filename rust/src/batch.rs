@@ -16,7 +16,7 @@ use crate::{anonymize, cli::BatchOperation, validate};
 pub fn process_directory(dir: &Path, operation: BatchOperation) -> Result<()> {
     // Scan recursively for `.dcm` files and fan out work across threads with Rayon.
     println!(
-        "Processando diretório: {:?} | Operação: {:?}",
+        "Processing directory: {:?} | Operation: {:?}",
         dir, operation
     );
 
@@ -26,7 +26,7 @@ pub fn process_directory(dir: &Path, operation: BatchOperation) -> Result<()> {
         .filter(|e| e.path().extension().map_or(false, |ext| ext == "dcm"))
         .collect();
 
-    println!("Encontrados {} arquivos.", files.len());
+    println!("Found {} files.", files.len());
 
     files.par_iter().for_each(|entry| {
         let path = entry.path();
@@ -37,9 +37,9 @@ pub fn process_directory(dir: &Path, operation: BatchOperation) -> Result<()> {
         };
 
         if let Err(e) = res {
-            eprintln!("Erro em {:?}: {}", path, e);
+            eprintln!("Error in {:?}: {}", path, e);
         } else {
-            println!("Sucesso: {:?}", path.file_name().unwrap());
+            println!("Success: {:?}", path.file_name().unwrap());
         }
     });
 
