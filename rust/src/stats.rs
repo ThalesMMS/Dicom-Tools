@@ -76,7 +76,7 @@ pub fn pixel_statistics_for_file(input: &Path) -> Result<PixelStatistics> {
 }
 
 pub fn pixel_statistics_from_decoded(decoded: &DecodedPixelData) -> Result<PixelStatistics> {
-    let (values, mut shape) = pixel_values(decoded)?;
+    let (mut values, mut shape) = pixel_values(decoded)?;
     // Normalize shape to [frames, samples, rows, cols] for reporting consistency.
     if shape.len() == 4 {
         let frames = shape[0];
@@ -119,13 +119,23 @@ pub fn pixel_statistics_from_decoded(decoded: &DecodedPixelData) -> Result<Pixel
     let std_dev = (variance_sum / total_pixels as f64).sqrt() as f32;
 
     let median = {
-        let mut sorted = values.clone();
-        sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-        let mid = sorted.len() / 2;
-        if sorted.len() % 2 == 0 {
-            Some((sorted[mid - 1] + sorted[mid]) / 2.0)
+        fn cmp_f32(a: &f32, b: &f32) -> std::cmp::Ordering {
+            a.total_cmp(b)
+        }
+
+        let len = values.len();
+        let mid = len / 2;
+        if len % 2 == 0 {
+            let (lower_partition, upper, _) = values.select_nth_unstable_by(mid, cmp_f32);
+            let lower = lower_partition
+                .iter()
+                .max_by(|a, b| cmp_f32(a, b))
+                .copied()
+                .unwrap_or(*upper);
+            Some((lower + *upper) / 2.0)
         } else {
-            Some(sorted[mid])
+            let (_, median, _) = values.select_nth_unstable_by(mid, cmp_f32);
+            Some(*median)
         }
     };
 

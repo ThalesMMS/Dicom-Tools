@@ -1,40 +1,40 @@
 # JS Layer (Cornerstone Gateway & Contract CLI)
 
-Pasta com os artefatos JS do projeto. Inclui o gateway Cornerstone3D usado pelo viewer web e um shim de CLI para o contrato.
+This folder contains the project's JS artifacts. It includes the Cornerstone3D gateway used by the web viewer and a CLI shim for the shared contract.
 
-## Estrutura
-- `viewer-gateway/`: app Vite + gateway para Cornerstone3D (WADO-URI) e testes Vitest.
-- `contract-cli/`: shim Node que encaminha chamadas do contrato para o backend Python.
-- `new_features.md`: sugestões/estado de testes automatizados.
-- `INTEGRATION.md`, `TASKS.md`: notas e tarefas rápidas de integração.
+## Structure
+- `viewer-gateway/`: Vite app + Cornerstone3D gateway and Vitest tests.
+- `contract-cli/`: Node shim that forwards contract calls to the Python backend.
+- `new_features.md`: suggestions / status for automated tests.
+- `INTEGRATION.md`, `TASKS.md`: quick integration notes and task lists.
 
-## Pré-requisitos
+## Prerequisites
 - Node 18+.
-- `sample_series/` na raiz do repo (usada em testes e demo).
+- `sample_series/` at the repo root (used in tests and the demo).
 
 ## Viewer Gateway
 ```bash
 cd js/viewer-gateway
 npm install
-npm run dev        # demo Vite; sirva sample_series em http://localhost:8080/sample_series
-npm run build      # build de produção
+npm run dev        # Vite demo; serve sample_series at http://localhost:8080/sample_series
+npm run build      # production build
 npm test           # Vitest (gateway + MPR/MIP/overlay via sample_series)
-npm test -- --coverage   # cobertura V8 (depende de @vitest/coverage-v8)
-npm run test:coverage    # alias para cobertura + testes (usado no CI)
+npm test -- --coverage   # V8 coverage (depends on @vitest/coverage-v8)
+npm run test:coverage    # alias for coverage + tests (used in CI)
 ```
 
-- Novas utilidades:
-  - `createVolumeViewport` para inicializar viewports ortográficos (MIP) ou 3D com orientação axial/sagital/coronal, blend mode e slab thickness.
-  - `volumeUtils` inclui spacing/origin/orientation, transforms index↔world (crosshair), ROI stats e helpers de labelmap/segmentação.
-  - `dicomWeb.ts` monta `wadors:` imageIds via `dicomweb-client` (QIDO→WADO-RS), alinhado com os servidores usados por dcm4che/fo-dicom/dicom-rs.
-  - `src/main.ts` agora demonstra stack (WADO-URI), volume MIP/3D e um terceiro painel DICOMweb: configure `VITE_DICOMWEB_BASE`, `VITE_DICOMWEB_STUDY`, `VITE_DICOMWEB_SERIES` ou `window.DICOMWEB_CONFIG` para exercitar WADO-RS real.
+- New utilities:
+  - `createVolumeViewport` initializes orthographic (MIP) or 3D viewports with axial/sagittal/coronal orientation, blend mode, and slab thickness.
+  - `volumeUtils` includes spacing/origin/orientation, index↔world transforms (crosshair), ROI stats, and labelmap/segmentation helpers.
+  - `dicomWeb.ts` builds `wadors:` imageIds through `dicomweb-client` (QIDO→WADO-RS), aligned with the servers used by dcm4che/fo-dicom/dicom-rs.
+  - `src/main.ts` now demonstrates stack (WADO-URI), MIP/3D volume rendering, and a third DICOMweb panel: configure `VITE_DICOMWEB_BASE`, `VITE_DICOMWEB_STUDY`, `VITE_DICOMWEB_SERIES`, or `window.DICOMWEB_CONFIG` to exercise real WADO-RS flows.
 
 ## Contract CLI
 ```bash
 node js/contract-cli/index.js --op info --input sample_series/IM-0001-0001.dcm --options "{}"
 ```
-- Usa `BACKING_CMD` (env) para redirecionar para outro backend; padrão: `python -m DICOM_reencoder.cli`.
+- Uses `BACKING_CMD` (env) to redirect to another backend, defaulting to `python -m DICOM_reencoder.cli`.
 
-## Notas rápidas
-- Tests usam `sample_series` localmente (verifique o caminho ao rodar em CI/containers).
-- O gateway constrói `wadouri:` imageIds para séries servidas por HTTP; veja `viewer-gateway/src/imageIds.ts`.
+## Quick notes
+- Tests use `sample_series` locally, so check the path when running in CI/containers.
+- The gateway builds `wadouri:` imageIds for series served over HTTP, see `viewer-gateway/src/imageIds.ts`.

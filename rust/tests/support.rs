@@ -6,6 +6,7 @@
 
 use std::net::TcpListener;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::thread;
 
 use dicom::core::value::DataSetSequence;
@@ -19,9 +20,42 @@ use dicom_ul::association::server::ServerAssociationOptions;
 use dicom_ul::pdu::{PDataValue, PDataValueType, Pdu, PresentationContextResultReason};
 use tempfile::{tempdir, TempDir};
 
+static FG_DICOM_UID_COUNTER: AtomicU64 = AtomicU64::new(1);
+
 pub fn build_multiframe_fg_dicom() -> (TempDir, PathBuf) {
+    build_fg_dicom(
+        "multi_frame_fg.dcm",
+        &[10.0, 60.0, 100.0],
+        &[20.0, 30.0, 40.0],
+        &[0.0, 2.0, 4.0],
+    )
+}
+
+pub fn build_singleframe_fg_dicom() -> (TempDir, PathBuf) {
+    build_fg_dicom("single_frame_fg.dcm", &[10.0], &[20.0], &[0.0])
+}
+
+fn build_fg_dicom(
+    file_name: &str,
+    window_centers: &[f64],
+    window_widths: &[f64],
+    z_positions: &[f64],
+) -> (TempDir, PathBuf) {
+    assert_eq!(window_centers.len(), window_widths.len());
+    assert_eq!(window_centers.len(), z_positions.len());
+
     let dir = tempdir().expect("tempdir");
-    let path = dir.path().join("multi_frame_fg.dcm");
+    let path = dir.path().join(file_name);
+    let frame_count = z_positions.len();
+    assert!(frame_count > 0, "build_fg_dicom requires frame_count > 0");
+    let rows = 2_u16;
+    let columns = 2_u16;
+    let samples_per_pixel = 1_u16;
+    let per_frame_pixels = rows as usize * columns as usize * samples_per_pixel as usize;
+    let sop_instance_uid = format!(
+        "1.2.826.0.1.3680043.2.1125.2.{}",
+        FG_DICOM_UID_COUNTER.fetch_add(1, Ordering::Relaxed)
+    );
 
     let mut obj = InMemDicomObject::new_empty_with_dict(StandardDataDictionary);
 
@@ -54,29 +88,29 @@ pub fn build_multiframe_fg_dicom() -> (TempDir, PathBuf) {
     obj.put(DataElement::new(
         tags::SOP_INSTANCE_UID,
         VR::UI,
-        PrimitiveValue::from("1.2.826.0.1.3680043.2.1125.2.1"),
+        PrimitiveValue::from(sop_instance_uid.as_str()),
     ));
 
     // Image shape and encoding.
     obj.put(DataElement::new(
         tags::ROWS,
         VR::US,
-        PrimitiveValue::from(2_u16),
+        PrimitiveValue::from(rows),
     ));
     obj.put(DataElement::new(
         tags::COLUMNS,
         VR::US,
-        PrimitiveValue::from(2_u16),
+        PrimitiveValue::from(columns),
     ));
     obj.put(DataElement::new(
         tags::NUMBER_OF_FRAMES,
         VR::IS,
-        PrimitiveValue::from("3"),
+        PrimitiveValue::from(frame_count.to_string()),
     ));
     obj.put(DataElement::new(
         tags::SAMPLES_PER_PIXEL,
         VR::US,
-        PrimitiveValue::from(1_u16),
+        PrimitiveValue::from(samples_per_pixel),
     ));
     obj.put(DataElement::new(
         tags::PHOTOMETRIC_INTERPRETATION,
@@ -143,11 +177,12 @@ pub fn build_multiframe_fg_dicom() -> (TempDir, PathBuf) {
 
     // Per-frame FG: VOI (window) and positions vary per frame.
     let mut per_frame_items = Vec::new();
-    let window_centers = [10.0, 60.0, 100.0];
-    let window_widths = [20.0, 30.0, 40.0];
-    let z_positions = [0.0, 2.0, 4.0];
 
-    for ((wc, ww), z) in window_centers.iter().zip(window_widths.iter()).zip(z_positions.iter()) {
+    for ((wc, ww), z) in window_centers
+        .iter()
+        .zip(window_widths.iter())
+        .zip(z_positions.iter())
+    {
         let mut voi = InMemDicomObject::new_empty_with_dict(StandardDataDictionary);
         voi.put(DataElement::new(
             tags::WINDOW_CENTER,
@@ -188,14 +223,20 @@ pub fn build_multiframe_fg_dicom() -> (TempDir, PathBuf) {
         DataSetSequence::from(per_frame_items),
     ));
 
-    // Pixel data across three frames: incremental values for easy verification.
-    let pixels: Vec<u8> = vec![0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110];
-    obj.put(DataElement::new(tags::PIXEL_DATA, VR::OB, PrimitiveValue::from(pixels)));
+    // Pixel data across frames: incremental values for easy verification.
+    let pixels: Vec<u8> = (0..frame_count * per_frame_pixels)
+        .map(|idx| (idx * 10) as u8)
+        .collect();
+    obj.put(DataElement::new(
+        tags::PIXEL_DATA,
+        VR::OB,
+        PrimitiveValue::from(pixels),
+    ));
 
     let meta = FileMetaTableBuilder::new()
         .transfer_syntax(EXPLICIT_VR_LITTLE_ENDIAN.uid())
         .media_storage_sop_class_uid("1.2.840.10008.5.1.4.1.1.4")
-        .media_storage_sop_instance_uid("1.2.826.0.1.3680043.2.1125.2.1")
+        .media_storage_sop_instance_uid(&sop_instance_uid)
         .build()
         .expect("meta");
 

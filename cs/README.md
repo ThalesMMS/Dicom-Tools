@@ -1,48 +1,48 @@
 # Dicom-Tools (C# / fo-dicom)
 
-CLI e testes em .NET 8 usando fo-dicom e ImageSharp.
+.NET 8 CLI and tests built with fo-dicom and ImageSharp.
 
-## Estrutura
-- `DicomTools.Cli/` — CLI fo-dicom (`DicomTools.Cli.dll`).
-- `DicomTools.Tests/` — suite xUnit cobrindo rede (C-STORE/C-FIND/C-MOVE), codecs, imaging/window-level/LUT e multi-frame.
-- `sample_series/` (raiz do repo) — séries DICOM usadas nos testes.
-- `package_cli.sh` — empacotador de binários do CLI.
+## Structure
+- `DicomTools.Cli/` — fo-dicom CLI (`DicomTools.Cli.dll`).
+- `DicomTools.Tests/` — xUnit suite covering networking (C-STORE/C-FIND/C-MOVE), codecs, imaging/window-level/LUT, and multi-frame cases.
+- `sample_series/` (repo root) — DICOM series used in tests.
+- `package_cli.sh` — CLI binary packager.
 
-## Pré-requisitos
-- .NET SDK 8 (ou superior com `DOTNET_ROLL_FORWARD=Major`).
-- A pasta `sample_series/` deve estar acessível a partir do diretório base dos testes/CLI.
+## Prerequisites
+- .NET SDK 8 (or newer with `DOTNET_ROLL_FORWARD=Major`).
+- The `sample_series/` folder must be reachable from the base directory used by the tests/CLI.
 
 ## Build
 ```bash
 dotnet build DicomTools.sln
-# ou apenas o CLI
+# or only the CLI
 dotnet build DicomTools.Cli/DicomTools.Cli.csproj
 ```
 
-## Testes
+## Tests
 ```bash
-# se só houver .NET 10 instalado:
+# if only .NET 10 is installed:
 DOTNET_ROLL_FORWARD=Major dotnet test DicomTools.Tests/DicomTools.Tests.csproj
-# com .NET 8 disponível:
+# with .NET 8 available:
 dotnet test DicomTools.Tests/DicomTools.Tests.csproj
-# cobertura de linhas (coverlet.msbuild):
+# line coverage (coverlet.msbuild):
 DOTNET_ROLL_FORWARD=Major dotnet test DicomTools.Tests/DicomTools.Tests.csproj \\
   /p:CollectCoverage=true \\
   /p:CoverletOutputFormat=cobertura \\
   /p:CoverletOutput=coverage.cobertura.xml \\
-  /p:Include=\"[DicomTools*]*\" /p:Exclude=\"[xunit.*]*\"
-# último run: ~93% linhas / ~69% branch no CLI (ver `DicomTools.Tests/coverage.cobertura.xml`).
+  /p:Include="[DicomTools*]*" /p:Exclude="[xunit.*]*"
+# latest run: ~93% line / ~69% branch coverage in the CLI (see `DicomTools.Tests/coverage.cobertura.xml`).
 ```
-Cobertura recente inclui:
-- SCPs in-memory para C-STORE/C-FIND/C-MOVE e Modality Worklist (SCU↔SCP).
-- Validação de multi-frame color (RGB) com round-trip de compressão (RLE) mantendo pixels/frames.
-- Stub DICOMweb STOW→DIMSE bridge para validar ingestão via HTTP e recuperação por C-MOVE.
+Recent coverage includes:
+- In-memory SCPs for C-STORE/C-FIND/C-MOVE and Modality Worklist (SCU↔SCP).
+- Validation of color multi-frame (RGB) round-trip compression (RLE) while preserving pixels/frames.
+- A stub DICOMweb STOW→DIMSE bridge to validate HTTP ingestion and C-MOVE retrieval.
 
 ## CLI
 ```bash
 dotnet cs/bin/Debug/net8.0/DicomTools.Cli.dll --help
 ```
-Operações suportadas:
+Supported operations:
 - `info <input> [--json]`
 - `anonymize <input> --output <path>`
 - `to-image <input> --output <path> [--frame N] [--format png|jpeg]`
@@ -53,7 +53,7 @@ Operações suportadas:
 - `stats <input> [--frame N] [--json]`
 - `histogram <input> [--bins N] [--frame N] [--json]`
 
-## Notas
-- Testes de rede usam SCPs in-memory e portas livres; rodar em ambiente local (sem firewalls bloqueando loopback).
-- Cobertura de codecs avançados tenta RLE/JPEG2000/JPEG-LS; se ausentes, os testes retornam sem falha.
-- Código do CLI modularizado em comandos/ajudantes menores (e.g. `InfoCommand`, `StatsCommand`) para manter arquivos abaixo de 500 linhas.
+## Notes
+- Networking tests use in-memory SCPs and free ports, so run them in a local environment (without firewalls blocking loopback).
+- Advanced codec coverage tries RLE/JPEG2000/JPEG-LS, and the tests return without failure when those codecs are unavailable.
+- The CLI code is split into smaller commands/helpers (for example `InfoCommand`, `StatsCommand`) to keep files under 500 lines.

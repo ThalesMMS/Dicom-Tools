@@ -141,34 +141,34 @@ pub fn extract_detailed_metadata<T: ElementAccess>(obj: &T) -> DetailedMetadata 
 
 /// Produce a fully owned metadata bundle for CLI/JSON consumers.
 pub fn info_report(path: &Path) -> Result<InfoReport> {
-    let obj: DefaultDicomObject = open_file(path).context("Falha ao abrir arquivo DICOM")?;
+    let obj: DefaultDicomObject = open_file(path).context("Failed to open DICOM file")?;
     build_info_report(path, &obj)
 }
 
 /// Serialize the info report into a pretty JSON string.
 pub fn info_to_json(path: &Path) -> Result<String> {
     let report = info_report(path)?;
-    let json = to_string_pretty(&report).context("Falha ao serializar metadados para JSON")?;
+    let json = to_string_pretty(&report).context("Failed to serialize metadata to JSON")?;
     Ok(json)
 }
 
 pub fn read_basic_metadata(path: &Path) -> Result<BasicMetadata> {
-    let obj: DefaultDicomObject = open_file(path).context("Falha ao abrir arquivo DICOM")?;
+    let obj: DefaultDicomObject = open_file(path).context("Failed to open DICOM file")?;
     Ok(extract_basic_metadata(&obj))
 }
 
 pub fn read_detailed_metadata(path: &Path) -> Result<DetailedMetadata> {
-    let obj: DefaultDicomObject = open_file(path).context("Falha ao abrir arquivo DICOM")?;
+    let obj: DefaultDicomObject = open_file(path).context("Failed to open DICOM file")?;
     Ok(extract_detailed_metadata(&obj))
 }
 
 pub fn print_info(path: &Path, verbose: bool, json: bool) -> Result<()> {
-    let obj: DefaultDicomObject = open_file(path).context("Falha ao abrir arquivo DICOM")?;
+    let obj: DefaultDicomObject = open_file(path).context("Failed to open DICOM file")?;
     let report = build_info_report(path, &obj)?;
 
     if json {
         let payload =
-            to_string_pretty(&report).context("Falha ao serializar metadados para JSON")?;
+            to_string_pretty(&report).context("Failed to serialize metadata to JSON")?;
         println!("{payload}");
         return Ok(());
     }

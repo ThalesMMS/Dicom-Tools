@@ -7,7 +7,7 @@ from .runner import RunResult, ensure_dir, parse_json_maybe, run_process, split_
 
 
 class PythonCliAdapter:
-    """Chama o CLI Python (`python -m DICOM_reencoder.cli`)."""
+    """Calls the Python CLI (`python -m DICOM_reencoder.cli`)."""
 
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
@@ -23,15 +23,15 @@ class PythonCliAdapter:
 
         requires_input = op not in {"echo", "custom"}
         if not op or (requires_input and not input_path):
-            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+            return RunResult(False, 1, "", "op and input are required", [], None)
 
         cmd = self._build_cmd(op, input_path, output, options)
         if cmd is None:
-            return RunResult(False, 1, "", f"operação não suportada pelo backend Python: {op}", [], None)
+            return RunResult(False, 1, "", f"operation not supported by Python backend: {op}", [], None)
 
         result = run_process(cmd, cwd=self.cwd)
 
-        # Tentar extrair metadata quando a saída for JSON (info/summary)
+        # Try to extract metadata when stdout is JSON (info/summary)
         meta = parse_json_maybe(result.stdout)
         result.metadata = meta
         result.backend = "python"
@@ -66,7 +66,7 @@ class PythonCliAdapter:
             return [*self.base_cmd, "transcode", input_path, "-o", inferred_output, "--syntax", str(syntax)]
 
         if op == "validate":
-            # Usa script dedicado, pois não existe subcomando em cli.py
+            # Uses the dedicated script because cli.py has no subcommand.
             return [sys.executable, "-m", "DICOM_reencoder.validate_dicom", input_path]
 
         if op == "echo":

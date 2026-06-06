@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Interface interativa para acionar os testes do Dicom-Tools-cpp.
+Interactive interface to run Dicom-Tools-cpp tests.
 
-- Modo CLI: menus numericos para escolher biblioteca e teste.
-- Modo GUI: janela simples em Tkinter (se disponivel) com selecao de comandos.
+- CLI mode: numeric menus to choose the library and test.
+- GUI mode: simple Tkinter window (if available) with command selection.
 
-Requer o binario `DicomTools` ja compilado (por padrao em build/DicomTools).
+Requires the compiled `DicomTools` binary (default: build/DicomTools).
 """
 
 import argparse
@@ -22,59 +22,59 @@ DEFAULT_OUTPUT = "output"
 
 COMMANDS: Dict[str, List[Tuple[str, str]]] = {
     "GDCM": [
-        ("test-gdcm", "Rodar suite completa GDCM"),
-        ("gdcm:tags", "Inspecionar tags basicas"),
-        ("gdcm:anonymize", "Anonimizar paciente"),
+        ("test-gdcm", "Run complete GDCM suite"),
+        ("gdcm:tags", "Inspect basic tags"),
+        ("gdcm:anonymize", "Anonymize patient"),
         ("gdcm:transcode-j2k", "Transcode JPEG2000"),
         ("gdcm:jpegls", "Transcode JPEG-LS"),
-        ("gdcm:retag-uids", "Regerar UIDs"),
-        ("gdcm:dump", "Dump dataset para texto"),
+        ("gdcm:retag-uids", "Regenerate UIDs"),
+        ("gdcm:dump", "Dump dataset to text"),
         ("gdcm:transcode-rle", "Transcode RLE"),
-        ("gdcm:stats", "Estatisticas de pixels"),
-        ("gdcm:scan", "Indexar diretorio em CSV"),
-        ("gdcm:preview", "Exportar preview PGM"),
+        ("gdcm:stats", "Pixel statistics"),
+        ("gdcm:scan", "Index directory to CSV"),
+        ("gdcm:preview", "Export PGM preview"),
     ],
     "DCMTK": [
-        ("test-dcmtk", "Rodar suite completa DCMTK"),
-        ("dcmtk:modify", "Modificar tags basicas"),
-        ("dcmtk:ppm", "Exportar pixels (PPM)"),
+        ("test-dcmtk", "Run complete DCMTK suite"),
+        ("dcmtk:modify", "Modify basic tags"),
+        ("dcmtk:ppm", "Export pixels (PPM)"),
         ("dcmtk:jpeg-lossless", "Reencode JPEG Lossless"),
         ("dcmtk:jpeg-baseline", "Reencode JPEG Baseline"),
         ("dcmtk:rle", "Reencode RLE"),
-        ("dcmtk:raw-dump", "Dump de buffer bruto"),
-        ("dcmtk:explicit-vr", "Reescrever Explicit VR"),
-        ("dcmtk:metadata", "Exportar metadata"),
+        ("dcmtk:raw-dump", "Dump raw buffer"),
+        ("dcmtk:explicit-vr", "Rewrite Explicit VR"),
+        ("dcmtk:metadata", "Export metadata"),
         ("dcmtk:bmp", "Preview BMP"),
-        ("dcmtk:dicomdir", "Gerar DICOMDIR"),
-        ("dcmtk:seg", "Gerar SEG sintetico"),
+        ("dcmtk:dicomdir", "Generate DICOMDIR"),
+        ("dcmtk:seg", "Generate synthetic SEG"),
     ],
     "ITK": [
-        ("test-itk", "Rodar suite completa ITK"),
+        ("test-itk", "Run complete ITK suite"),
         ("itk:canny", "Canny edge detection"),
         ("itk:gaussian", "Gaussian smoothing"),
-        ("itk:median", "Filtro mediana"),
-        ("itk:threshold", "Segmentacao por limiar"),
-        ("itk:otsu", "Segmentacao Otsu"),
+        ("itk:median", "Median filter"),
+        ("itk:threshold", "Threshold segmentation"),
+        ("itk:otsu", "Otsu segmentation"),
         ("itk:connected-threshold", "Region growing"),
-        ("itk:resample", "Reamostrar 1mm"),
-        ("itk:aniso", "Denoise anisotropico"),
-        ("itk:histogram", "Equalizacao adaptativa"),
+        ("itk:resample", "Resample to 1mm"),
+        ("itk:aniso", "Anisotropic denoise"),
+        ("itk:histogram", "Adaptive equalization"),
         ("itk:mip", "MIP axial"),
-        ("itk:slice", "Slice central PNG"),
-        ("itk:nrrd", "Exportar NRRD"),
-        ("itk:nifti", "Exportar NIfTI"),
+        ("itk:slice", "Central slice PNG"),
+        ("itk:nrrd", "Export NRRD"),
+        ("itk:nifti", "Export NIfTI"),
     ],
     "VTK": [
-        ("test-vtk", "Rodar suite completa VTK"),
-        ("vtk:export", "Exportar VTI"),
-        ("vtk:nifti", "Exportar NIfTI"),
-        ("vtk:isosurface", "Gerar STL via marching cubes"),
-        ("vtk:resample", "Reamostrar 1mm"),
-        ("vtk:mask", "Mascara por limiar"),
-        ("vtk:connectivity", "Rotular conectividade"),
+        ("test-vtk", "Run complete VTK suite"),
+        ("vtk:export", "Export VTI"),
+        ("vtk:nifti", "Export NIfTI"),
+        ("vtk:isosurface", "Generate STL via marching cubes"),
+        ("vtk:resample", "Resample to 1mm"),
+        ("vtk:mask", "Threshold mask"),
+        ("vtk:connectivity", "Label connectivity"),
         ("vtk:mip", "MIP axial"),
-        ("vtk:metadata", "Exportar metadata"),
-        ("vtk:stats", "Estatisticas de volume"),
+        ("vtk:metadata", "Export metadata"),
+        ("vtk:stats", "Volume statistics"),
         ("vtk:viewer", "Snapshot viewer"),
     ],
 }
@@ -90,7 +90,7 @@ def resolve_executable(path: str) -> str:
     alt = shutil.which("DicomTools")
     if alt:
         return alt
-    raise FileNotFoundError(f"Executavel DicomTools nao encontrado em {path}")
+    raise FileNotFoundError(f"DicomTools executable not found at {path}")
 
 
 def build_command(executable: str, command: str, input_path: str, output_dir: str, verbose: bool) -> List[str]:
@@ -110,7 +110,7 @@ def run_once(executable: str, command: str, input_path: str, output_dir: str, ve
     try:
         result = subprocess.run(cmd, text=True, capture_output=True, check=False)
     except FileNotFoundError:
-        print("Erro: nao foi possivel chamar o binario. Confirme o caminho em --exe.")
+        print("Error: could not call binary. Confirm path in --exe.")
         return 1
     if result.stdout:
         print(result.stdout.strip())
@@ -119,23 +119,23 @@ def run_once(executable: str, command: str, input_path: str, output_dir: str, ve
     if result.returncode == 0:
         print("Status: OK")
     else:
-        print(f"Status: FALHOU (code {result.returncode})")
+        print(f"Status: FAILED (code {result.returncode})")
     return result.returncode
 
 
 def cli_menu(executable: str, input_path: str, output_dir: str, verbose: bool) -> None:
-    print("Interface CLI - escolha a biblioteca e o teste.")
-    print(f"Usando binario: {executable}")
-    print(f"Input padrao : {input_path}")
-    print(f"Output padrao: {output_dir}")
-    print("Digite 'q' para sair a qualquer momento.")
+    print("CLI Interface - choose library and test.")
+    print(f"Using binary: {executable}")
+    print(f"Default input: {input_path}")
+    print(f"Default output: {output_dir}")
+    print("Type 'q' to exit at any time.")
     modules = list(COMMANDS.keys())
     while True:
-        print("\nBibliotecas:")
+        print("\nLibraries:")
         for idx, mod in enumerate(modules, start=1):
             print(f"  {idx}) {mod}")
-        print("  0) Rodar tudo (comando 'all')")
-        choice = input("Selecione a opcao: ").strip().lower()
+        print("  0) Run all (command 'all')")
+        choice = input("Select option: ").strip().lower()
         if choice in ("q", "quit", "exit"):
             return
         if choice == "0":
@@ -144,15 +144,15 @@ def cli_menu(executable: str, input_path: str, output_dir: str, verbose: bool) -
         try:
             module = modules[int(choice) - 1]
         except (ValueError, IndexError):
-            print("Opcao invalida.")
+            print("Invalid option.")
             continue
         commands = COMMANDS[module]
         while True:
-            print(f"\n{module} - comandos:")
+            print(f"\n{module} - commands:")
             for idx, (cmd, desc) in enumerate(commands, start=1):
                 print(f"  {idx}) {cmd:20} - {desc}")
-            print("  0) Voltar")
-            cmd_choice = input("Escolha o comando: ").strip().lower()
+            print("  0) Back")
+            cmd_choice = input("Choose the command: ").strip().lower()
             if cmd_choice in ("q", "quit", "exit"):
                 return
             if cmd_choice == "0":
@@ -160,7 +160,7 @@ def cli_menu(executable: str, input_path: str, output_dir: str, verbose: bool) -
             try:
                 cmd_name = commands[int(cmd_choice) - 1][0]
             except (ValueError, IndexError):
-                print("Opcao invalida.")
+                print("Invalid option.")
                 continue
             run_once(executable, cmd_name, input_path, output_dir, verbose)
 
@@ -170,7 +170,7 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
         import tkinter as tk
         from tkinter import messagebox, ttk
     except Exception as exc:  # noqa: BLE001
-        print(f"Tkinter indisponivel ({exc}); use modo CLI.")
+        print(f"Tkinter unavailable ({exc}); use CLI mode.")
         return 1
 
     root = tk.Tk()
@@ -212,11 +212,11 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
                 result = subprocess.run(cmd, text=True, capture_output=True, check=False)
                 output = (result.stdout or "").strip()
                 error = (result.stderr or "").strip()
-                status = "OK" if result.returncode == 0 else f"FALHOU ({result.returncode})"
+                status = "OK" if result.returncode == 0 else f"FAILED ({result.returncode})"
             except FileNotFoundError:
                 output = ""
-                error = "Nao foi possivel encontrar o binario. Ajuste o campo Executavel."
-                status = "FALHOU"
+                error = "Could not find the binary. Adjust the Executable field."
+                status = "FAILED"
 
             def finish() -> None:
                 if output:
@@ -224,8 +224,8 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
                 if error:
                     log(error)
                 log(f"Status: {status}\n")
-                if status.startswith("FALHOU"):
-                    messagebox.showerror("Erro ao executar", error or status)
+                if status.startswith("FAILED"):
+                    messagebox.showerror("Execution error", error or status)
             root.after(0, finish)
 
         threading.Thread(target=task, daemon=True).start()
@@ -233,7 +233,7 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
     def on_run_command() -> None:
         selection = listbox.curselection()
         if not selection:
-            messagebox.showinfo("Selecione um comando", "Escolha um comando na lista.")
+            messagebox.showinfo("Select a command", "Choose a command from the list.")
             return
         selected_text = listbox.get(selection[0])
         command = selected_text.split(" | ")[0]
@@ -250,7 +250,7 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
     top_frame = ttk.Frame(root, padding=10)
     top_frame.pack(fill="x")
 
-    ttk.Label(top_frame, text="Executavel").grid(row=0, column=0, sticky="w")
+    ttk.Label(top_frame, text="Executable").grid(row=0, column=0, sticky="w")
     ttk.Entry(top_frame, textvariable=exe_var, width=50).grid(row=0, column=1, sticky="we", padx=5)
 
     ttk.Label(top_frame, text="Input (-i)").grid(row=1, column=0, sticky="w")
@@ -266,7 +266,7 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
     middle_frame = ttk.Frame(root, padding=10)
     middle_frame.pack(fill="both", expand=True)
 
-    ttk.Label(middle_frame, text="Biblioteca").grid(row=0, column=0, sticky="w")
+    ttk.Label(middle_frame, text="Library").grid(row=0, column=0, sticky="w")
     module_menu = ttk.OptionMenu(middle_frame, module_var, module_var.get(), *COMMANDS.keys(), command=lambda _: update_commands())
     module_menu.grid(row=0, column=1, sticky="w")
 
@@ -278,9 +278,9 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
 
     button_frame = ttk.Frame(middle_frame)
     button_frame.grid(row=2, column=0, columnspan=2, sticky="we", pady=5)
-    ttk.Button(button_frame, text="Rodar comando selecionado", command=on_run_command).pack(side="left", padx=5)
-    ttk.Button(button_frame, text="Rodar suite da biblioteca", command=on_run_suite).pack(side="left", padx=5)
-    ttk.Button(button_frame, text="Rodar ALL", command=on_run_all).pack(side="left", padx=5)
+    ttk.Button(button_frame, text="Run selected command", command=on_run_command).pack(side="left", padx=5)
+    ttk.Button(button_frame, text="Run library suite", command=on_run_suite).pack(side="left", padx=5)
+    ttk.Button(button_frame, text="Run ALL", command=on_run_all).pack(side="left", padx=5)
 
     middle_frame.rowconfigure(1, weight=1)
     middle_frame.columnconfigure(1, weight=1)
@@ -297,12 +297,12 @@ def start_gui(executable: str, input_path: str, output_dir: str, verbose: bool) 
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Interface interativa para Dicom-Tools-cpp.")
-    parser.add_argument("--exe", default=DEFAULT_EXECUTABLE, help="Caminho para o binario DicomTools.")
-    parser.add_argument("--input", default=DEFAULT_INPUT, help="Caminho do arquivo/diretorio DICOM para -i.")
-    parser.add_argument("--output", default=DEFAULT_OUTPUT, help="Diretorio de saida para -o.")
-    parser.add_argument("--verbose", action="store_true", help="Ativa flag -v do binario.")
-    parser.add_argument("--gui", action="store_true", help="Abrir interface grafica Tkinter (se disponivel).")
+    parser = argparse.ArgumentParser(description="Interactive interface for Dicom-Tools-cpp.")
+    parser.add_argument("--exe", default=DEFAULT_EXECUTABLE, help="Path to the DicomTools binary.")
+    parser.add_argument("--input", default=DEFAULT_INPUT, help="Path to the DICOM file/directory for -i.")
+    parser.add_argument("--output", default=DEFAULT_OUTPUT, help="Output directory for -o.")
+    parser.add_argument("--verbose", action="store_true", help="Enable the binary's -v flag.")
+    parser.add_argument("--gui", action="store_true", help="Open the Tkinter GUI (if available).")
     return parser.parse_args()
 
 

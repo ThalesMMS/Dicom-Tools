@@ -2,7 +2,7 @@
 // storage_tests.rs
 // Dicom-Tools-rs
 //
-// Testes adicionais para FileStore (armazenamento seguro de arquivos DICOM).
+// Additional tests for FileStore (secure DICOM file storage).
 //
 // Thales Matheus Mendonça Santos - November 2025
 
@@ -45,7 +45,7 @@ fn test_save_sanitizes_filename() {
         .save(Some("../../etc/passwd.dcm"), b"data")
         .expect("save");
 
-    // Verificar que caracteres perigosos foram removidos
+    // Verify that dangerous characters were removed.
     assert!(!filename.contains("../"));
     assert!(!filename.contains("/"));
     assert!(dir.path().join(&filename).exists());
@@ -59,7 +59,7 @@ fn test_save_creates_unique_names() {
     let filename1 = store.save(Some("test.dcm"), b"data1").expect("save");
     let filename2 = store.save(Some("test.dcm"), b"data2").expect("save");
 
-    // Arquivos diferentes devem ter nomes diferentes (hash diferente)
+    // Different files should have different names (different hash).
     assert_ne!(filename1, filename2);
 }
 
@@ -82,11 +82,11 @@ fn test_resolve_rejects_path_traversal() {
     fs::create_dir_all(&store_root).expect("create safe dir");
     let store = FileStore::new(&store_root).expect("store");
 
-    // Criar arquivo fora do diretório seguro
+    // Create a file outside the safe directory.
     let outside = dir.path().join("outside.dcm");
     fs::write(&outside, b"outside").expect("write outside");
 
-    // Tentar acessar usando path traversal
+    // Try to access it using path traversal.
     assert!(store.resolve("../outside.dcm").is_err());
 }
 
@@ -136,10 +136,9 @@ fn test_save_special_characters() {
         .save(Some("file with spaces & symbols!.dcm"), b"data")
         .expect("save");
 
-    // Verificar que caracteres especiais foram removidos
+    // Verify that special characters were removed.
     assert!(!filename.contains(" "));
     assert!(!filename.contains("&"));
     assert!(!filename.contains("!"));
     assert!(dir.path().join(&filename).exists());
 }
-

@@ -6,7 +6,7 @@ from .runner import RunResult, parse_json_maybe, run_process, split_cmd
 
 
 class RustCliAdapter:
-    """Chama o binário Rust (`dicom-tools`)."""
+    """Calls the Rust binary (`dicom-tools`)."""
 
     def __init__(self) -> None:
         self.root = Path(__file__).resolve().parents[2]
@@ -22,7 +22,7 @@ class RustCliAdapter:
             if bin_path.exists():
                 self.base_cmd = [str(bin_path)]
             else:
-                # Fallback para cargo run --release -- <args>
+                # Fallback to cargo run --release -- <args>
                 self.base_cmd = ["cargo", "run", "--quiet", "--release", "--"]
 
     def handle(self, request: Dict[str, Any]) -> RunResult:
@@ -33,11 +33,11 @@ class RustCliAdapter:
 
         requires_input = op not in {"echo", "custom"}
         if not op or (requires_input and not input_path):
-            return RunResult(False, 1, "", "op e input são obrigatórios", [], None)
+            return RunResult(False, 1, "", "op and input are required", [], None)
 
         cmd = self._build_cmd(op, input_path, output, options)
         if cmd is None:
-            return RunResult(False, 1, "", f"operação não suportada pelo backend Rust: {op}", [], None)
+            return RunResult(False, 1, "", f"operation not supported by Rust backend: {op}", [], None)
 
         result = run_process(cmd, cwd=self.cwd)
         meta = parse_json_maybe(result.stdout)

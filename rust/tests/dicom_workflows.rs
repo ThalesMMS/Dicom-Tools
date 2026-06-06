@@ -53,6 +53,26 @@ fn build_test_dicom() -> (TempDir, PathBuf) {
         VR::UI,
         PrimitiveValue::from("1.2.826.0.1.3680043.2.1125.1"),
     ));
+    obj.put(DataElement::new(
+        Tag(0x0008, 0x0050),
+        VR::SH,
+        PrimitiveValue::from("ACC-12345"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0008, 0x0080),
+        VR::LO,
+        PrimitiveValue::from("Test Hospital"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0010, 0x1040),
+        VR::LO,
+        PrimitiveValue::from("123 Test Street"),
+    ));
+    obj.put(DataElement::new(
+        Tag(0x0011, 0x0010),
+        VR::LO,
+        PrimitiveValue::from("PRIVATE-PHI"),
+    ));
 
     obj.put(DataElement::new(
         Tag(0x0028, 0x0010),
@@ -189,6 +209,22 @@ fn anonymization_creates_clean_copy() {
         .to_str()
         .unwrap();
     assert_eq!(patient_name, "ANONYMOUS^PATIENT");
+    assert!(anon.element(Tag(0x0008, 0x0050)).is_err());
+    assert_eq!(
+        anon.element(Tag(0x0008, 0x0080))
+            .expect("institution")
+            .to_str()
+            .unwrap(),
+        "ANONYMIZED"
+    );
+    assert_eq!(
+        anon.element(Tag(0x0010, 0x1040))
+            .expect("address")
+            .to_str()
+            .unwrap(),
+        ""
+    );
+    assert!(anon.element(Tag(0x0011, 0x0010)).is_err());
 }
 
 #[test]

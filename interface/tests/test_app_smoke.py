@@ -22,6 +22,13 @@ def test_tk_app_can_import_and_init(monkeypatch):
     tk_app.root.destroy()
 
 
+def test_app_star_import_keeps_compatibility_names():
+    namespace = {}
+    exec("from interface.app import *", namespace)
+    for name in ["get_adapter", "tk", "messagebox"]:
+        assert name in namespace
+
+
 def test_run_button_binding(monkeypatch):
     try:
         from interface import app

@@ -1,42 +1,42 @@
-# Artefatos e Convenções de Saída
+# Artifacts and Output Conventions
 
-Objetivo: manter saídas previsíveis por backend para facilitar depuração, limpeza e integração no contrato CLI/JSON.
+Goal: keep backend outputs predictable to make debugging, cleanup, and CLI/JSON contract integration easier.
 
-## Convenções gerais
-- Use `output/` por backend quando não houver caminho explícito na requisição.
-- Nomes derivados do input: `<stem>_<op>.<ext>` ou `<stem>.<ext>` quando fizer sentido (ex.: PNG).
-- Registre erros em stderr; stdout deve ser legível e curto, ou JSON quando houver `--json`.
+## General Conventions
+- Use a backend-specific `output/` path when the request does not provide an explicit path.
+- Derive names from the input: `<stem>_<op>.<ext>` or `<stem>.<ext>` when that is appropriate, such as PNG output.
+- Log errors to stderr; stdout should be short and readable, or JSON when `--json` is enabled.
 
 ## Python (`python/`)
-- Preferir `output/` na raiz do repo quando não especificado; scripts atuais já inferem nomes (ex.: `<stem>_anonymized.dcm`, `<stem>.png`).
-- Logs: mensagens curtas em stdout; erros/exceções em stderr.
-- Operações mapeadas:
-  - anonymize → `<stem>_anonymized.dcm`
-  - to_image → `<stem>.png`
-  - transcode → `<stem>_explicit.dcm`
-  - volume → `volume.npy` (+ metadata JSON)
-  - nifti → `<stem>.nii.gz`
+- Prefer `output/` at the repository root when no output is specified; current scripts already infer names such as `<stem>_anonymized.dcm` and `<stem>.png`.
+- Logs: short messages in stdout; errors/exceptions in stderr.
+- Mapped operations:
+  - anonymize -> `<stem>_anonymized.dcm`
+  - to_image -> `<stem>.png`
+  - transcode -> `<stem>_explicit.dcm`
+  - volume -> `volume.npy` (+ metadata JSON)
+  - nifti -> `<stem>.nii.gz`
 
 ## Rust (`rust/`)
-- Binário `dicom-tools`: seguir saída padrão em stdout; arquivos em caminhos fornecidos. Para operações sem output explícito, usar `output/` na raiz.
-- Logs detalhados: manter em stderr (tracing); resumo em stdout.
-- Operações mapeadas (padrão): anonymize (`*_anonymized.dcm`), to_image (`*.png`), transcode (`*_explicit.dcm`), volume/nifti usam paths explícitos do caller.
+- Binary `dicom-tools`: follow the standard stdout output; write files to provided paths. For operations without an explicit output, use `output/` at the repository root.
+- Detailed logs: keep them in stderr (tracing); keep summaries in stdout.
+- Mapped operations (default): anonymize (`*_anonymized.dcm`), to_image (`*.png`), transcode (`*_explicit.dcm`); volume/nifti use caller-provided paths.
 
 ## C++ (`cpp/`)
-- Executável `DicomTools`: já usa `-o` para diretório; manter padrão `cpp/output/` se não especificado.
-- Arquivos comuns:
+- Executable `DicomTools`: already uses `-o` for the output directory; keep the default `cpp/output/` when no output is specified.
+- Common files:
   - Dump: `dump.txt`
   - Preview: `preview.pgm`
   - Stats: `pixel_stats.txt`
-  - Transcodes: nome do input preservado dentro de `-o`.
+  - Transcodes: preserve the input name inside `-o`.
 
-## Interface/Contrato (`interface/`)
-- Adaptadores inferem `output` quando vazio:
-  - Python: usa heurísticas de nome (ex.: `_anonymized`, `.png`, `.nii.gz`).
+## Interface/Contract (`interface/`)
+- Adapters infer `output` when it is empty:
+  - Python: uses name heuristics such as `_anonymized`, `.png`, `.nii.gz`.
   - Rust: `_anonymized.dcm`, `.png`, `_explicit.dcm`.
-  - C++: diretório `cpp/output/` com nomes padrão (acima).
-- Ao adicionar novos backends (Java/C#), usar a mesma convenção: aceitar `output` explícito, senão escrever em `output/<backend>/`.
+  - C++: `cpp/output/` directory with the default names listed above.
+- When adding new backends (Java/C#), use the same convention: accept an explicit `output`; otherwise write to `output/<backend>/`.
 
-## Limpeza
-- `make clean` remove artefatos Python/C++/interface e `rust/target/`.
-- Evite escrever em diretórios fora de `output/` ou paths passados explicitamente.
+## Cleanup
+- `make clean` removes Python/C++/interface artifacts and `rust/target/`.
+- Avoid writing outside `output/` or paths passed explicitly by the caller.

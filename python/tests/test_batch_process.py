@@ -33,6 +33,15 @@ class TestFindDicomFiles:
         assert len(found) >= len(paths)
         assert all(Path(f).exists() for f in found)
 
+    def test_find_dicom_files_non_recursive_skips_missing_directory(self, tmp_path, caplog):
+        missing_dir = tmp_path / "missing"
+
+        with caplog.at_level("WARNING", logger="DICOM_reencoder.batch_process"):
+            found = find_dicom_files(str(missing_dir), recursive=False)
+
+        assert found == []
+        assert any("Skipping unreadable directory" in record.message for record in caplog.records)
+
     def test_find_dicom_files_recursive(self, synthetic_series, tmp_path):
         paths, _ = synthetic_series
         source_dir = Path(paths[0]).parent
@@ -59,6 +68,38 @@ class TestFindDicomFiles:
 
         assert str(no_ext_file) in found or any(Path(f).samefile(no_ext_file) for f in found)
 
+    def test_find_dicom_files_without_extension_skips_expected_probe_errors(self, tmp_path, monkeypatch):
+        import DICOM_reencoder.batch_process as batch_process
+
+        no_ext_file = tmp_path / "no_extension"
+        no_ext_file.write_bytes(b"not a dicom")
+
+        def raise_invalid(*args, **kwargs):
+            raise ValueError("bad dicom payload")
+
+        monkeypatch.setattr(batch_process.pydicom, "dcmread", raise_invalid)
+
+        found = find_dicom_files(str(tmp_path), recursive=False)
+
+        assert not any(Path(f).samefile(no_ext_file) for f in found)
+
+    def test_find_dicom_files_without_extension_logs_unexpected_probe_errors(self, tmp_path, monkeypatch, caplog):
+        import DICOM_reencoder.batch_process as batch_process
+
+        no_ext_file = tmp_path / "no_extension"
+        no_ext_file.write_bytes(b"not a dicom")
+
+        def raise_runtime_error(*args, **kwargs):
+            raise RuntimeError("probe exploded")
+
+        monkeypatch.setattr(batch_process.pydicom, "dcmread", raise_runtime_error)
+
+        with caplog.at_level("DEBUG", logger="DICOM_reencoder.batch_process"):
+            found = find_dicom_files(str(tmp_path), recursive=False)
+
+        assert not any(Path(f).samefile(no_ext_file) for f in found)
+        assert any("Failed probing" in record.message for record in caplog.records)
+
     def test_find_dicom_files_multiple_extensions(self, tmp_path):
         from DICOM_reencoder.core import build_secondary_capture, save_dataset
 
@@ -71,6 +112,32 @@ class TestFindDicomFiles:
 
         # Should find files with different extensions
         assert len(found) >= 1  # At least one should be found
+
+    def test_find_dicom_files_recursive_handles_mixed_case_suffixes(self, tmp_path):
+        from DICOM_reencoder.core import build_secondary_capture, save_dataset
+
+        ds = build_secondary_capture(shape=(8, 8))
+        nested = tmp_path / "nested"
+        nested.mkdir()
+        mixed_case = nested / "mixed.DcM"
+        save_dataset(ds, mixed_case)
+
+        found = find_dicom_files(str(tmp_path), recursive=True)
+
+        assert any(Path(f).samefile(mixed_case) for f in found)
+
+    def test_find_dicom_files_recursive_excludes_files_without_extension(self, tmp_path):
+        from DICOM_reencoder.core import build_secondary_capture, save_dataset
+
+        ds = build_secondary_capture(shape=(8, 8))
+        nested = tmp_path / "nested"
+        nested.mkdir()
+        no_ext = nested / "no_ext"
+        save_dataset(ds, no_ext)
+
+        found = find_dicom_files(str(tmp_path), recursive=True)
+
+        assert not any(Path(f).samefile(no_ext) for f in found)
 
 
 class TestDecompressBatch:
@@ -260,4 +327,3 @@ class TestListFiles:
 
         # Should not crash
         assert True
-

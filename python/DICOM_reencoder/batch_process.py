@@ -16,9 +16,30 @@ including decompression, anonymization, conversion, and validation.
 import pydicom
 import sys
 import os
-import glob
+import logging
 from pathlib import Path
 import argparse
+
+_DICOM_SUFFIXES = {'.dcm', '.dicom'}
+logger = logging.getLogger(__name__)
+
+
+def _iter_files(directory: str, recursive: bool):
+    if recursive:
+        for root, _, filenames in os.walk(directory):
+            for filename in filenames:
+                yield os.path.join(root, filename)
+        return
+
+    try:
+        with os.scandir(directory) as entries:
+            for entry in entries:
+                if entry.is_file():
+                    yield entry.path
+    except OSError as exc:
+        logger.warning("Skipping unreadable directory %s: %s", directory, exc)
+        return
+
 
 def find_dicom_files(directory, recursive=False):
     """
@@ -32,25 +53,23 @@ def find_dicom_files(directory, recursive=False):
         List of DICOM file paths
     """
     dicom_files = []
-    patterns = ['*.dcm', '*.DCM', '*.dicom', '*.DICOM']
 
-    if recursive:
-        for pattern in patterns:
-            dicom_files.extend(glob.glob(os.path.join(directory, '**', pattern), recursive=True))
-    else:
-        for pattern in patterns:
-            dicom_files.extend(glob.glob(os.path.join(directory, pattern)))
+    for file_path in _iter_files(directory, recursive):
+        suffix = Path(file_path).suffix.lower()
+        if suffix in _DICOM_SUFFIXES:
+            dicom_files.append(file_path)
+            continue
 
-    # Also check files without extension
-    if not recursive:
-        for file_path in glob.glob(os.path.join(directory, '*')):
-            if os.path.isfile(file_path) and not any(file_path.endswith(ext) for ext in ['.dcm', '.DCM', '.dicom', '.DICOM']):
-                try:
-                    # Try to read as DICOM using header only; avoids loading large pixel data accidentally
-                    pydicom.dcmread(file_path, stop_before_pixels=True, force=True)
-                    dicom_files.append(file_path)
-                except:
-                    pass
+        # Preserve the existing non-recursive fallback for extensionless or oddly named files.
+        if not recursive:
+            try:
+                # Try to read as DICOM using header only; avoids loading large pixel data accidentally
+                pydicom.dcmread(file_path, stop_before_pixels=True, force=True)
+                dicom_files.append(file_path)
+            except (pydicom.errors.InvalidDicomError, ValueError):
+                pass
+            except Exception as exc:
+                logger.debug("Failed probing %s: %s", file_path, exc, exc_info=True)
 
     return sorted(set(dicom_files))
 
