@@ -35,6 +35,14 @@ class TestSearchDicomFiles:
         assert len(results) > 0
         assert all(Path(f).exists() for f in results)
 
+    def test_search_criteria_values_are_redacted(self, tmp_path, capsys):
+        criteria = {"PrivateCreator": "secret-value"}
+        search_dicom_files(str(tmp_path), criteria, recursive=False)
+
+        output = capsys.readouterr().out
+        assert "PrivateCreator: <redacted>" in output
+        assert "secret-value" not in output
+
     def test_search_by_patient_name(self, synthetic_series):
         paths, _ = synthetic_series
         source_dir = Path(paths[0]).parent
@@ -241,4 +249,3 @@ class TestDisplayFormats:
         assert len(output_str) > 0
         # CSV should have commas
         assert "," in output_str
-

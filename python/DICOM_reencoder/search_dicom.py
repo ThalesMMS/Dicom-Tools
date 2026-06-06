@@ -52,11 +52,8 @@ def search_dicom_files(directory, criteria, recursive=False, output_format='tabl
 
     # Display search criteria
     print("Search Criteria:")
-    for tag, value in criteria.items():
-        if tag in SENSITIVE_DISPLAY_FIELDS:
-            print(f"  {tag}: {REDACTED}")
-        else:
-            print(f"  {tag}: {value}")
+    for tag in criteria.keys():
+        print(f"  {tag}: {REDACTED}")
     print(f"\n{'─'*80}\n")
 
     # Find all DICOM files

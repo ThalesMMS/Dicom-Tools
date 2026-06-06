@@ -55,6 +55,16 @@ def _load_uploaded(filename: str):
         return None, (jsonify({"error": "Invalid DICOM file"}), 400)
 
 
+def _validation_response(is_valid: bool, validator: DicomValidator) -> dict[str, object]:
+    return {
+        "valid": is_valid,
+        "status": "valid" if is_valid else "invalid",
+        "error_count": len(validator.errors),
+        "warning_count": len(validator.warnings),
+        "info_count": len(validator.info),
+    }
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -134,12 +144,7 @@ def validate_file(filename: str):
 
     validator = DicomValidator()
     is_valid = validator.validate_dataset(dataset, display=False)
-    return jsonify({
-        "valid": is_valid,
-        "errors": validator.errors,
-        "warnings": validator.warnings,
-        "info": validator.info,
-    })
+    return jsonify(_validation_response(is_valid, validator))
 
 
 @app.route("/api/anonymize/<filename>", methods=["POST"])

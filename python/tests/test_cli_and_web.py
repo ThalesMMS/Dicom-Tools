@@ -17,6 +17,7 @@ import pytest
 
 from DICOM_reencoder import cli as cli_mod
 from DICOM_reencoder import dicom_echo, dicom_query
+from DICOM_reencoder import web_interface
 from DICOM_reencoder.core import build_synthetic_series, load_dataset
 from DICOM_reencoder.web_interface import app as flask_app
 
@@ -157,6 +158,38 @@ def test_web_interface_upload_and_fetch(endpoint, synthetic_dicom_path):
     assert resp.status_code == 200
     if endpoint != "image":
         assert resp.is_json
+
+
+def test_web_validate_response_does_not_expose_internal_messages(monkeypatch, synthetic_dicom_path):
+    class FailingValidator:
+        def __init__(self):
+            self.errors = ["Traceback: /srv/private/module.py failed"]
+            self.warnings = ["Internal warning detail"]
+            self.info = ["Internal info detail"]
+
+        def validate_dataset(self, dataset, display=False):
+            return False
+
+    monkeypatch.setattr(web_interface, "DicomValidator", FailingValidator)
+
+    client = flask_app.test_client()
+    with open(synthetic_dicom_path, "rb") as f:
+        upload_resp = client.post("/api/upload", data={"file": (io.BytesIO(f.read()), "sample.dcm")})
+    filename = upload_resp.get_json()["filename"]
+
+    resp = client.get(f"/api/validate/{filename}")
+    payload = resp.get_json()
+
+    assert resp.status_code == 200
+    assert payload == {
+        "valid": False,
+        "status": "invalid",
+        "error_count": 1,
+        "warning_count": 1,
+        "info_count": 1,
+    }
+    assert "Traceback" not in resp.text
+    assert "/srv/private/module.py" not in resp.text
 
 
 def test_web_interface_anonymize_and_download(synthetic_dicom_path):

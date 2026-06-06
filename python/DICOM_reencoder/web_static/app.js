@@ -73,13 +73,15 @@ function renderStats(data) {
 function renderValidation(result) {
   const statusClass = result.valid ? 'success' : 'error';
   let html = `<div class="alert ${statusClass}">${result.valid ? 'File is valid.' : 'Validation failed.'}</div>`;
+  const summary = [
+    ['Errors', result.error_count ?? 0],
+    ['Warnings', result.warning_count ?? 0],
+    ['Checks', result.info_count ?? 0],
+  ];
 
-  if (result.errors?.length) {
-    html += '<p class="eyebrow">Errors</p>' + result.errors.map((err) => `<div class="alert error">${err}</div>`).join('');
-  }
-  if (result.warnings?.length) {
-    html += '<p class="eyebrow">Warnings</p>' + result.warnings.map((warn) => `<div class="alert">${warn}</div>`).join('');
-  }
+  html += '<div class="stats-grid">' + summary
+    .map(([label, value]) => `<div class="stat-card"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`)
+    .join('') + '</div>';
 
   detailsBody.innerHTML = html;
 }
