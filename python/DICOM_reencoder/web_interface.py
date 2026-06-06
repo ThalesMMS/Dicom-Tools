@@ -51,8 +51,8 @@ def _load_uploaded(filename: str):
     try:
         # Use the shared loader so the web API matches CLI behavior
         return load_dataset(path, force=True), None
-    except Exception as exc:  # pragma: no cover - surfaced to client
-        return None, (jsonify({"error": str(exc)}), 400)
+    except Exception:  # pragma: no cover - surfaced to client
+        return None, (jsonify({"error": "Invalid DICOM file"}), 400)
 
 
 @app.route("/")
@@ -153,8 +153,8 @@ def anonymize_file(filename: str):
     try:
         anonymize_dicom(filepath, output_filepath)
         return jsonify({"success": True, "filename": output_filename})
-    except Exception as exc:  # pragma: no cover - surfaced to client
-        return jsonify({"error": str(exc)}), 500
+    except Exception:  # pragma: no cover - surfaced to client
+        return jsonify({"error": "Anonymization failed"}), 500
 
 
 @app.route("/api/download/<filename>")

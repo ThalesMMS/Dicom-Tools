@@ -23,6 +23,8 @@ from pynetdicom.sop_class import (
 )
 from pydicom.dataset import Dataset
 
+REDACTED = "<redacted>"
+
 # Optional: Enable debug logging
 # debug_logger()
 
@@ -179,18 +181,18 @@ def display_results(results, query_level):
         print(f"{'─'*80}")
 
         if query_level == 'PATIENT':
-            print(f"  Patient Name       : {result.get('PatientName', 'N/A')}")
-            print(f"  Patient ID         : {result.get('PatientID', 'N/A')}")
-            print(f"  Birth Date         : {result.get('PatientBirthDate', 'N/A')}")
-            print(f"  Sex                : {result.get('PatientSex', 'N/A')}")
+            print(f"  Patient Name       : {REDACTED}")
+            print(f"  Patient ID         : {REDACTED}")
+            print(f"  Birth Date         : {REDACTED}")
+            print(f"  Sex                : {REDACTED}")
 
         elif query_level == 'STUDY':
-            print(f"  Patient Name       : {result.get('PatientName', 'N/A')}")
-            print(f"  Patient ID         : {result.get('PatientID', 'N/A')}")
-            print(f"  Study Date         : {result.get('StudyDate', 'N/A')}")
-            print(f"  Study Time         : {result.get('StudyTime', 'N/A')}")
+            print(f"  Patient Name       : {REDACTED}")
+            print(f"  Patient ID         : {REDACTED}")
+            print(f"  Study Date         : {REDACTED}")
+            print(f"  Study Time         : {REDACTED}")
             print(f"  Study Description  : {result.get('StudyDescription', 'N/A')}")
-            print(f"  Accession Number   : {result.get('AccessionNumber', 'N/A')}")
+            print(f"  Accession Number   : {REDACTED}")
             print(f"  Modalities         : {result.get('ModalitiesInStudy', 'N/A')}")
             print(f"  Number of Series   : {result.get('NumberOfStudyRelatedSeries', 'N/A')}")
             print(f"  Number of Instances: {result.get('NumberOfStudyRelatedInstances', 'N/A')}")

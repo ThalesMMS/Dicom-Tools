@@ -18,7 +18,7 @@ from pynetdicom.sop_class import Verification
 def _pick_free_port() -> int:
     # Bind to port 0 to let the OS choose a free ephemeral port
     sock = socket.socket()
-    sock.bind(("", 0))
+    sock.bind(("127.0.0.1", 0))
     _, port = sock.getsockname()
     sock.close()
     return int(port)

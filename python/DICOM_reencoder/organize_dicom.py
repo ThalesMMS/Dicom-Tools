@@ -21,6 +21,8 @@ import glob
 import argparse
 from pathlib import Path
 
+REDACTED = "<redacted>"
+
 def sanitize_filename(name):
     """
     Sanitize a string to be used as a filename or directory name.
@@ -91,7 +93,7 @@ def organize_by_patient(source_dir, dest_dir, copy_mode=False, recursive=False):
             else:
                 shutil.move(file_path, dest_file)
 
-            print(f"  ✓ {os.path.basename(file_path)} -> {patient_name}/{patient_id}/")
+            print(f"  ✓ {os.path.basename(file_path)} -> {REDACTED}/{REDACTED}/")
             organized_count += 1
 
         except Exception as e:

@@ -235,12 +235,9 @@ def list_files(files):
             total_size += file_size
 
             modality = dataset.get('Modality', 'N/A')
-            patient_id = dataset.get('PatientID', 'N/A')
-            study_date = dataset.get('StudyDate', 'N/A')
-
             print(f"[{i:3d}] {os.path.basename(file_path)}")
             print(f"      Size: {file_size:,} bytes | Modality: {modality} | "
-                  f"Patient: {patient_id} | Date: {study_date}")
+                  "Patient: <redacted> | Date: <redacted>")
 
         except Exception as e:
             print(f"[{i:3d}] {os.path.basename(file_path)} - Error: {e}")

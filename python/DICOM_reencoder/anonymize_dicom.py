@@ -177,7 +177,7 @@ def anonymize_dicom(input_file, output_file=None, patient_prefix="ANON"):
 
         print(f"\n{'='*80}")
         print(f"✓ Anonymization complete!")
-        print(f"  Original Patient ID: {original_patient_id}")
+        print("  Original Patient ID: <redacted>")
         print(f"  Anonymous ID: {anonymous_id}")
         print(f"  Output file: {output_file}")
         print(f"{'='*80}\n")

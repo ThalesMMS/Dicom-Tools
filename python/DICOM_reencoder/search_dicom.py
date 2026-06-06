@@ -21,6 +21,17 @@ import re
 import argparse
 from datetime import datetime
 
+SENSITIVE_DISPLAY_FIELDS = {
+    'AccessionNumber',
+    'PatientBirthDate',
+    'PatientID',
+    'PatientName',
+    'PatientSex',
+    'StudyDate',
+    'StudyTime',
+}
+REDACTED = '<redacted>'
+
 def search_dicom_files(directory, criteria, recursive=False, output_format='table'):
     """
     Search for DICOM files matching criteria.
@@ -42,7 +53,10 @@ def search_dicom_files(directory, criteria, recursive=False, output_format='tabl
     # Display search criteria
     print("Search Criteria:")
     for tag, value in criteria.items():
-        print(f"  {tag}: {value}")
+        if tag in SENSITIVE_DISPLAY_FIELDS:
+            print(f"  {tag}: {REDACTED}")
+        else:
+            print(f"  {tag}: {value}")
     print(f"\n{'─'*80}\n")
 
     # Find all DICOM files
@@ -104,11 +118,14 @@ def search_dicom_files(directory, criteria, recursive=False, output_format='tabl
                 # Collect data for display
                 file_data = {'file': os.path.basename(file_path)}
                 for tag in criteria.keys():
-                    file_data[tag] = str(dataset.get(tag, 'N/A'))
+                    if tag in SENSITIVE_DISPLAY_FIELDS:
+                        file_data[tag] = REDACTED
+                    else:
+                        file_data[tag] = str(dataset.get(tag, 'N/A'))
 
                 # Add some additional useful fields
                 file_data['Modality'] = str(dataset.get('Modality', 'N/A'))
-                file_data['StudyDate'] = str(dataset.get('StudyDate', 'N/A'))
+                file_data['StudyDate'] = REDACTED
 
                 matched_data.append(file_data)
 

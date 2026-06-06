@@ -54,6 +54,10 @@ def format_dicom_time(time_str):
     except:
         return time_str
 
+def redacted_value():
+    """Return the placeholder used when PHI would otherwise be printed."""
+    return "<redacted>"
+
 def display_dicom_info(file_path, verbose=False):
     """
     Display summary information about a DICOM file.
@@ -80,19 +84,19 @@ def display_dicom_info(file_path, verbose=False):
 
         # Patient Information
         print("PATIENT")
-        print(f"  Name               : {dataset.get('PatientName', 'N/A')}")
-        print(f"  ID                 : {dataset.get('PatientID', 'N/A')}")
-        print(f"  Birth Date         : {format_dicom_date(str(dataset.get('PatientBirthDate', 'N/A')))}")
-        print(f"  Sex                : {dataset.get('PatientSex', 'N/A')}")
-        print(f"  Age                : {dataset.get('PatientAge', 'N/A')}")
+        print(f"  Name               : {redacted_value()}")
+        print(f"  ID                 : {redacted_value()}")
+        print(f"  Birth Date         : {redacted_value()}")
+        print(f"  Sex                : {redacted_value()}")
+        print(f"  Age                : {redacted_value()}")
 
         # Study Information
         print(f"\nSTUDY")
         print(f"  Description        : {dataset.get('StudyDescription', 'N/A')}")
-        print(f"  Date               : {format_dicom_date(str(dataset.get('StudyDate', 'N/A')))}")
-        print(f"  Time               : {format_dicom_time(str(dataset.get('StudyTime', 'N/A')))}")
+        print(f"  Date               : {redacted_value()}")
+        print(f"  Time               : {redacted_value()}")
         print(f"  Study ID           : {dataset.get('StudyID', 'N/A')}")
-        print(f"  Accession Number   : {dataset.get('AccessionNumber', 'N/A')}")
+        print(f"  Accession Number   : {redacted_value()}")
 
         # Series Information
         print(f"\nSERIES")
